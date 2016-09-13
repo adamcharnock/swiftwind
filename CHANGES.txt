@@ -3,3 +3,8 @@ Change-log for swiftwind.
 This file will be added to as part of each release
 
 ----
+
+Version 0.0.1 (first version), Tue 13 Sep 2016
+===============================================
+
+
