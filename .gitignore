@@ -8,3 +8,5 @@ static/
 /.idea
 .bash_history
 /fixtures/*.live.json
+/build
+/dist
