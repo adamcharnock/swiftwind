@@ -20,7 +20,7 @@ install:
 
 script:
   - env
-  - env PYTHONPATH=`pwd` coverage run --source=hordak ./manage.py test hordak
+  - env PYTHONPATH=`pwd` coverage run --source=swiftwind ./manage.py test
 
 after_success:
   coveralls
