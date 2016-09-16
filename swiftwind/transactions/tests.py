@@ -38,10 +38,10 @@ class SimpleTransactionFormTestCase(TestCase):
         debit = transaction.legs.credits()[0]
 
         self.assertEqual(credit.account, self.from_account)
-        self.assertEqual(credit.amount, -50)
+        self.assertEqual(credit.amount, 50)
 
         self.assertEqual(debit.account, self.to_account)
-        self.assertEqual(debit.amount, 50)
+        self.assertEqual(debit.amount, -50)
 
     def test_transfer_from_bank_to_income(self):
         """If we move money out of the bank and into an income account, we expect both values to go up"""
