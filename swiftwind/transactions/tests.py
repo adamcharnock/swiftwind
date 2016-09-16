@@ -34,14 +34,12 @@ class SimpleTransactionFormTestCase(TestCase):
         self.assertEqual(self.to_account.balance(), 50)
 
         # Check transaction legs have amounts set as expected
-        credit = transaction.legs.debits()[0]
-        debit = transaction.legs.credits()[0]
+        from_leg = transaction.legs.get(account=self.from_account)
+        to_leg = transaction.legs.get(account=self.to_account)
 
-        self.assertEqual(credit.account, self.from_account)
-        self.assertEqual(credit.amount, 50)
+        self.assertEqual(from_leg.amount, -50)
+        self.assertEqual(to_leg.amount, 50)
 
-        self.assertEqual(debit.account, self.to_account)
-        self.assertEqual(debit.amount, -50)
 
     def test_transfer_from_bank_to_income(self):
         """If we move money out of the bank and into an income account, we expect both values to go up"""
