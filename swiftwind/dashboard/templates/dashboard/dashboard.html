@@ -6,19 +6,11 @@
 <h4>Summary</h4>
 
 <p>
-    Total income: {{ net_income }}
+    Balance this month: {{ net_total }}
 </p>
 
 <p>
-    Total expenses: {{ net_expense }}
-</p>
-
-<p>
-    Total balance (excludes stockpile): {{ net_total }}
-</p>
-
-<p>
-    Bank balance (includes stockpile): {{ bank_balance }}
+    Bank balance: {{ bank_balance }}
 </p>
 
 <h4>Housemate Income</h4>
@@ -48,6 +40,10 @@
     {% endfor %}
 </table>
 
+<p>
+    Total: {{ housemate_accounts.net_balance }}
+</p>
+
 <h4>Other Income</h4>
 
 <p>
@@ -76,6 +72,10 @@
     {% endfor %}
 </table>
 
+<p>
+    Total: {{ other_income_accounts.net_balance }}
+</p>
+
 <h4>Expenses - money we <em>have</em> spent</h4>
 
 <p>
@@ -102,6 +102,10 @@
         </tr>
     {% endfor %}
 </table>
+
+<p>
+    Total: {{ expense_accounts.net_balance }}
+</p>
 
 <h4>Stockpile - money we <em>will</em> spend</h4>
 
@@ -132,6 +136,9 @@
     {% endfor %}
 </table>
 
+<p>
+    Total: {{ current_liability_accounts.net_balance }}
+</p>
 
 <h4>Long-term debts</h4>
 
@@ -158,6 +165,10 @@
         </tr>
     {% endfor %}
 </table>
+
+<p>
+Total: {{ long_term_liability_accounts.net_balance }}
+</p>
 
 <h4>Long-term money - rainy day fund</h4>
 
