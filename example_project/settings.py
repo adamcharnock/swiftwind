@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     # 'django.contrib.admindocs',
 
     'bootstrap3',
+    'mptt',
     'django_extensions',
+    'hordak',
 
     'swiftwind.core',
     'swiftwind.accounts',
@@ -54,6 +56,7 @@ INSTALLED_APPS = [
     'swiftwind.costs_one_off',
     'swiftwind.costs_recurring',
     'swiftwind.dashboard',
+    'swiftwind.transactions',
 ]
 
 MIDDLEWARE = [
@@ -133,6 +136,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+SITE_ID = 1
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/

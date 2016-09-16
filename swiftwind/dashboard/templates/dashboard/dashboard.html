@@ -1,0 +1,175 @@
+{% extends 'core/base.html' %}
+
+{% block body %}
+<h2>Dashboard</h2>
+
+<h4>Summary</h4>
+
+<p>
+    Total income: {{ net_income }}
+</p>
+
+<p>
+    Total expenses: {{ net_expense }}
+</p>
+
+<p>
+    Total balance (excludes stockpile): {{ net_total }}
+</p>
+
+<p>
+    Bank balance (includes stockpile): {{ bank_balance }}
+</p>
+
+<h4>Housemate Income</h4>
+
+<p>
+    This is money which has been paid to us by housemates.
+    The aim should be to get these accounts to zero by transferring money
+    to the relevant expense or stockpile accounts.
+</p>
+
+<table>
+    {% for account in housemate_accounts %}
+        <tr>
+            <td>
+                {{ account.name }}
+            </td>
+            <td>
+                {{ account.balance }}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td>
+                No housemate accounts
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h4>Other Income</h4>
+
+<p>
+    This is money which has been received from elsewhere.
+    The aim should be to get these accounts to zero. You can do this
+    but putting it towards this month's expenses, or towards the stockpile.
+    You could also save it for a rainy day by moving it to Retained Earnings.
+</p>
+
+<table>
+    {% for account in other_income_accounts %}
+        <tr>
+            <td>
+                {{ account.name }}
+            </td>
+            <td>
+                {{ account.balance }}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td>
+                No additional income accounts
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h4>Expenses - money we <em>have</em> spent</h4>
+
+<p>
+    Amounts below are things we have <em>already</em> spent money on.
+    The aim should be to get these accounts to be zero by
+    transferring money in from the income accounts.
+</p>
+
+<table>
+    {% for account in expense_accounts %}
+        <tr>
+            <td>
+                {{ account.name }}
+            </td>
+            <td>
+                {{ account.balance }}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td>
+                No expense accounts
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h4>Stockpile - money we <em>will</em> spend</h4>
+
+<p>
+    This is money we are saving up because we know we are going to have to pay it in the future.
+    When we eventually pay a bill it will come out of an expense account (because it will then
+    be money we <em>have</em> spent). At which point we transfer the relevant stockpile
+    into the expense account, thereby returning both to zero. Congratuations on planning for the
+    future.
+</p>
+
+<table>
+    {% for account in current_liability_accounts %}
+        <tr>
+            <td>
+                {{ account.name }}
+            </td>
+            <td>
+                {{ account.balance }}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td>
+                No accounts
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+<h4>Long-term debts</h4>
+
+<p>
+    Sometimes we may have long-term debts, such as loans from housemates.
+    These don't need to be worried about from month-to-month.
+</p>
+
+<table>
+    {% for account in long_term_liability_accounts %}
+        <tr>
+            <td>
+                {{ account.name }}
+            </td>
+            <td>
+                {{ account.balance }}
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td>
+                No long-term debts
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h4>Long-term money - rainy day fund</h4>
+
+<p>
+    Sometimes we end up with more money than we need. In which case we place
+    it into the 'Retained Earnings' account. It is money the house has earnt,
+    and it is retained until a later date when we may choose to spend it.
+</p>
+
+<p>
+    Retained Earnings: {{ retained_earnings_balance }}
+</p>
+
+{% endblock %}
+
