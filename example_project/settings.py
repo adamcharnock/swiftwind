@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'bootstrap3',
     'mptt',
     'django_extensions',
+    'djcelery',
     'hordak',
 
     'swiftwind.core',
@@ -143,3 +144,8 @@ SITE_ID = 1
 
 STATIC_URL = '/static/'
 
+# Celery
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+BROKER_URL = 'redis://localhost'

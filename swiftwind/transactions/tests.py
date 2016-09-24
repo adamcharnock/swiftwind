@@ -1,7 +1,13 @@
+import six
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from hordak.models import Account, Transaction
 from django.test import TestCase
+from django.test import Client
 
-from .forms import SimpleTransactionForm
+from swiftwind.transactions.models import TransactionImportColumn
+from .forms import SimpleTransactionForm, TransactionImportForm
+from .models import TransactionImport
 
 
 class SimpleTransactionFormTestCase(TestCase):
@@ -90,3 +96,135 @@ class SimpleTransactionFormTestCase(TestCase):
             amount='',
         ))
         self.assertFalse(form.is_valid())
+
+
+class CreateImportViewTestCase(TestCase):
+
+    def setUp(self):
+        self.view_url = reverse('transactions:import_create')
+
+    def test_load(self):
+        c = Client()
+        response = c.post(self.view_url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_success_url(self):
+        from swiftwind.transactions.views import CreateImportView
+        view = CreateImportView()
+        view.object = TransactionImport.objects.create()
+        self.assertIn(str(view.object.uuid), view.get_success_url())
+
+class TransactionFormTestCase(TestCase):
+
+    def setUp(self):
+        self.f = SimpleUploadedFile('data.csv',
+                                    six.binary_type('Number,Date,Account,Amount,Subcategory,Memo', encoding='utf8'))
+
+    def test_create(self):
+        form = TransactionImportForm(files=dict(file=self.f))
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        obj = TransactionImport.objects.get()
+        self.assertEqual(obj.columns.count(), 6)
+
+    def test_edit(self):
+        obj = TransactionImport.objects.create(has_headings=True, file=self.f)
+        form = TransactionImportForm(files=dict(file=self.f), instance=obj)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertEqual(obj.columns.count(), 0)
+
+
+class SetupImportViewTestCase(TestCase):
+
+    def setUp(self):
+        self.transaction_import = TransactionImport.objects.create()
+        self.view_url = reverse('transactions:import_setup', args=[self.transaction_import.uuid])
+
+    def test_load(self):
+        c = Client()
+        response = c.get(self.view_url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_submit(self):
+        c = Client()
+        column1 = TransactionImportColumn.objects.create(
+            transaction_import=self.transaction_import,
+            column_number=1,
+            column_heading='Transaction Date',
+            example='1/1/1'
+        )
+
+        column2 = TransactionImportColumn.objects.create(
+            transaction_import=self.transaction_import,
+            column_number=2,
+            column_heading='Transaction Amount',
+            example='123.45'
+        )
+
+        response = c.post(self.view_url, data={
+            'columns-INITIAL_FORMS': '2',
+            'columns-TOTAL_FORMS': '2',
+
+            'columns-0-column_number': '1',
+            'columns-0-id': column1.pk,
+            'columns-0-to_field': 'date',
+
+            'columns-1-column_number': '2',
+            'columns-1-id': column2.pk,
+            'columns-1-to_field': 'amount',
+        })
+        if response.context:
+            # If we have a context then it is going to be because the form has errors
+            self.assertFalse(response.context['form'].errors)
+
+        column1.refresh_from_db()
+        column2.refresh_from_db()
+
+        self.assertEqual(column1.to_field, 'date')
+        self.assertEqual(column2.to_field, 'amount')
+
+
+
+class TransactionImportTestCase(TestCase):
+
+    def test_create_columns_ok(self):
+        f = SimpleUploadedFile('data.csv',
+                               six.binary_type(
+                                   'Number,Date,Account,Amount,Subcategory,Memo\n'
+                                   '1,1/1/1,123456789,123,OTH,Some random notes',
+                                   encoding='utf8')
+                               )
+
+        inst = TransactionImport.objects.create(has_headings=True, file=f)
+        inst.create_columns()
+
+        columns = inst.columns.all()
+
+        self.assertEqual(columns[0].column_number, 1)
+        self.assertEqual(columns[0].column_heading, 'Number')
+        self.assertEqual(columns[0].example, '1')
+
+        self.assertEqual(columns[1].column_number, 2)
+        self.assertEqual(columns[1].column_heading, 'Date')
+        self.assertEqual(columns[1].example, '1/1/1')
+
+        self.assertEqual(columns[2].column_number, 3)
+        self.assertEqual(columns[2].column_heading, 'Account')
+        self.assertEqual(columns[2].example, '123456789')
+
+        self.assertEqual(columns[3].column_number, 4)
+        self.assertEqual(columns[3].column_heading, 'Amount')
+        self.assertEqual(columns[3].example, '123')
+
+        self.assertEqual(columns[4].column_number, 5)
+        self.assertEqual(columns[4].column_heading, 'Subcategory')
+        self.assertEqual(columns[4].example, 'OTH')
+
+        self.assertEqual(columns[5].column_number, 6)
+        self.assertEqual(columns[5].column_heading, 'Memo')
+        self.assertEqual(columns[5].example, 'Some random notes')
+
+
+
+

@@ -25,5 +25,9 @@ setup(
         'dj-static',
         'psycopg2',
         'django-extensions',
+        'celery>=3.1',
+        'django-celery>=3.1',
+        'django-import-export>=0.5.0',
+        'six',
     ],
 )

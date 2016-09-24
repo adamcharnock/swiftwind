@@ -1,0 +1,10 @@
+{% extends 'core/base.html' %}
+
+{% block body %}
+    <h1>New import</h1>
+    <form action="{% url 'transactions:import_create' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit">
+    </form>
+{% endblock %}

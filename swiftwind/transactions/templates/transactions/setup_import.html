@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+
+{% block body %}
+    <h1>Setup import</h1>
+    <form action="{% url 'transactions:import_setup' transaction_import.uuid %}" method="post" enctype="multipart/form-data">
+        {{ form.management_form }}
+        {% csrf_token %}
+        {% for f in form %}
+            <h4>
+                {% if f.instance.column_heading %}
+                    Column: {{ f.instance.column_heading }}
+                {% else %}
+                    Column {{ f.instance.column_number }}
+                {% endif %}
+            </h4>
+            {% if f.instance.example %}
+                <h5>Example data: {{ f.instance.example }}</h5>
+            {% endif %}
+            {{ f.as_p }}
+        {% endfor %}
+
+        <input type="submit">
+    </form>
+{% endblock %}
