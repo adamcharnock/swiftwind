@@ -3,9 +3,10 @@
 {% block body %}
     <h1>Setup import</h1>
     <form action="{% url 'transactions:import_setup' transaction_import.uuid %}" method="post" enctype="multipart/form-data">
-        {{ form.management_form }}
+        {{ form }}
+        {{ formset.management_form }}
         {% csrf_token %}
-        {% for f in form %}
+        {% for f in formset %}
             <h4>
                 {% if f.instance.column_heading %}
                     Column: {{ f.instance.column_heading }}

@@ -7,6 +7,8 @@ from django.utils import timezone
 from django_smalluuid.models import SmallUUIDField, uuid_default
 from model_utils import Choices
 
+from .utilities import DATE_FORMATS
+
 
 class TransactionImport(models.Model):
     STATES = Choices(
@@ -20,6 +22,7 @@ class TransactionImport(models.Model):
     has_headings = models.BooleanField(default=True, verbose_name='First line of file contains headings')
     file = models.FileField(upload_to='transaction_imports', verbose_name='CSV file to import')
     state = models.CharField(max_length=20, choices=STATES, default='pending')
+    date_format = models.CharField(choices=DATE_FORMATS, max_length=50, default='%d-%m-%Y', null=False)
 
     def create_columns(self):
         """For each column in file create a TransactionImportColumn"""

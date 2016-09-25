@@ -2,8 +2,8 @@ from django import forms
 from django.forms import inlineformset_factory, formset_factory
 from hordak.models import Account, Transaction
 
-from swiftwind.transactions.models import TransactionImportColumn, TransactionImport
-from swiftwind.utilities.widgets import PlainTextWidget
+from .models import TransactionImportColumn, TransactionImport
+from .utilities import DATE_FORMATS
 
 
 class SimpleTransactionForm(forms.ModelForm):
@@ -42,14 +42,13 @@ class TransactionImportForm(forms.ModelForm):
 
 
 class TransactionImportColumnForm(forms.ModelForm):
-    column_number = forms.CharField(widget=forms.HiddenInput, disabled=True)
 
     class Meta:
         model = TransactionImportColumn
-        fields = ('to_field', 'column_number')
+        fields = ('to_field',)
 
 
-TransactionImportFieldFormSet = inlineformset_factory(
+TransactionImportColumnFormSet = inlineformset_factory(
     parent_model=TransactionImport,
     model=TransactionImportColumn,
     form=TransactionImportColumnForm,
