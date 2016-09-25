@@ -1,11 +1,15 @@
 import six
+import tablib
+from decimal import Decimal
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from hordak.models import Account, Transaction
+from django.utils.datetime_safe import date
+from hordak.models import Account, Transaction, StatementLine, StatementImport
 from django.test import TestCase
 from django.test import Client
 
 from swiftwind.transactions.models import TransactionImportColumn
+from swiftwind.transactions.resources import StatementLineResource
 from .forms import SimpleTransactionForm, TransactionImportForm
 from .models import TransactionImport
 
@@ -163,14 +167,14 @@ class SetupImportViewTestCase(TestCase):
         )
 
         response = c.post(self.view_url, data={
+            'date_format': '%d-%m-%Y',
+
             'columns-INITIAL_FORMS': '2',
             'columns-TOTAL_FORMS': '2',
 
-            'columns-0-column_number': '1',
             'columns-0-id': column1.pk,
             'columns-0-to_field': 'date',
 
-            'columns-1-column_number': '2',
             'columns-1-id': column2.pk,
             'columns-1-to_field': 'amount',
         })
@@ -178,9 +182,11 @@ class SetupImportViewTestCase(TestCase):
             # If we have a context then it is going to be because the form has errors
             self.assertFalse(response.context['form'].errors)
 
+        self.transaction_import.refresh_from_db()
         column1.refresh_from_db()
         column2.refresh_from_db()
 
+        self.assertEqual(self.transaction_import.date_format, '%d-%m-%Y')
         self.assertEqual(column1.to_field, 'date')
         self.assertEqual(column2.to_field, 'amount')
 
@@ -226,5 +232,53 @@ class TransactionImportTestCase(TestCase):
         self.assertEqual(columns[5].example, 'Some random notes')
 
 
+class StatementLineResourceTestCase(TestCase):
+    """Test the resource definition in resources.py"""
+
+    def setUp(self):
+        self.account = Account.objects.create(name='Bank', code='1')
+
+    def makeResource(self):
+        statement_import = StatementImport.objects.create(bank_account=self.account)
+        return StatementLineResource(statement_import)
+
+    def test_import_one(self):
+        dataset = tablib.Dataset(
+            [date(2016, 6, 15), '5.10', 'Example payment'],
+            headers=['date', 'amount', 'description']
+        )
+        self.makeResource().import_data(dataset)
+
+        self.assertEqual(StatementLine.objects.count(), 1)
+        obj = StatementLine.objects.get()
+        self.assertEqual(obj.date, date(2016, 6, 15))
+        self.assertEqual(obj.amount, Decimal('5.10'))
+        self.assertEqual(obj.description, 'Example payment')
+
+    def test_import_skip_duplicates(self):
+        dataset = tablib.Dataset(
+            [date(2016, 6, 15), '5.10', 'Example payment'],
+            headers=['date', 'amount', 'description']
+        )
+        self.makeResource().import_data(dataset)
+        # Now do the import again
+        self.makeResource().import_data(dataset)
+
+        # The record in the second should have been ignored
+        self.assertEqual(StatementLine.objects.count(), 1)
 
 
+    def test_import_two_identical(self):
+        """Ensure they both get imported and that one doesnt get skipped as a duplicate
+
+        After all, if there are two imported rows that look identical, it is probably because
+        there are two identical transactions.
+        """
+        dataset = tablib.Dataset(
+            [date(2016, 6, 15), '5.10', 'Example payment'],
+            [date(2016, 6, 15), '5.10', 'Example payment'],
+            headers=['date', 'amount', 'description']
+        )
+        self.makeResource().import_data(dataset)
+
+        self.assertEqual(StatementLine.objects.count(), 2)
