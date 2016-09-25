@@ -282,3 +282,56 @@ class StatementLineResourceTestCase(TestCase):
         self.makeResource().import_data(dataset)
 
         self.assertEqual(StatementLine.objects.count(), 2)
+
+    def test_import_a_few(self):
+        dataset = tablib.Dataset(
+            [date(2016, 6, 15), '5.10', 'Example payment'],
+            [date(2016, 6, 16), '10.91', 'Another payment'],
+            [date(2016, 6, 17), '-1.23', 'Paying someone'],
+            headers=['date', 'amount', 'description']
+        )
+        self.makeResource().import_data(dataset)
+
+        self.assertEqual(StatementLine.objects.count(), 3)
+        objs = StatementLine.objects.all().order_by('pk')
+
+        self.assertEqual(objs[0].date, date(2016, 6, 15))
+        self.assertEqual(objs[0].amount, Decimal('5.10'))
+        self.assertEqual(objs[0].description, 'Example payment')
+
+        self.assertEqual(objs[1].date, date(2016, 6, 16))
+        self.assertEqual(objs[1].amount, Decimal('10.91'))
+        self.assertEqual(objs[1].description, 'Another payment')
+
+        self.assertEqual(objs[2].date, date(2016, 6, 17))
+        self.assertEqual(objs[2].amount, Decimal('-1.23'))
+        self.assertEqual(objs[2].description, 'Paying someone')
+
+    def test_import_a_few_with_identical_transactions(self):
+        dataset = tablib.Dataset(
+            [date(2016, 6, 15), '5.10', 'Example payment'],
+            [date(2016, 6, 16), '10.91', 'Another payment'],
+            [date(2016, 6, 16), '10.91', 'Another payment'],
+            [date(2016, 6, 17), '-1.23', 'Paying someone'],
+            headers=['date', 'amount', 'description']
+        )
+        self.makeResource().import_data(dataset)
+
+        self.assertEqual(StatementLine.objects.count(), 4)
+        objs = StatementLine.objects.all().order_by('pk')
+
+        self.assertEqual(objs[0].date, date(2016, 6, 15))
+        self.assertEqual(objs[0].amount, Decimal('5.10'))
+        self.assertEqual(objs[0].description, 'Example payment')
+
+        self.assertEqual(objs[1].date, date(2016, 6, 16))
+        self.assertEqual(objs[1].amount, Decimal('10.91'))
+        self.assertEqual(objs[1].description, 'Another payment')
+
+        self.assertEqual(objs[2].date, date(2016, 6, 16))
+        self.assertEqual(objs[2].amount, Decimal('10.91'))
+        self.assertEqual(objs[2].description, 'Another payment')
+
+        self.assertEqual(objs[3].date, date(2016, 6, 17))
+        self.assertEqual(objs[3].amount, Decimal('-1.23'))
+        self.assertEqual(objs[3].description, 'Paying someone')
