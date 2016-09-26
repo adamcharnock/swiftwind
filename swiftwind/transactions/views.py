@@ -5,7 +5,8 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, SingleObjectMixin, UpdateView
-from hordak.models import Transaction
+from django.views.generic.list import ListView
+from hordak.models import Transaction, StatementLine
 
 from swiftwind.transactions.models import TransactionImport, TransactionImportColumn
 from swiftwind.transactions.resources import StatementLineResource
@@ -110,3 +111,9 @@ class DryRunImportView(AbstractImportView):
 class ExecuteImportView(AbstractImportView):
     template_name = 'transactions/import_execute.html'
     dry_run = False
+
+
+class ReconcileTransactionsView(ListView):
+    template_name = 'transactions/reconcile.html'
+    model = StatementLine
+    paginate_by = 50

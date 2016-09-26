@@ -1,0 +1,54 @@
+{% extends 'core/layout.html' %}
+
+{% block content %}
+    <h1>Reconcile</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Account</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in object_list %}
+            <tr>
+                <td>{{ obj.date }}</td>
+                <td>{{ obj.amount }}</td>
+                <td>{{ obj.description }}</td>
+                <td>
+                    {% if obj.transaction %}
+                        {{ obj.transaction.account.name }}
+                    {% else %}
+                        <form action="{% url 'transactions:reconcile' %}" method="get">
+                            <input type="hidden" name="reconcile" value="{{ obj.uuid }}">
+                            <input type="hidden" name="page" value="{{ page_obj.number }}">
+                            <input type="submit" value="Reconcile">
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+            {% endif %}
+        </span>
+    </div>
+
+
+{% endblock %}
