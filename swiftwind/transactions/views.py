@@ -70,16 +70,15 @@ class SetupImportView(UpdateView):
         return reverse('transactions:import_dry_run', args=[self.object.uuid])
 
 
-class DryRunImportView(DetailView):
+class AbstractImportView(DetailView):
     context_object_name = 'transaction_import'
     slug_url_kwarg = 'uuid'
     slug_field = 'uuid'
     model = TransactionImport
-    template_name = 'transactions/import_dry_run.html'
-
+    dry_run = True
 
     def get(self, request, **kwargs):
-        return super(DryRunImportView, self).get(request, **kwargs)
+        return super(AbstractImportView, self).get(request, **kwargs)
 
     def post(self, request, **kwargs):
         transaction_import = self.get_object()
@@ -90,17 +89,24 @@ class DryRunImportView(DetailView):
 
         self.result = resource.import_data(
             dataset=transaction_import.get_dataset(),
-            dry_run=True,
+            dry_run=self.dry_run,
             use_transactions=True,
             collect_failed_rows=True,
         )
         return self.get(request, **kwargs)
 
     def get_context_data(self, **kwargs):
-        return super(DryRunImportView, self).get_context_data(
+        return super(AbstractImportView, self).get_context_data(
             result=getattr(self, 'result', None),
             **kwargs
         )
 
 
+class DryRunImportView(AbstractImportView):
+    template_name = 'transactions/import_dry_run.html'
+    dry_run = True
 
+
+class ExecuteImportView(AbstractImportView):
+    template_name = 'transactions/import_execute.html'
+    dry_run = False

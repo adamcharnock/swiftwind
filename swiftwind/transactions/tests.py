@@ -491,6 +491,8 @@ class DryRunViewTestCase(TestCase):
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
 
+        self.assertEqual(StatementLine.objects.count(), 0)
+
     def test_post(self):
         self.create_import()
 
@@ -505,6 +507,8 @@ class DryRunViewTestCase(TestCase):
         self.assertEqual(result.totals['skip'], 0)
         self.assertEqual(result.totals['error'], 0)
 
+        self.assertEqual(StatementLine.objects.count(), 0)
+
     def test_date_error(self):
         self.create_import(b'1')
 
@@ -513,3 +517,60 @@ class DryRunViewTestCase(TestCase):
 
         self.assertEqual(len(result.failed_dataset), 1, result.failed_dataset.dict)
         self.assertEqual(len(result.row_errors()), 1)
+        self.assertEqual(StatementLine.objects.count(), 0)
+
+
+class ExecuteViewTestCase(TestCase):
+
+    def setUp(self):
+        logging.disable(logging.CRITICAL)
+
+    def tearDown(self):
+        logging.disable(logging.INFO)
+
+    def create_import(self, year=b'2000'):
+        f = SimpleUploadedFile('data.csv',
+                               six.binary_type(
+                                   b'Number,Date,Account,Amount,Subcategory,Memo\n'
+                                   b'1,1/1/' + year + b',123456789,123,OTH,Some random notes')
+                               )
+        self.transaction_import = TransactionImport.objects.create(has_headings=True, file=f, date_format='%d/%m/%Y', hordak_import=hordak_import())
+        self.view_url = reverse('transactions:import_execute', args=[self.transaction_import.uuid])
+        self.transaction_import.create_columns()
+
+        self.transaction_import.columns.filter(column_number=2).update(to_field='date')
+        self.transaction_import.columns.filter(column_number=4).update(to_field='amount')
+        self.transaction_import.columns.filter(column_number=6).update(to_field='description')
+
+    def test_get(self):
+        self.create_import()
+
+        response = self.client.get(self.view_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(StatementLine.objects.count(), 0)
+
+    def test_post(self):
+        self.create_import()
+
+        response = self.client.post(self.view_url)
+        result = response.context['result']
+
+        self.assertEqual(len(result.failed_dataset), 0, result.failed_dataset.dict)
+        self.assertEqual(result.base_errors, [])
+        self.assertEqual(result.totals['new'], 1)
+        self.assertEqual(result.totals['update'], 0)
+        self.assertEqual(result.totals['delete'], 0)
+        self.assertEqual(result.totals['skip'], 0)
+        self.assertEqual(result.totals['error'], 0)
+
+        self.assertEqual(StatementLine.objects.count(), 1)
+
+    def test_date_error(self):
+        self.create_import(b'1')
+
+        response = self.client.post(self.view_url)
+        result = response.context['result']
+
+        self.assertEqual(len(result.failed_dataset), 1, result.failed_dataset.dict)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertEqual(StatementLine.objects.count(), 0)

@@ -1,13 +1,16 @@
 {% extends 'core/base.html' %}
 
 {% block body %}
-    <h1>Dry run</h1>
     {% if not result %}
+        <h1>Start import</h1>
+
         <form action="{% url 'transactions:import_dry_run' transaction_import.uuid %}" method="post">
             {% csrf_token %}
             <input type="submit" value="Check the data">
         </form>
     {% else %}
+        <h1>Import complete</h1>
+
         <p>Update: {{ result.totals.update }}</p>
         <p>New: {{ result.totals.new }}</p>
         <p>Delete: {{ result.totals.delete }}</p>
@@ -25,10 +28,5 @@
             {% endfor %}
         {% endfor %}
         </dl>
-
-        <form action="{% url 'transactions:import_execute' transaction_import.uuid %}" method="post">
-            {% csrf_token %}
-            <input type="submit" value="Begin import">
-        </form>
     {% endif %}
 {% endblock %}
