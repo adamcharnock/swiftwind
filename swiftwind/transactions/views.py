@@ -14,7 +14,7 @@ from .forms import SimpleTransactionForm, TransactionImportForm, TransactionImpo
 
 class CreateTransactionView(CreateView):
     form_class = SimpleTransactionForm
-    template_name = 'transactions/create_transaction.html'
+    template_name = 'transactions/transaction_create.html'
 
     def get_success_url(self):
         return reverse('dashboard:dashboard')
@@ -23,7 +23,7 @@ class CreateTransactionView(CreateView):
 class CreateImportView(CreateView):
     model = TransactionImport
     form_class = TransactionImportForm
-    template_name = 'transactions/create_import.html'
+    template_name = 'transactions/import_create.html'
 
     def get_success_url(self):
         return reverse('transactions:import_setup', args=[self.object.uuid])
@@ -40,7 +40,7 @@ class SetupImportView(UpdateView):
     slug_field = 'uuid'
     model = TransactionImport
     fields = ('date_format', )
-    template_name = 'transactions/setup_import.html'
+    template_name = 'transactions/import_setup.html'
 
     def get_context_data(self, **kwargs):
         context = super(SetupImportView, self).get_context_data(**kwargs)
