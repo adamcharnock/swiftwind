@@ -2,10 +2,13 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
+from django.views.generic import TemplateView
+from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, SingleObjectMixin, UpdateView
 from hordak.models import Transaction
 
 from swiftwind.transactions.models import TransactionImport, TransactionImportColumn
+from swiftwind.transactions.resources import StatementLineResource
 from .forms import SimpleTransactionForm, TransactionImportForm, TransactionImportColumnFormSet
 
 
@@ -67,5 +70,34 @@ class SetupImportView(UpdateView):
         return reverse('transactions:import_dry_run', args=[self.object.uuid])
 
 
-class DryRunImportView(View):
-    pass
+class DryRunImportView(DetailView):
+    context_object_name = 'transaction_import'
+    slug_url_kwarg = 'uuid'
+    slug_field = 'uuid'
+    model = TransactionImport
+    template_name = 'transactions/import_dry_run.html'
+
+
+    def get(self, request, **kwargs):
+        return super(DryRunImportView, self).get(request, **kwargs)
+
+    def post(self, request, **kwargs):
+        transaction_import = self.get_object()
+        resource = StatementLineResource(transaction_import.hordak_import)
+
+        self.result = resource.import_data(
+            dataset=transaction_import.get_dataset(),
+            dry_run=True,
+            use_transactions=True,
+            # collect_failed_rows=True,
+        )
+        return self.get(request, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        return super(DryRunImportView, self).get_context_data(
+            result=getattr(self, 'result', None),
+            **kwargs
+        )
+
+
+

@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory, formset_factory
-from hordak.models import Account, Transaction
+from hordak.models import Account, Transaction, StatementImport
 
 from .models import TransactionImportColumn, TransactionImport
 from .utilities import DATE_FORMATS
@@ -28,6 +28,7 @@ class SimpleTransactionForm(forms.ModelForm):
 
 
 class TransactionImportForm(forms.ModelForm):
+    bank_account = forms.ModelChoiceField(Account.objects.filter(has_statements=True), label='Import data for account')
 
     class Meta:
         model = TransactionImport
@@ -35,6 +36,9 @@ class TransactionImportForm(forms.ModelForm):
 
     def save(self, commit=True):
         exists = bool(self.instance.pk)
+        self.instance.hordak_import = StatementImport.objects.create(
+            bank_account=self.cleaned_data['bank_account'],
+        )
         obj = super(TransactionImportForm, self).save()
         if not exists:
             obj.create_columns()

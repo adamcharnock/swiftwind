@@ -441,7 +441,7 @@
     ],
     "code": "0",
     "_type": "",
-    "has_statements": false,
+    "has_statements": true,
     "lft": 2,
     "rght": 3,
     "tree_id": 1,

@@ -14,6 +14,12 @@ from .forms import SimpleTransactionForm, TransactionImportForm
 from .models import TransactionImport
 
 
+def hordak_import():
+    return StatementImport.objects.create(
+        bank_account=Account.objects.create(name='Bank', code='1', has_statements=True)
+    )
+
+
 class SimpleTransactionFormTestCase(TestCase):
 
     def setUp(self):
@@ -115,25 +121,31 @@ class CreateImportViewTestCase(TestCase):
     def test_success_url(self):
         from swiftwind.transactions.views import CreateImportView
         view = CreateImportView()
-        view.object = TransactionImport.objects.create()
+        view.object = TransactionImport.objects.create(hordak_import=hordak_import())
         self.assertIn(str(view.object.uuid), view.get_success_url())
 
 class TransactionFormTestCase(TestCase):
 
     def setUp(self):
+        self.account = Account.objects.create(name='Bank', code='1', has_statements=True)
         self.f = SimpleUploadedFile('data.csv',
                                     six.binary_type('Number,Date,Account,Amount,Subcategory,Memo', encoding='utf8'))
 
     def test_create(self):
-        form = TransactionImportForm(files=dict(file=self.f))
+        form = TransactionImportForm(data=dict(bank_account=self.account.pk), files=dict(file=self.f))
         self.assertTrue(form.is_valid(), form.errors)
         form.save()
         obj = TransactionImport.objects.get()
         self.assertEqual(obj.columns.count(), 6)
+        self.assertEqual(obj.hordak_import.bank_account, self.account)
 
     def test_edit(self):
-        obj = TransactionImport.objects.create(has_headings=True, file=self.f)
-        form = TransactionImportForm(files=dict(file=self.f), instance=obj)
+        obj = TransactionImport.objects.create(
+            hordak_import=StatementImport.objects.create(bank_account=self.account),
+            has_headings=True,
+            file=self.f
+        )
+        form = TransactionImportForm(data=dict(bank_account=self.account.pk), files=dict(file=self.f), instance=obj)
         self.assertTrue(form.is_valid(), form.errors)
         form.save()
         self.assertEqual(obj.columns.count(), 0)
@@ -142,7 +154,7 @@ class TransactionFormTestCase(TestCase):
 class SetupImportViewTestCase(TestCase):
 
     def setUp(self):
-        self.transaction_import = TransactionImport.objects.create()
+        self.transaction_import = TransactionImport.objects.create(hordak_import=hordak_import())
         self.view_url = reverse('transactions:import_setup', args=[self.transaction_import.uuid])
 
     def test_load(self):
@@ -202,7 +214,7 @@ class TransactionImportTestCase(TestCase):
                                    encoding='utf8')
                                )
 
-        inst = TransactionImport.objects.create(has_headings=True, file=f)
+        inst = TransactionImport.objects.create(has_headings=True, file=f, hordak_import=hordak_import())
         inst.create_columns()
 
         columns = inst.columns.all()
@@ -335,3 +347,12 @@ class StatementLineResourceTestCase(TestCase):
         self.assertEqual(objs[3].date, date(2016, 6, 17))
         self.assertEqual(objs[3].amount, Decimal('-1.23'))
         self.assertEqual(objs[3].description, 'Paying someone')
+
+
+class DryRunViewTestCase(TestCase):
+
+    def test_get(self):
+        self.assertFalse('implement me')
+
+    def test_post(self):
+        self.assertFalse('implement me')

@@ -1,0 +1,18 @@
+{% extends 'core/base.html' %}
+
+{% block body %}
+    <h1>Dry run</h1>
+    {% if not result %}
+        <form action="{% url 'transactions:import_dry_run' transaction_import.uuid %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Check the data">
+        </form>
+    {% else %}
+        <p>Update: {{ result.totals.update }}</p>
+        <p>New: {{ result.totals.new }}</p>
+        <p>Delete: {{ result.totals.delete }}</p>
+        <p>Skip: {{ result.totals.skip }}</p>
+        <p>Error: {{ result.totals.error }}</p>
+        <p>{{ result.base_errors }}</p>
+    {% endif %}
+{% endblock %}

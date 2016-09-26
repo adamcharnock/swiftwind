@@ -3,9 +3,9 @@
 {% block body %}
     <h1>Setup import</h1>
     <form action="{% url 'transactions:import_setup' transaction_import.uuid %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
         {{ form }}
         {{ formset.management_form }}
-        {% csrf_token %}
         {% for f in formset %}
             <h4>
                 {% if f.instance.column_heading %}
