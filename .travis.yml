@@ -1,25 +1,27 @@
 language: python
 python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-
+- '2.7'
+- '3.4'
+- '3.5'
 services:
-  - postgresql
-
+- postgresql
 env:
-  - DJANGO_VERSION=1.10.1
-  - DJANGO_VERSION=1.9.9
-  - DJANGO_VERSION=1.8.14
-
+- DJANGO_VERSION=1.10.1
+- DJANGO_VERSION=1.9.9
+- DJANGO_VERSION=1.8.14
 install:
-  - "python setup.py develop"
-  - "pip install ."
-  - "pip install pytest coveralls"
-
+- python setup.py develop
+- pip install .
+- pip install pytest coveralls
 script:
-  - env
-  - env PYTHONPATH=`pwd` coverage run --source=swiftwind ./manage.py test
-
-after_success:
-  coveralls
+- env
+- env PYTHONPATH=`pwd` coverage run --source=swiftwind ./manage.py test
+after_success: coveralls
+notifications:
+  pushover:
+    on_success: always
+    on_failure: always
+    api_key:
+      secure: lepE3WdovnCx3IUwIK4/eG3FsGd9/mY8cZsF7lzPbCbjXtjRVFEeHVORi+YJd96kWKr7HbNYFLHH9ibNHbi9tejlT34aW8Xr3H1sOxZ5XEQCKp29xbgd9pPBDgLANvMGJvqmvV1EyTJqAnl2rfI3n24jteXIPBDFCISemshJiJnc0Ou7T/MXVuBbkH0URAKcSPHMilgQmON4dtnaN/f+nHzaQCFI3+dQpiJ/ZBA+yWQpioJbkhXvSUWwDLhpxmU2/ZMf3Y4cyZf9PO2CGuRwBXmdtEV2j5QnlIJryMMdE0nXTogDhSm0ZSNSutuBD8Ruht3Wo7qN3SXpMR38tGdSlNvmXX/U2vZbUzekt7DjrB1lZWun3pKIOGiDPuawSKi8up1mSxgWGef+W62OzveBXhZ0XSOQlWvvMbSdBRpzd2BcNdc170UUClAEKYGRkgGptNTtMWRBBDmsWYhzf2KNrcPE+nxiGm5w+lpqfJBObK7GMI1n4x5KAkWFYWnGoWedr78Z2sC+4FoAq++ilvlC3wuTDZhlCRosSwODTR1pxyvqHCTSHtvnCpIIU9RLTYNONJTgUixoFqwf4NDS4zXHNayAqNvlgDe5m+cjDwGPM3SDXHs4k4TP9oAi+FzRhAjOuzE9/HwXVqqRMMp4JXrk0kPQG2tpERMEuiQuFU0l02I=
+    users:
+      secure: HK67fmH/RMVOf6HBbs3AYITQyT6ehRLQoqKDfO0a16W2P1a+Je8U5ZlwHTvv00JjH6IJnhEcen44sglLUdFaTb4I8jxG1ikZou+W1bbYa3El51ar7P8a0EcRt3UfVfDoxNSF+zb75VzIgEy51Ct/f0xJEiv/grdyM4w6Z+T8oYKkVSa6xRaKMRl6qCFO6GTybqXEfIYe7XKsmR8ofszcKKUXInTVWCzHZlAZvALDaCcKDBeslbmr1hoZyb+jU5qKQ8LQTYNB50BM0G8d/Wro3qsErg9rsomdgaeF8i6XuVnROFhsX3BHWcOXy2gPq/4xrzmLUQct0O/K88G2zUttltTIqYaB+6Uu+fCpXuLdInT/jhum6x5/dvjbKIUkLEG3NR44xhY5YHWVTZAFS/QoUtsmgaHCLWU4GQX6rcdvrz9Dw6LLS/6b+3oiSmUMWv1QZqz3ROCxCYZOVu/y57l31ulAipL9lZbWMJZ2v3lsp9pDy0UsVQJi2YC7OHmtTjXdOrOR8i3+6Wq3rlg1CP87Fyvcs2UvWq9hRyqCa6jrvqL6w1Jn8ZGmAQg0WrBwst4CESyjw4p32jT5dG7v2nI7irN/j7ueGya6ZUljBv5C/viu+PlqDGsgrKgdoIEmGgGcl6Om4MC/gK5pjS9EqW4siAW4jxUxvlQRro9LZSAMDyc=
