@@ -10,3 +10,4 @@ static/
 /fixtures/*.live.json
 /build
 /dist
+/example_project/media
