@@ -453,6 +453,15 @@ class StatementLineResourceTestCase(TestCase):
         self.assertEqual(len(result.row_errors()), 1)
         self.assertIn('Invalid', str(result.row_errors()[0][1][0].error))
 
+    def test_error_no_amount(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', 'Example payment'],
+            headers=['date', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('No amount', str(result.row_errors()[0][1][0].error))
+
     def test_error_zero_amount(self):
         dataset = tablib.Dataset(
             ['15/6/2016', '0', 'Example payment'],
