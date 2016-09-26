@@ -250,6 +250,10 @@ class StatementLineResourceTestCase(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(name='Bank', code='1')
+        logging.disable(logging.CRITICAL)
+
+    def tearDown(self):
+        logging.disable(logging.INFO)
 
     def makeResource(self):
         statement_import = StatementImport.objects.create(bank_account=self.account)
@@ -348,6 +352,115 @@ class StatementLineResourceTestCase(TestCase):
         self.assertEqual(objs[3].date, date(2016, 6, 17))
         self.assertEqual(objs[3].amount, Decimal('-1.23'))
         self.assertEqual(objs[3].description, 'Paying someone')
+
+    def test_split_amounts(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', '', '100.56', 'Example payment'],
+            ['16/6/2016', '60.31', '', 'Example income'],
+            headers=['date', 'amount_in', 'amount_out', 'description']
+        )
+        self.makeResource().import_data(dataset)
+
+        self.assertEqual(StatementLine.objects.count(), 2)
+
+        obj = StatementLine.objects.all().order_by('date')
+        self.assertEqual(obj[0].date, date(2016, 6, 15))
+        self.assertEqual(obj[0].amount, Decimal('-100.56'))
+        self.assertEqual(obj[0].description, 'Example payment')
+
+        self.assertEqual(obj[1].date, date(2016, 6, 16))
+        self.assertEqual(obj[1].amount, Decimal('60.31'))
+        self.assertEqual(obj[1].description, 'Example income')
+
+    def test_error_no_date(self):
+        dataset = tablib.Dataset(
+            ['5.10', 'Example payment'],
+            headers=['amount', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('No date', str(result.row_errors()[0][1][0].error))
+
+    def test_error_empty_date(self):
+        dataset = tablib.Dataset(
+            ['', '5.10', 'Example payment'],
+            headers=['date', 'amount', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('Expected dd/mm/yyyy', str(result.row_errors()[0][1][0].error))
+
+    def test_error_empty_amounts(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', '', '', 'Example payment'],
+            headers=['date', 'amount_in', 'amount_out', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('Value required', str(result.row_errors()[0][1][0].error))
+
+    def test_error_empty_amount(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', '', 'Example payment'],
+            headers=['date', 'amount', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('No value found', str(result.row_errors()[0][1][0].error))
+
+    def test_error_both_amounts(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', '5.10', '1.20', 'Example payment'],
+            headers=['date', 'amount_in', 'amount_out', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('Values found for both', str(result.row_errors()[0][1][0].error))
+
+    def test_error_neither_amount(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', '', '', 'Example payment'],
+            headers=['date', 'amount_in', 'amount_out', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('either', str(result.row_errors()[0][1][0].error))
+
+    def test_error_invalid_in_amount(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', 'a', '', 'Example payment'],
+            headers=['date', 'amount_in', 'amount_out', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('Invalid', str(result.row_errors()[0][1][0].error))
+
+    def test_error_invalid_out_amount(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', '', 'a', 'Example payment'],
+            headers=['date', 'amount_in', 'amount_out', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('Invalid', str(result.row_errors()[0][1][0].error))
+
+    def test_error_invalid_amount(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', 'a', 'Example payment'],
+            headers=['date', 'amount', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('Invalid', str(result.row_errors()[0][1][0].error))
+
+    def test_error_zero_amount(self):
+        dataset = tablib.Dataset(
+            ['15/6/2016', '0', 'Example payment'],
+            headers=['date', 'amount', 'description']
+        )
+        result = self.makeResource().import_data(dataset)
+        self.assertEqual(len(result.row_errors()), 1)
+        self.assertIn('zero not allowed', str(result.row_errors()[0][1][0].error))
 
 
 class DryRunViewTestCase(TestCase):

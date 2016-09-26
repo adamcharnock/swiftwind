@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 
 from django.utils.datetime_safe import datetime
 from hordak.models import StatementLine
@@ -6,6 +6,7 @@ from import_export import resources
 from import_export.results import Result as _Result
 
 from swiftwind.transactions.models import TransactionImportColumn
+from swiftwind.transactions.utilities import DATE_FORMATS
 
 
 class Result(_Result):
@@ -80,20 +81,52 @@ class StatementLineResource(resources.ModelResource):
 
     def import_obj(self, obj, data, dry_run):
         F = TransactionImportColumn.TO_FIELDS
+        use_dual_amounts = F.amount_out in data and F.amount_in in data
 
-        date = datetime.strptime(data[F.date], self.date_format).date()
+        if F.date not in data:
+            raise ValueError('No date column found')
+
+        try:
+            date = datetime.strptime(data[F.date], self.date_format).date()
+        except ValueError:
+            raise ValueError('Invalid value for date. Expected {}'.format(
+                dict(DATE_FORMATS)[self.date_format]
+            ))
+
         description = data[F.description]
 
         # Do we have in/out columns, or just one amount column?
-        if F.amount_out in data and F.amount_in in data:
+        if use_dual_amounts:
             amount_out = data[F.amount_out]
             amount_in = data[F.amount_in]
+
+            if amount_in and amount_out:
+                raise ValueError('Values found for both Amount In and Amount Out')
+            if not amount_in and not amount_out:
+                raise ValueError('Value required for either Amount In or Amount Out')
+
             if amount_out:
-                amount = abs(Decimal(amount_out)) * -1
+                try:
+                    amount = abs(Decimal(amount_out)) * -1
+                except DecimalException:
+                    raise ValueError('Invalid value found for Amount Out')
             else:
-                amount = abs(Decimal(amount_in))
+                try:
+                    amount = abs(Decimal(amount_in))
+                except DecimalException:
+                    raise ValueError('Invalid value found for Amount In')
         else:
-            amount = Decimal(data[F.amount])
+            if F.amount not in data:
+                raise ValueError('No amount column found')
+            if not data[F.amount]:
+                raise ValueError('No value found for amount')
+            try:
+                amount = Decimal(data[F.amount])
+            except:
+                raise DecimalException('Invalid value found for Amount')
+
+        if amount == Decimal('0'):
+            raise ValueError('Amount of zero not allowed')
 
         data = dict(
             date=date,
