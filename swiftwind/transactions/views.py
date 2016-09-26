@@ -89,7 +89,7 @@ class DryRunImportView(DetailView):
             dataset=transaction_import.get_dataset(),
             dry_run=True,
             use_transactions=True,
-            # collect_failed_rows=True,
+            collect_failed_rows=True,
         )
         return self.get(request, **kwargs)
 

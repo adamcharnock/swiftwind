@@ -1,5 +1,16 @@
 from hordak.models import StatementLine
 from import_export import resources
+from import_export.results import Result as _Result
+
+
+class Result(_Result):
+
+    def append_failed_row(self, row, error):
+        # This class can be removed once this is merged:
+        #   https://github.com/django-import-export/django-import-export/pull/526
+        row_values = [v for (k, v) in row.items()]
+        row_values.append(str(error.error))
+        self.failed_dataset.append(row_values)
 
 
 class StatementLineResource(resources.ModelResource):
@@ -10,6 +21,10 @@ class StatementLineResource(resources.ModelResource):
 
     def __init__(self, statement_import):
         self.statement_import = statement_import
+
+    @classmethod
+    def get_result_class(self):
+        return Result
 
     def before_import(self, dataset, using_transactions, dry_run, **kwargs):
         # We're going to need this to check for duplicates (because

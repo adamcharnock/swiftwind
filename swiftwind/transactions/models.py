@@ -112,6 +112,7 @@ class TransactionImportColumn(models.Model):
     transaction_import = models.ForeignKey(TransactionImport, related_name='columns')
     column_number = models.PositiveSmallIntegerField()
     column_heading = models.CharField(max_length=100, default='', blank=True, verbose_name='Column')
+    # TODO: Create a constraint to limit to_field to only valid values
     to_field = models.CharField(max_length=20, blank=True, default=None, null=True, choices=TO_FIELDS, verbose_name='Is')
     example = models.CharField(max_length=200, blank=True, default='', null=False)
 
