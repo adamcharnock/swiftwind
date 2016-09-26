@@ -1,6 +1,11 @@
+from decimal import Decimal
+
+from django.utils.datetime_safe import datetime
 from hordak.models import StatementLine
 from import_export import resources
 from import_export.results import Result as _Result
+
+from swiftwind.transactions.models import TransactionImportColumn
 
 
 class Result(_Result):
@@ -19,7 +24,8 @@ class StatementLineResource(resources.ModelResource):
         model = StatementLine
         fields = ('date', 'amount', 'description')
 
-    def __init__(self, statement_import):
+    def __init__(self, date_format, statement_import):
+        self.date_format = date_format
         self.statement_import = statement_import
 
     @classmethod
@@ -49,7 +55,7 @@ class StatementLineResource(resources.ModelResource):
         # We never update, we either create or skip
         return None
 
-    def init_instance(self, row):
+    def init_instance(self, row=None):
         # Attach the row to the instance as we'll need it in skip_row()
         instance = super(StatementLineResource, self).init_instance(row)
         instance._row = row
@@ -71,3 +77,28 @@ class StatementLineResource(resources.ModelResource):
     def _get_num_similar_rows(self, row, until=None):
         """Get the number of rows similar to row which precede the index `until`"""
         return len(list(filter(lambda r: row == r, self.dataset[:until])))
+
+    def import_obj(self, obj, data, dry_run):
+        F = TransactionImportColumn.TO_FIELDS
+
+        date = datetime.strptime(data[F.date], self.date_format).date()
+        description = data[F.description]
+
+        # Do we have in/out columns, or just one amount column?
+        if F.amount_out in data and F.amount_in in data:
+            amount_out = data[F.amount_out]
+            amount_in = data[F.amount_in]
+            if amount_out:
+                amount = abs(Decimal(amount_out)) * -1
+            else:
+                amount = abs(Decimal(amount_in))
+        else:
+            amount = Decimal(data[F.amount])
+
+        data = dict(
+            date=date,
+            amount=amount,
+            description=description,
+        )
+
+        return super(StatementLineResource, self).import_obj(obj, data, dry_run)

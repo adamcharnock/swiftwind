@@ -12,7 +12,18 @@
         <p>New: {{ result.totals.new }}</p>
         <p>Delete: {{ result.totals.delete }}</p>
         <p>Skip: {{ result.totals.skip }}</p>
-        <p>Error: {{ result.totals.error }}</p>
+        <p>Error: {{ result.row_errors|length }}</p>
+        <h4>Base errors</h4>
         <p>{{ result.base_errors }}</p>
+
+        <h4>Row errors</h4>
+        <dl>
+        {% for row_num, errors in result.row_errors %}
+            <dt>Row {{ row_num }}</dt>
+            {% for error in errors %}
+                <dd>{{ error.error }}</dd>
+            {% endfor %}
+        {% endfor %}
+        </dl>
     {% endif %}
 {% endblock %}

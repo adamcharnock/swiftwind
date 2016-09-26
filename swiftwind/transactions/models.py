@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime
 from io import StringIO
 import six
 from decimal import Decimal
@@ -33,33 +34,6 @@ class TransactionImport(models.Model):
         csv_buffer = StringIO(self.file.read().decode())
         return csv.reader(csv_buffer)
 
-    def _get_mapping_dict(self):
-        """Get a dict which maps db field name to column number"""
-        mappings = {}
-        for column in self.columns.all():
-            if column.to_field:
-                mappings[column.to_field] = column.column_number - 1
-        return mappings
-
-    def _parse_row(self, row, mapping):
-        """Returns a tuple of (date, amount, description)"""
-        F = TransactionImportColumn.TO_FIELDS
-        date = row[mapping[F.date]]
-        description = row[mapping[F.description]]
-
-        # Do we have in/out columns, or just one amount column?
-        if F.amount_out in mapping and F.amount_in in mapping:
-            amount_out = row[mapping[F.amount_out]]
-            amount_in = row[mapping[F.amount_in]]
-            if amount_out:
-                amount = abs(Decimal(amount_out)) * -1
-            else:
-                amount = abs(Decimal(amount_in))
-        else:
-            amount = Decimal(row[mapping[F.amount]])
-
-        return date, amount, description
-
     def create_columns(self):
         """For each column in file create a TransactionImportColumn"""
         reader = self._get_csv_reader()
@@ -86,12 +60,13 @@ class TransactionImport(models.Model):
         if self.has_headings:
             six.next(reader)
 
-        data = []
-        mapping = self._get_mapping_dict()
-        for row in reader:
-            data.append(self._parse_row(row, mapping))
-
-        return Dataset(*data, headers=['date', 'amount', 'description'])
+        data = list(reader)
+        headers = [
+            column.to_field or 'col_%s' % column.column_number
+            for column
+            in self.columns.all()
+            ]
+        return Dataset(*data, headers=headers)
 
 
 class TransactionImportColumn(models.Model):

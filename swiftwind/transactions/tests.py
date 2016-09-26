@@ -253,11 +253,11 @@ class StatementLineResourceTestCase(TestCase):
 
     def makeResource(self):
         statement_import = StatementImport.objects.create(bank_account=self.account)
-        return StatementLineResource(statement_import)
+        return StatementLineResource('%d/%m/%Y', statement_import)
 
     def test_import_one(self):
         dataset = tablib.Dataset(
-            [date(2016, 6, 15), '5.10', 'Example payment'],
+            ['15/6/2016', '5.10', 'Example payment'],
             headers=['date', 'amount', 'description']
         )
         self.makeResource().import_data(dataset)
@@ -270,7 +270,7 @@ class StatementLineResourceTestCase(TestCase):
 
     def test_import_skip_duplicates(self):
         dataset = tablib.Dataset(
-            [date(2016, 6, 15), '5.10', 'Example payment'],
+            ['15/6/2016', '5.10', 'Example payment'],
             headers=['date', 'amount', 'description']
         )
         self.makeResource().import_data(dataset)
@@ -288,8 +288,8 @@ class StatementLineResourceTestCase(TestCase):
         there are two identical transactions.
         """
         dataset = tablib.Dataset(
-            [date(2016, 6, 15), '5.10', 'Example payment'],
-            [date(2016, 6, 15), '5.10', 'Example payment'],
+            ['15/6/2016', '5.10', 'Example payment'],
+            ['15/6/2016', '5.10', 'Example payment'],
             headers=['date', 'amount', 'description']
         )
         self.makeResource().import_data(dataset)
@@ -298,9 +298,9 @@ class StatementLineResourceTestCase(TestCase):
 
     def test_import_a_few(self):
         dataset = tablib.Dataset(
-            [date(2016, 6, 15), '5.10', 'Example payment'],
-            [date(2016, 6, 16), '10.91', 'Another payment'],
-            [date(2016, 6, 17), '-1.23', 'Paying someone'],
+            ['15/6/2016', '5.10', 'Example payment'],
+            ['16/6/2016', '10.91', 'Another payment'],
+            ['17/6/2016', '-1.23', 'Paying someone'],
             headers=['date', 'amount', 'description']
         )
         self.makeResource().import_data(dataset)
@@ -322,10 +322,10 @@ class StatementLineResourceTestCase(TestCase):
 
     def test_import_a_few_with_identical_transactions(self):
         dataset = tablib.Dataset(
-            [date(2016, 6, 15), '5.10', 'Example payment'],
-            [date(2016, 6, 16), '10.91', 'Another payment'],
-            [date(2016, 6, 16), '10.91', 'Another payment'],
-            [date(2016, 6, 17), '-1.23', 'Paying someone'],
+            ['15/6/2016', '5.10', 'Example payment'],
+            ['16/6/2016', '10.91', 'Another payment'],
+            ['16/6/2016', '10.91', 'Another payment'],
+            ['17/6/2016', '-1.23', 'Paying someone'],
             headers=['date', 'amount', 'description']
         )
         self.makeResource().import_data(dataset)
@@ -364,7 +364,7 @@ class DryRunViewTestCase(TestCase):
                                    b'Number,Date,Account,Amount,Subcategory,Memo\n'
                                    b'1,1/1/' + year + b',123456789,123,OTH,Some random notes')
                                )
-        self.transaction_import = TransactionImport.objects.create(has_headings=True, file=f, hordak_import=hordak_import())
+        self.transaction_import = TransactionImport.objects.create(has_headings=True, file=f, date_format='%d/%m/%Y', hordak_import=hordak_import())
         self.view_url = reverse('transactions:import_dry_run', args=[self.transaction_import.uuid])
         self.transaction_import.create_columns()
 
@@ -399,3 +399,4 @@ class DryRunViewTestCase(TestCase):
         result = response.context['result']
 
         self.assertEqual(len(result.failed_dataset), 1, result.failed_dataset.dict)
+        self.assertEqual(len(result.row_errors()), 1)

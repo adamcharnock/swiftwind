@@ -83,7 +83,10 @@ class DryRunImportView(DetailView):
 
     def post(self, request, **kwargs):
         transaction_import = self.get_object()
-        resource = StatementLineResource(transaction_import.hordak_import)
+        resource = StatementLineResource(
+            date_format=transaction_import.date_format,
+            statement_import=transaction_import.hordak_import,
+        )
 
         self.result = resource.import_data(
             dataset=transaction_import.get_dataset(),
