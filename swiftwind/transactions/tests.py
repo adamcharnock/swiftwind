@@ -129,7 +129,7 @@ class TransactionFormTestCase(TestCase):
     def setUp(self):
         self.account = Account.objects.create(name='Bank', code='1', has_statements=True)
         self.f = SimpleUploadedFile('data.csv',
-                                    six.binary_type('Number,Date,Account,Amount,Subcategory,Memo', encoding='utf8'))
+                                    six.binary_type(b'Number,Date,Account,Amount,Subcategory,Memo'))
 
     def test_create(self):
         form = TransactionImportForm(data=dict(bank_account=self.account.pk), files=dict(file=self.f))
@@ -209,9 +209,8 @@ class TransactionImportTestCase(TestCase):
     def test_create_columns_ok(self):
         f = SimpleUploadedFile('data.csv',
                                six.binary_type(
-                                   'Number,Date,Account,Amount,Subcategory,Memo\n'
-                                   '1,1/1/1,123456789,123,OTH,Some random notes',
-                                   encoding='utf8')
+                                   b'Number,Date,Account,Amount,Subcategory,Memo\n'
+                                   b'1,1/1/1,123456789,123,OTH,Some random notes')
                                )
 
         inst = TransactionImport.objects.create(has_headings=True, file=f, hordak_import=hordak_import())
