@@ -1,13 +1,12 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
 from django.urls import reverse
-from django.views import View
-from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, SingleObjectMixin, UpdateView
+from django.views.generic.edit import CreateView, SingleObjectMixin, UpdateView, FormMixin
 from django.views.generic.list import ListView
 from hordak.models import Transaction, StatementLine
+from django.http import Http404
 
+from swiftwind.transactions.forms import TransactionForm, LegFormSet
 from swiftwind.transactions.models import TransactionImport, TransactionImportColumn
 from swiftwind.transactions.resources import StatementLineResource
 from .forms import SimpleTransactionForm, TransactionImportForm, TransactionImportColumnFormSet
@@ -117,3 +116,46 @@ class ReconcileTransactionsView(ListView):
     template_name = 'transactions/reconcile.html'
     model = StatementLine
     paginate_by = 50
+    context_object_name = 'statement_lines'
+
+    def get_uuid(self):
+        return self.request.POST.get('reconcile') or self.request.GET.get('reconcile')
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        uuid = self.get_uuid()
+        if not uuid:
+            return None
+
+        queryset = queryset.filter(uuid=uuid, transaction=None)
+        try:
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404('No unreconciled statement line found for {}'.format(uuid))
+
+        return obj
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super(ReconcileTransactionsView, self).get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return super(ReconcileTransactionsView, self).post(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        if self.object:
+            kwargs.update(
+                transaction_form=self.get_transaction_form(),
+                leg_formset=self.get_leg_formset(),
+                reconcile_line=self.object,
+            )
+        return super(ReconcileTransactionsView, self).get_context_data(**kwargs)
+
+    def get_transaction_form(self):
+        return TransactionForm(data=self.request.POST or None)
+
+    def get_leg_formset(self):
+        return LegFormSet(data=self.request.POST or None)

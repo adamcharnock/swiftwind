@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory, formset_factory
-from hordak.models import Account, Transaction, StatementImport
+from hordak.models import Account, Transaction, StatementImport, Leg
 
 from .models import TransactionImportColumn, TransactionImport
 from .utilities import DATE_FORMATS
@@ -58,4 +58,26 @@ TransactionImportColumnFormSet = inlineformset_factory(
     form=TransactionImportColumnForm,
     extra=0,
     can_delete=False,
+)
+
+
+class TransactionForm(forms.ModelForm):
+
+    class Meta:
+        model = Transaction
+        fields = ('description', )
+
+
+class LegForm(forms.ModelForm):
+
+    class Meta:
+        model = Leg
+        fields = ('amount', 'account', 'description')
+
+
+LegFormSet = inlineformset_factory(
+    parent_model=Transaction,
+    model=Leg,
+    form=LegForm,
+    extra=2,
 )

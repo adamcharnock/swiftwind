@@ -13,23 +13,39 @@
             </tr>
         </thead>
         <tbody>
-            {% for obj in object_list %}
-            <tr>
-                <td>{{ obj.date }}</td>
-                <td>{{ obj.amount }}</td>
-                <td>{{ obj.description }}</td>
-                <td>
-                    {% if obj.transaction %}
-                        {{ obj.transaction.account.name }}
-                    {% else %}
-                        <form action="{% url 'transactions:reconcile' %}" method="get">
-                            <input type="hidden" name="reconcile" value="{{ obj.uuid }}">
-                            <input type="hidden" name="page" value="{{ page_obj.number }}">
-                            <input type="submit" value="Reconcile">
-                        </form>
-                    {% endif %}
-                </td>
-            </tr>
+            {% for line in statement_lines %}
+                <tr>
+                    <td>{{ line.date }}</td>
+                    <td>{{ line.amount }}</td>
+                    <td>{{ line.description }}</td>
+                    <td>
+                        {% if line.transaction %}
+                            {{ line.transaction.account.name }}
+                        {% elif line != reconcile_line %}
+                            <form action="{% url 'transactions:reconcile' %}" method="get">
+                                <input type="hidden" name="reconcile" value="{{ line.uuid }}">
+                                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                <input type="submit" value="Reconcile">
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if line == reconcile_line %}
+                    <tr>
+                        <td colspan="4">
+                            <form action="{% url 'transactions:reconcile' %}" method="get">
+                                {% csrf_token %}
+                                <input type="hidden" name="reconcile" value="{{ line.uuid }}">
+                                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                <table>
+                                    {{ transaction_form }}
+                                    {{ leg_formset }}
+                                </table>
+                                <input type="submit" value="Reconcile">
+                            </form>
+                        </td>
+                    </tr>
+                {% endif %}
             {% endfor %}
         </tbody>
     </table>

@@ -583,3 +583,53 @@ class ExecuteViewTestCase(TestCase):
         self.assertEqual(len(result.failed_dataset), 1, result.failed_dataset.dict)
         self.assertEqual(len(result.row_errors()), 1)
         self.assertEqual(StatementLine.objects.count(), 0)
+
+
+class ReconcileTransactionsViewTestCase(TestCase):
+
+    def setUp(self):
+        self.view_url = reverse('transactions:reconcile')
+
+        bank_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.asset)
+        income_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.income)
+
+        statement_import = StatementImport.objects.create(bank_account=bank_account)
+
+        self.line1 = StatementLine.objects.create(
+            date='2000-01-01',
+            statement_import=statement_import,
+            amount=Decimal('100.16'),
+            description='Item description',
+        )
+
+        self.line2 = StatementLine.objects.create(
+            date='2000-01-03',
+            statement_import=statement_import,
+            amount=Decimal('-50.12'),
+            description='Item description',
+        )
+
+        self.line3 = StatementLine.objects.create(  # Reconciled
+            date='2000-01-06',
+            statement_import=statement_import,
+            amount=Decimal('40.35'),
+            description='Item description',
+        )
+        self.line3.create_transaction(income_account)
+        self.line3.refresh_from_db()
+
+    def test_get(self):
+        response = self.client.get(self.view_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['statement_lines'].count(), 3)
+        self.assertNotIn('transaction_form', response.context)
+        self.assertNotIn('leg_formset', response.context)
+
+    def test_get_reconcile(self):
+        response = self.client.get(self.view_url, data=dict(
+            reconcile=self.line1.uuid
+        ))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['statement_lines'].count(), 3)
+        self.assertTrue(response.context['transaction_form'])
+        self.assertTrue(response.context['leg_formset'])
