@@ -1,6 +1,8 @@
 from django import forms
-from django.forms import inlineformset_factory, formset_factory
+from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory, formset_factory, BaseModelFormSet, BaseInlineFormSet
 from hordak.models import Account, Transaction, StatementImport, Leg
+from mptt.forms import TreeNodeChoiceField
 
 from .models import TransactionImportColumn, TransactionImport
 from .utilities import DATE_FORMATS
@@ -67,12 +69,33 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = ('description', )
 
+    def save(self, commit=True):
+        return super(TransactionForm, self).save(commit)
+
 
 class LegForm(forms.ModelForm):
+    account = TreeNodeChoiceField(Account.objects.all(), to_field_name='uuid')
 
     class Meta:
         model = Leg
         fields = ('amount', 'account', 'description')
+
+
+class BaseLegFormSet(BaseInlineFormSet):
+
+    def __init__(self, **kwargs):
+        self.statement_line = kwargs.pop('statement_line')
+        super(BaseLegFormSet, self).__init__(**kwargs)
+
+    def clean(self):
+        super(BaseLegFormSet, self).clean()
+
+        if any(self.errors):
+            return
+
+        amounts = [f.cleaned_data['amount'] for f in self.forms if f.has_changed()]
+        if self.statement_line.amount != sum(amounts):
+            raise ValidationError('Amounts must add up to {}'.format(self.statement_line.amount))
 
 
 LegFormSet = inlineformset_factory(
@@ -80,4 +103,6 @@ LegFormSet = inlineformset_factory(
     model=Leg,
     form=LegForm,
     extra=2,
+    can_delete=False,
+    formset=BaseLegFormSet,
 )

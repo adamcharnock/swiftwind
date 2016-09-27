@@ -33,14 +33,25 @@
                 {% if line == reconcile_line %}
                     <tr>
                         <td colspan="4">
-                            <form action="{% url 'transactions:reconcile' %}" method="get">
+                            {% if leg_formset.non_form_errors %}
+                                <ul>
+                                    {% for error in leg_formset.non_form_errors %}
+                                    <li class="error">{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                            <form action="{% url 'transactions:reconcile' %}" method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="reconcile" value="{{ line.uuid }}">
                                 <input type="hidden" name="page" value="{{ page_obj.number }}">
-                                <table>
-                                    {{ transaction_form }}
-                                    {{ leg_formset }}
-                                </table>
+                                {{ transaction_form.as_p }}
+                                <hr>
+                                {{ leg_formset.management_form }}
+                                {% for form in leg_formset %}
+                                    {{ form.as_p }}
+                                    <hr>
+                                {% endfor %}
                                 <input type="submit" value="Reconcile">
                             </form>
                         </td>

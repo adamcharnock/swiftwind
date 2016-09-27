@@ -590,10 +590,10 @@ class ReconcileTransactionsViewTestCase(TestCase):
     def setUp(self):
         self.view_url = reverse('transactions:reconcile')
 
-        bank_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.asset)
-        income_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.income)
+        self.bank_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.asset)
+        self.income_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.income)
 
-        statement_import = StatementImport.objects.create(bank_account=bank_account)
+        statement_import = StatementImport.objects.create(bank_account=self.bank_account)
 
         self.line1 = StatementLine.objects.create(
             date='2000-01-01',
@@ -609,14 +609,12 @@ class ReconcileTransactionsViewTestCase(TestCase):
             description='Item description',
         )
 
-        self.line3 = StatementLine.objects.create(  # Reconciled
+        self.line3 = StatementLine.objects.create(
             date='2000-01-06',
             statement_import=statement_import,
             amount=Decimal('40.35'),
             description='Item description',
         )
-        self.line3.create_transaction(income_account)
-        self.line3.refresh_from_db()
 
     def test_get(self):
         response = self.client.get(self.view_url)
@@ -633,3 +631,77 @@ class ReconcileTransactionsViewTestCase(TestCase):
         self.assertEqual(response.context['statement_lines'].count(), 3)
         self.assertTrue(response.context['transaction_form'])
         self.assertTrue(response.context['leg_formset'])
+
+    def test_post_reconcile_valid_one(self):
+        response = self.client.post(self.view_url, data={
+            'reconcile': self.line1.uuid,
+            'description': 'Test transaction',
+
+            'legs-INITIAL_FORMS': '0',
+            'legs-TOTAL_FORMS': '2',
+
+            'legs-0-amount': '100.16',
+            'legs-0-account': self.income_account.uuid,
+            'legs-0-id': '',
+        })
+        self.line1.refresh_from_db()
+
+        self.assertEqual(Transaction.objects.count(), 1)
+        transaction = Transaction.objects.get()
+
+        self.assertEqual(transaction.description, 'Test transaction')
+        self.assertEqual(self.line1.transaction, transaction)
+
+        self.assertEqual(transaction.legs.count(), 2)
+        self.assertEqual(transaction.legs.filter(account=self.bank_account).count(), 1)
+        self.assertEqual(transaction.legs.filter(account=self.income_account).count(), 1)
+
+        leg_in = transaction.legs.get(account=self.bank_account)
+        leg_out = transaction.legs.get(account=self.income_account)
+
+        self.assertEqual(leg_in.amount, Decimal('-100.16'))
+        self.assertEqual(leg_in.account, self.bank_account)
+
+        self.assertEqual(leg_out.amount, Decimal('100.16'))
+        self.assertEqual(leg_out.account, self.income_account)
+
+        self.assertNotIn('leg_formset', response.context)
+        self.assertNotIn('transaction_form', response.context)
+
+    def test_post_reconcile_valid_two(self):
+        response = self.client.post(self.view_url, data={
+            'reconcile': self.line1.uuid,
+            'description': 'Test transaction',
+
+            'legs-INITIAL_FORMS': '0',
+            'legs-TOTAL_FORMS': '2',
+
+            'legs-0-amount': '50.16',
+            'legs-0-account': self.income_account.uuid,
+            'legs-0-id': '',
+
+            'legs-1-amount': '50.00',
+            'legs-1-account': self.income_account.uuid,
+            'legs-1-id': '',
+        })
+
+        transaction = Transaction.objects.get()
+        self.assertEqual(transaction.legs.count(), 3)
+
+    def test_post_reconcile_invalid_amounts(self):
+        response = self.client.post(self.view_url, data={
+            'reconcile': self.line1.uuid,
+            'description': 'Test transaction',
+
+            'legs-INITIAL_FORMS': '0',
+            'legs-TOTAL_FORMS': '2',
+
+            'legs-0-amount': '1',
+            'legs-0-account': self.income_account.uuid,
+            'legs-0-id': '',
+        })
+        self.assertEqual(Transaction.objects.count(), 0)
+
+        leg_formset = response.context['leg_formset']
+        self.assertEqual(leg_formset.non_form_errors(), ['Amounts must add up to 100.16'])
+        self.assertIn('Amounts must add up to 100.16', response.content.decode('utf8'))
