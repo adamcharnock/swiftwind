@@ -14,7 +14,8 @@ def abs_val(value):
 @register.filter()
 def currency(value):
     locale.setlocale(locale.LC_ALL, 'en_GB.UTF-8')
-    return locale.currency(value, grouping=True)
+    value_locale = locale.currency(abs(value), grouping=True)
+    return value_locale if value >= 0 else "({})".format(value_locale)
 
 
 @register.filter(is_safe=True)

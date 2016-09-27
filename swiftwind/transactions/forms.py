@@ -15,7 +15,7 @@ class SimpleTransactionForm(forms.ModelForm):
 
     class Meta:
         model = Transaction
-        fields = ['description', ]
+        fields = ['amount', 'from_account', 'to_account', 'description', ]
 
     def save(self, commit=True):
         from_account = self.cleaned_data.get('from_account')
@@ -64,6 +64,7 @@ TransactionImportColumnFormSet = inlineformset_factory(
 
 
 class TransactionForm(forms.ModelForm):
+    description = forms.CharField(label='Transaction notes')
 
     class Meta:
         model = Transaction
@@ -75,6 +76,7 @@ class TransactionForm(forms.ModelForm):
 
 class LegForm(forms.ModelForm):
     account = TreeNodeChoiceField(Account.objects.all(), to_field_name='uuid')
+    description = forms.CharField()
 
     class Meta:
         model = Leg

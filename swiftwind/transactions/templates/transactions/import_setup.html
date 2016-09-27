@@ -1,25 +1,39 @@
 {% extends 'core/layout.html' %}
+{% load bootstrap3 %}
+
+{% block page_title %}Import Bank Statement: Setup{% endblock %}
+{% block page_description %}Select which fields we should import{% endblock %}
 
 {% block content %}
-    <h1>Setup import</h1>
     <form action="{% url 'transactions:import_setup' transaction_import.uuid %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form }}
+        {% bootstrap_form form %}
         {{ formset.management_form }}
         {% for f in formset %}
-            <h4>
-                {% if f.instance.column_heading %}
-                    Column: {{ f.instance.column_heading }}
-                {% else %}
-                    Column {{ f.instance.column_number }}
-                {% endif %}
-            </h4>
-            {% if f.instance.example %}
-                <h5>Example data: {{ f.instance.example }}</h5>
-            {% endif %}
-            {{ f.as_p }}
+            <div class="row">
+                <div class="col-xs-6">
+                    <h4>
+                        {% if f.instance.column_heading %}
+                            Column: {{ f.instance.column_heading }}
+                        {% else %}
+                            Column {{ f.instance.column_number }}
+                        {% endif %}
+                            <h5>
+                                {% if f.instance.example %}
+                                    Example data: <strong>{{ f.instance.example }}</strong>
+                                {% else %}
+                                    <em>No data in column</em>
+                                {% endif %}
+                            </h5>
+
+                    </h4>
+                </div>
+                <div class="col-xs-6">
+                    {% bootstrap_form f layout="horizontal" show_label=False %}
+                </div>
+            </div>
         {% endfor %}
 
-        <input type="submit">
+        <input type="submit" class="btn btn-primary btn-lg pull-right" value="Continue...">
     </form>
 {% endblock %}

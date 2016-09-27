@@ -1,10 +1,13 @@
 {% extends 'core/layout.html' %}
+{% load bootstrap3 %}
+
+{% block page_title %}Import Bank Statement{% endblock %}
+{% block page_description %}Upload a CSV file of your bank statement.{% endblock %}
 
 {% block content %}
-    <h1>New import</h1>
     <form action="{% url 'transactions:import_create' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form }}
-        <input type="submit">
+        {% bootstrap_form form %}
+        <input type="submit" class="btn btn-primary btn-lg pull-right" value="Continue...">
     </form>
 {% endblock %}

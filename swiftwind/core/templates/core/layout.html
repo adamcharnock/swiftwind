@@ -100,12 +100,15 @@
 {% endblock %}
 
 {% block stylesheets %}
+    {{ block.super }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
 
     <link rel="stylesheet" href="{% static 'core/vendor/bootstrap-3.3.7/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{%  static 'core/vendor/adminlte-2.3.6/css/AdminLTE.min.css'  %}">
     <link rel="stylesheet" href="{%  static 'core/vendor/adminlte-2.3.6/css/skins/skin-blue.min.css'  %}">
+
+    <link rel="stylesheet" href="{%  static 'core/css/common.css'  %}">
 {% endblock %}
 
 {% block javascript %}

@@ -1,32 +1,26 @@
 {% extends 'core/layout.html' %}
 
+{% block page_title %}
+    {% if result %}
+        Import Bank Statement: Done
+    {% else %}
+        Import Bank Statement: Start Import
+    {% endif %}
+{% endblock %}
+
 {% block content %}
     {% if not result %}
-        <h1>Start import</h1>
-
-        <form action="{% url 'transactions:import_dry_run' transaction_import.uuid %}" method="post">
+        <form action="{% url 'transactions:import_execute' transaction_import.uuid %}" method="post">
             {% csrf_token %}
-            <input type="submit" value="Check the data">
+            <input type="submit" value="Begin import" class="btn btn-primary btn-lg pull-right">
         </form>
     {% else %}
-        <h1>Import complete</h1>
 
-        <p>Update: {{ result.totals.update }}</p>
-        <p>New: {{ result.totals.new }}</p>
-        <p>Delete: {{ result.totals.delete }}</p>
-        <p>Skip: {{ result.totals.skip }}</p>
-        <p>Error: {{ result.row_errors|length }}</p>
-        <h4>Base errors</h4>
-        <p>{{ result.base_errors }}</p>
+        {% include 'transactions/_import_info_boxes.html' with result=result only %}
 
-        <h4>Row errors</h4>
-        <dl>
-        {% for row_num, errors in result.row_errors %}
-            <dt>Row {{ row_num }}</dt>
-            {% for error in errors %}
-                <dd>{{ error.error }}</dd>
-            {% endfor %}
-        {% endfor %}
-        </dl>
+        {% include 'transactions/_import_errors.html' with result=result only %}
+
+        <a href="{% url 'transactions:reconcile' %}" class="btn btn-primary btn-lg pull-right">Reconcile Transactions</a>
+
     {% endif %}
 {% endblock %}
