@@ -1,5 +1,5 @@
 {% extends 'core/base.html' %}
-{% load static %}
+{% load static nav banking %}
 
 {% block body %}
 
@@ -46,21 +46,47 @@
                 <li class="header">HEADER</li>
 
                 <li><a href="{% url 'dashboard:dashboard' %}"><i class="fa fa-tachometer"></i> Dashboard</a></li>
-                <li><a href="{% url 'transactions:reconcile' %}"><i class="fa fa-arrows-h"></i> Reconcile Transactions</a></li>
+
+                <li>
+                    <a href="{% url 'transactions:reconcile' %}">
+                        <i class="fa fa-arrows-h"></i>
+                        Reconcile Transactions
+                        <span class="pull-right-container">
+                            {% total_unreconciled as t %}
+                            <small class="label pull-right {% if t > 0 %}bg-yellow{% else %}bg-green{% endif %}">{{ t }}</small>
+                        </span>
+                    </a>
+                </li>
+
                 <li><a href="{% url 'transactions:create' %}"><i class="fa fa-arrow-circle-right"></i> Create Transaction</a></li>
                 <li><a href="{% url 'transactions:import_create' %}"><i class="fa fa-upload"></i> Import Statement</a></li>
 
                 <li class="treeview">
                     <a href="#">
-                        <i class="fa fa-usd"></i>
-                        <span>Accounts</span>
+                        <i class="fa fa-user"></i>
+                        <span>Housemate Accounts</span>
                         <span class="pull-right-container">
                           <i class="fa fa-angle-left pull-right"></i>
                         </span>
                     </a>
+
                     <ul class="treeview-menu">
-                        <li><a href="#"><i class="fa fa-user"></i> A Housemate</a></li>
-                        <li><a href="#"><i class="fa fa-usd"></i> Regular account</a></li>
+                        {% housemate_accounts as housemate_accounts %}
+                        {% for account in housemate_accounts %}
+                            <li>
+                                <a href="#">
+                                    <i class="fa fa-user"></i>
+                                    {{ account.name }}
+                                    <span class="pull-right-container">
+                                        {% with balance=account.balance %}
+                                        <small class="label pull-right {% if balance > 0 %}bg-green{% elif balance < 0 %}bg-red{% else %}bg-gray{% endif %}">
+                                            {{ balance|currency }}
+                                        </small>
+                                        {% endwith %}
+                                    </span>
+                                </a>
+                            </li>
+                        {% endfor %}
                     </ul>
                 </li>
             </ul>
