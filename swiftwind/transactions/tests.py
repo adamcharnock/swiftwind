@@ -650,6 +650,11 @@ class ReconcileTransactionsViewTestCase(TestCase):
             'legs-0-account': self.income_account.uuid,
             'legs-0-id': '',
         })
+
+        if 'transaction_form' in response.context:
+            self.assertFalse(response.context['transaction_form'].errors)
+            self.assertFalse(response.context['leg_formset'].errors)
+
         self.line1.refresh_from_db()
 
         self.assertEqual(Transaction.objects.count(), 1)
@@ -690,6 +695,10 @@ class ReconcileTransactionsViewTestCase(TestCase):
             'legs-1-account': self.income_account.uuid,
             'legs-1-id': '',
         })
+
+        if 'transaction_form' in response.context:
+            self.assertFalse(response.context['transaction_form'].errors)
+            self.assertFalse(response.context['leg_formset'].errors)
 
         transaction = Transaction.objects.get()
         self.assertEqual(transaction.legs.count(), 3)

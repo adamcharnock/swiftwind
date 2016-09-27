@@ -64,7 +64,7 @@ TransactionImportColumnFormSet = inlineformset_factory(
 
 
 class TransactionForm(forms.ModelForm):
-    description = forms.CharField(label='Transaction notes')
+    description = forms.CharField(label='Transaction notes', required=False)
 
     class Meta:
         model = Transaction
@@ -76,7 +76,7 @@ class TransactionForm(forms.ModelForm):
 
 class LegForm(forms.ModelForm):
     account = TreeNodeChoiceField(Account.objects.all(), to_field_name='uuid')
-    description = forms.CharField()
+    description = forms.CharField(required=False)
 
     class Meta:
         model = Leg
