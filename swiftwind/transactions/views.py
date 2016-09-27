@@ -123,6 +123,7 @@ class ReconcileTransactionsView(ListView):
     model = StatementLine
     paginate_by = 50
     context_object_name = 'statement_lines'
+    ordering = ['-date', '-pk']
 
     def get_uuid(self):
         return self.request.POST.get('reconcile') or self.request.GET.get('reconcile')
