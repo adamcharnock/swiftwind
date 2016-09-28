@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'swiftwind.costs_one_off',
     'swiftwind.costs_recurring',
     'swiftwind.dashboard',
+    'swiftwind.housemates',
     'swiftwind.transactions',
 ]
 

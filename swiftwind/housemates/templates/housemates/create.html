@@ -1,0 +1,34 @@
+{% extends 'core/layout.html' %}
+{% load bootstrap3 %}
+
+{% block page_title %}Create Housemate{% endblock %}
+{% block page_description %}Create a new housemate with their own user and account{% endblock %}
+
+{% block content %}
+    <form action="{% url 'housemates:create' %}" method="post">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-sm-6">
+                <h4>Select an existing user</h4>
+                {% bootstrap_field form.existing_user show_label=False %}
+            </div>
+            <div class="col-sm-6">
+                <h4>Create a new user</h4>
+                {% bootstrap_field form.new_username %}
+                {% bootstrap_field form.new_email %}
+                {% bootstrap_field form.new_first_name %}
+                {% bootstrap_field form.new_last_name %}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-offset-4 col-xs-4">
+                <h4>Select an account (optional)</h4>
+                {% bootstrap_field form.account %}
+            </div>
+        </div>
+
+        <input type="submit" value="Create Housemate" class="btn btn-success btn-lg pull-right">
+    </form>
+{% endblock %}
