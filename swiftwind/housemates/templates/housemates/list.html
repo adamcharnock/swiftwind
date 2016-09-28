@@ -28,7 +28,7 @@
                             <i class="fa fa-times-circle text-danger"></i>
                         {% endif %}
                     </td>
-                    <td>{{ housemate.user.last_login }}</td>
+                    <td>{% firstof housemate.user.last_login 'Never' %}</td>
                 </tr>
             {% endfor %}
         </tbody>

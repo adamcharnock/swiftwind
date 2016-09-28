@@ -19,7 +19,7 @@
         </thead>
         <tbody>
             {% for line in statement_lines %}
-                <tr>
+                <tr id="L{{ line.uuid }}">
                     <td>{{ line.date }}</td>
                     <td>{{ line.amount|color_currency }}</td>
                     <td>{{ line.description }}</td>
@@ -31,7 +31,7 @@
                                 {% endif %}
                             {% endfor %}
                         {% elif line != reconcile_line %}
-                            <form action="{% url 'transactions:reconcile' %}" method="get">
+                            <form action="{% url 'transactions:reconcile' %}#L{{ line.uuid }}" method="get">
                                 <input type="hidden" name="reconcile" value="{{ line.uuid }}">
                                 <input type="hidden" name="page" value="{{ page_obj.number }}">
                                 <input type="submit" value="Reconcile" class="btn btn-primary btn-xs">

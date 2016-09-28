@@ -77,10 +77,25 @@ class TransactionForm(forms.ModelForm):
 class LegForm(forms.ModelForm):
     account = TreeNodeChoiceField(Account.objects.all(), to_field_name='uuid')
     description = forms.CharField(required=False)
+    amount = forms.DecimalField(required=True)
 
     class Meta:
         model = Leg
         fields = ('amount', 'account', 'description')
+
+    def __init__(self, *args, **kwargs):
+        self.statement_line = kwargs.pop('statement_line')
+        super(LegForm, self).__init__(*args, **kwargs)
+
+    def clean_amount(self):
+        amount = self.cleaned_data['amount']
+        if amount <= 0:
+            raise ValidationError('Amount must be greater than zero')
+
+        if self.statement_line.amount < 0:
+            amount *= -1
+
+        return amount
 
 
 class BaseLegFormSet(BaseInlineFormSet):
@@ -88,6 +103,15 @@ class BaseLegFormSet(BaseInlineFormSet):
     def __init__(self, **kwargs):
         self.statement_line = kwargs.pop('statement_line')
         super(BaseLegFormSet, self).__init__(**kwargs)
+
+    def get_form_kwargs(self, index):
+        kwargs = super(BaseLegFormSet, self).get_form_kwargs(index)
+        kwargs.update(statement_line=self.statement_line)
+        if index == 0:
+            kwargs.update(initial=dict(
+                amount=abs(self.statement_line.amount)
+            ))
+        return kwargs
 
     def clean(self):
         super(BaseLegFormSet, self).clean()
@@ -104,7 +128,7 @@ LegFormSet = inlineformset_factory(
     parent_model=Transaction,
     model=Leg,
     form=LegForm,
-    extra=2,
+    extra=4,
     can_delete=False,
     formset=BaseLegFormSet,
 )

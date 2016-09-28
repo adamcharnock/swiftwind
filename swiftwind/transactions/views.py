@@ -207,7 +207,10 @@ class ReconcileTransactionsView(ListView):
         return super(ReconcileTransactionsView, self).get_context_data(**kwargs)
 
     def get_transaction_form(self):
-        return TransactionForm(data=self.request.POST or None)
+        return TransactionForm(
+            data=self.request.POST or None,
+            initial=dict(description=self.object.description)
+        )
 
     def get_leg_formset(self, **kwargs):
         return LegFormSet(data=self.request.POST or None, statement_line=self.object, **kwargs)

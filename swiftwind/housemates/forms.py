@@ -17,7 +17,7 @@ class HousemateForm(forms.ModelForm):
     new_first_name = forms.CharField(required=False)
     new_last_name = forms.CharField(required=False)
     account = TreeNodeChoiceField(Account.objects.all(), required=False, to_field_name='uuid',
-                                  empty_label='-- Create new account --')
+                                  empty_label='-- Create new account for user --')
 
     class Meta:
         model = Housemate
