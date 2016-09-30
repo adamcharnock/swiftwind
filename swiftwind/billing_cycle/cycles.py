@@ -1,4 +1,3 @@
-import functools
 from copy import copy
 
 from dateutil.relativedelta import relativedelta
@@ -6,8 +5,14 @@ from django.utils.datetime_safe import date
 from django.utils.module_loading import import_string
 from django.conf import settings
 
+try:
+    from functools import lru_cache
+except ImportError:
+    # Not available in Python 2.7
+    lru_cache = lambda: lambda f: f
 
-@functools.lru_cache()
+
+@lru_cache()
 def get_billing_cycle():
     """
 
