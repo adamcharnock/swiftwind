@@ -7,7 +7,7 @@ from django_smalluuid.models import uuid_default, SmallUUIDField
 from django.conf import settings
 from psycopg2._range import DateRange
 
-from swiftwind.billing_cycle.cycles import get_billing_cycle
+from .cycles import get_billing_cycle
 
 
 class BillingCycle(models.Model):

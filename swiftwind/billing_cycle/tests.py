@@ -2,10 +2,9 @@ import six
 from django.db.utils import IntegrityError
 from django.test import TestCase, TransactionTestCase
 from django.utils.datetime_safe import date
-from django.conf import settings
 
-from swiftwind.billing_cycle.cycles import Monthly
-from swiftwind.billing_cycle.models import BillingCycle
+from .cycles import Monthly
+from .models import BillingCycle
 
 
 class BillingCycleConstraintTestCase(TransactionTestCase):
