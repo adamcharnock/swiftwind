@@ -32,6 +32,8 @@ class RecurringCost(models.Model):
     to_account = models.ForeignKey('hordak.Account', related_name='inbound_costs')
     is_active = models.BooleanField(default=True, help_text='Uncheck to disable this cost')
     fixed_amount = models.DecimalField(max_digits=13, decimal_places=2)
+    total_billing_cycles = models.PositiveIntegerField(default=None, null=True, blank=True,
+                                                       help_text='Stop billing after this many billing cycles')
     type = models.CharField(max_length=20, choices=TYPES, default=TYPES.normal)
 
 
