@@ -4,7 +4,7 @@ python:
 - '3.4'
 - '3.5'
 services:
-- postgresql: '9.2'
+- postgresql
 env:
 - DJANGO_VERSION=1.10.1
 - DJANGO_VERSION=1.9.9
@@ -16,6 +16,8 @@ install:
 script:
 - env
 - env PYTHONPATH=`pwd` coverage run --source=swiftwind ./manage.py test
+addons:
+  postgresql: "9.2"
 after_success: coveralls
 notifications:
   pushover:
