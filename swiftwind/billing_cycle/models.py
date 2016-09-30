@@ -29,14 +29,20 @@ class BillingCycle(models.Model):
 
     @classmethod
     def populate(cls):
+        """Ensure the next X years of billing cycles exist
+        """
+        return cls._populate(as_of=date.today(), delete=True)
+
+    @classmethod
+    def repopulate(cls):
         """Create the next X years of billing cycles
 
         Will delete any billing cycles which are in the future
         """
-        return cls._populate(as_of=date.today())
+        return cls._populate(as_of=date.today(), delete=False)
 
     @classmethod
-    def _populate(cls, as_of=None):
+    def _populate(cls, as_of=None, delete=False):
         if as_of is None:
             as_of = datetime.now().date()
 
@@ -46,13 +52,21 @@ class BillingCycle(models.Model):
 
         with db_transaction.atomic():
 
-            # Delete all the future unused transactions
-            cls.objects.filter(
-                date_range__fully_gt=DateRange(as_of, as_of, bounds='[]')
-            ).delete()
+            if delete:
+                # Delete all the future unused transactions
+                cls.objects.filter(
+                    date_range__fully_gt=DateRange(as_of, as_of, bounds='[]')
+                ).delete()
 
             # Now recreate the upcoming billing cycles
             for start_date, end_date in date_ranges:
+                if not delete:
+                    exists = BillingCycle.objects.filter(date_range=[start_date, end_date]).count()
+                    if exists:
+                        # If we are not deleting (i.e. updating only), then don't
+                        # create this BillingCycle if one already exists
+                        continue
+
                 BillingCycle.objects.create(
                     date_range=(start_date, end_date),
                 )
