@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'swiftwind.bank_imports',
     'swiftwind.bank_rules',
     'swiftwind.bank_transactions',
+    'swiftwind.billing_cycle',
     'swiftwind.bills',
     'swiftwind.costs_one_off',
     'swiftwind.costs_recurring',
