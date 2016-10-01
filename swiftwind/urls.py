@@ -19,5 +19,6 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^transactions/', include('swiftwind.transactions.urls', namespace='transactions')),
     url(r'^housemates/', include('swiftwind.housemates.urls', namespace='housemates')),
+    url(r'^recurring/', include('swiftwind.costs_recurring.urls', namespace='costs_recurring')),
     url(r'^', include('swiftwind.dashboard.urls', namespace='dashboard')),
 ]

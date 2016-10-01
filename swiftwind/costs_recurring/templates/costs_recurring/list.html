@@ -1,0 +1,30 @@
+{% extends 'core/layout.html' %}
+{% load bootstrap3 %}
+
+{% block page_title %}Recurring Costs{% endblock %}
+{% block page_description %}{% endblock %}
+
+{% block content %}
+
+    {% for cost_form, split_forms in form_list %}
+        <section class="cost">
+            {% bootstrap_form cost_form %}
+            {% for split_form in split_forms %}
+                {% bootstrap_form split_form %}
+            {% empty %}
+                <p>It seems you haven't setup any housemates yet</p>
+            {% endfor %}
+        </section>
+    {% empty %}
+        <p>You don't have any recurring costs yet. Perhaps create some?</p>
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-xs-12">
+            <a href="{% url 'costs_recurring:create' %}" class="btn btn-success btn-lg pull-right">
+                Create New Recurring Cost...
+            </a>
+        </div>
+    </div>
+
+{% endblock %}

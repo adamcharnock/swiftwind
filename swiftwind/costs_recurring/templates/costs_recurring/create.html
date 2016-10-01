@@ -1,0 +1,15 @@
+{% extends 'core/layout.html' %}
+{% load bootstrap3 %}
+
+{% block page_title %}Create a Recurring Cost{% endblock %}
+{% block page_description %}{% endblock %}
+
+{% block content %}
+
+    <form action="{% url 'costs_recurring:create' %}" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <input type="submit" class="btn btn-primary btn-lg pull-right" value="Create Recurring Cost">
+    </form>
+
+{% endblock %}

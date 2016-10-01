@@ -33,12 +33,19 @@ class RecurringCost(models.Model):
     is_active = models.BooleanField(default=True, help_text='Uncheck to disable this cost')
     fixed_amount = models.DecimalField(max_digits=13, decimal_places=2)
     total_billing_cycles = models.PositiveIntegerField(default=None, null=True, blank=True,
-                                                       help_text='Stop billing after this many billing cycles')
+                                                       help_text='Stop billing after this many billing cycles. '
+                                                                 'Leave blank to have this cost continually recur.')
     type = models.CharField(max_length=20, choices=TYPES, default=TYPES.normal)
 
 
 class RecurringCostSplit(models.Model):
-    recurring_cost = models.ForeignKey(RecurringCost)
+    uuid = SmallUUIDField(default=uuid_default(), editable=False)
+    recurring_cost = models.ForeignKey(RecurringCost, related_name='splits')
     from_account = models.ForeignKey('hordak.Account')
-    portion = models.DecimalField(max_digits=13, decimal_places=2)
+    portion = models.DecimalField(max_digits=13, decimal_places=2, default=1)
+
+    class Meta:
+        unique_together = (
+            ('recurring_cost', 'from_account'),
+        )
 
