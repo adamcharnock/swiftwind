@@ -23,7 +23,6 @@ class RecurringCostFormTestCase(TestCase):
             type=RecurringCost.TYPES.normal,
             is_active='yes',
             fixed_amount='100',
-            total_billing_cycles='5',
         ))
         self.assertTrue(form.is_valid())
         obj = form.save()
@@ -32,7 +31,6 @@ class RecurringCostFormTestCase(TestCase):
         self.assertEqual(obj.type, RecurringCost.TYPES.normal)
         self.assertEqual(obj.is_active, True)
         self.assertEqual(obj.fixed_amount, Decimal('100'))
-        self.assertEqual(obj.total_billing_cycles, 5)
 
         splits = obj.splits.all()
         self.assertEqual(splits.count(), 3)
