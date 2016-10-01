@@ -60,7 +60,8 @@
 
                 <li><a href="{% url 'transactions:create' %}"><i class="fa fa-arrow-circle-right"></i> Create Transaction</a></li>
                 <li><a href="{% url 'transactions:import_create' %}"><i class="fa fa-upload"></i> Import Statement</a></li>
-                <li><a href="{% url 'costs_recurring:list' %}"><i class="fa fa-upload"></i> Recurring Costs</a></li>
+                <li><a href="{% url 'costs:recurring' %}"><i class="fa fa-clock-o"></i> Recurring Costs</a></li>
+                <li><a href="{% url 'costs:one_off' %}"><i class="fa fa-money"></i> One-off Costs</a></li>
                 <li><a href="{% url 'housemates:list' %}"><i class="fa fa-group"></i> Housemates</a></li>
 
                 <li class="treeview">
@@ -103,6 +104,9 @@
         <section class="content-header">
             <h1>
                 {% block page_title %}page_title block{% endblock %}
+                <div class="header-actions">
+                    {% block page_actions %}{% endblock %}
+                </div>
                 <small>{% block page_description %}{% endblock %}</small>
             </h1>
             <ol class="breadcrumb">
@@ -120,10 +124,10 @@
     <footer class="main-footer">
         <!-- To the right -->
         <div class="pull-right hidden-xs">
-            Anything you want
+            Powered by <a href="https://github.com/waldocollective/swiftwind">Swiftwind</a>
         </div>
         <!-- Default to the left -->
-        Text to the left.
+        &nbsp;
     </footer>
 
 {% endblock %}

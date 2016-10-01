@@ -71,7 +71,7 @@ class RecurringCostsViewTestCase(TestCase):
         RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_2)
         RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_3)
 
-        self.view_url = reverse('costs_recurring:list')
+        self.view_url = reverse('costs:recurring')
 
     def test_get(self):
         response = self.client.get(self.view_url)
@@ -80,4 +80,6 @@ class RecurringCostsViewTestCase(TestCase):
 
         self.assertIn('formset', context)
 
+    def test_post_valid(self):
+        pass
 

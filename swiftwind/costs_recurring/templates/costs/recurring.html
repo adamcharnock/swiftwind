@@ -1,0 +1,79 @@
+{% extends 'core/layout.html' %}
+{% load bootstrap3 %}
+{% load swiftwind_utilities %}
+
+{% block page_title %}Recurring Costs{% endblock %}
+{% block page_actions %}
+    <a href="{% url 'costs:create_recurring' %}" class="btn btn-success btn-sm">
+        Create New
+    </a>
+{% endblock %}
+
+{% block content %}
+
+    <form action="{{ form_action }}" method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <section class="panel panel-default cost">
+                <div class="panel-heading">
+                    {% bootstrap_field form.id %}
+                    {% bootstrap_field form.to_account size='large' show_label=False %}
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <h4>Details</h4>
+                            {% if form.type %}
+                                {% bootstrap_field form.type show_label=False %}
+                            {% endif %}
+                            {% bootstrap_field form.fixed_amount layout='horizontal' addon_before='£' %}
+                            {% if form.total_billing_cycles %}
+                                {% bootstrap_field form.total_billing_cycles layout='horizontal' addon_after='cycles' %}
+                            {% endif %}
+                            {% if form.is_active %}
+                                {% bootstrap_field form.is_active show_help=False %}
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-6">
+                            <h4>Cost Allocation</h4>
+                            <p>
+                                Equal values will result in the
+                                cost being spread evenly across all housemates. A value of <em>0</em> will prevent the
+                                housemate being billed for this cost.
+                            </p>
+                            {{ form.nested.management_form }}
+
+                            {% for split_form_row in form.nested|partition:"2" %}
+                                <div class="row">
+                                    {% for split_form in split_form_row %}
+                                        {% bootstrap_field split_form.id %}
+                                        <div class="col-xs-3">
+                                            <strong>{{ split_form.instance.from_account.name|short_name }}</strong>
+                                        </div>
+                                        <div class="col-xs-3">
+                                            {% bootstrap_field split_form.portion show_label=False %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% empty %}
+                                <p>It seems you haven't setup any housemates yet</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% if forloop.last %}
+                <div class="row">
+                    <div class="col-xs-12">
+                        <input type="submit" class="btn btn-primary btn-lg pull-right" value="Save changes">
+                    </div>
+                </div>
+            {% endif %}
+        {% empty %}
+            <p>You don't have any recurring costs yet. Perhaps create some?</p>
+        {% endfor %}
+
+    </form>
+
+{% endblock %}

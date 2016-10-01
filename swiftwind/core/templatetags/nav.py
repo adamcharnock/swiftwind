@@ -1,7 +1,4 @@
-import locale
-
 from django import template
-from django.utils.safestring import mark_safe
 from hordak.models import Account, StatementLine
 
 register = template.Library()

@@ -6,7 +6,7 @@
 
 {% block content %}
 
-    <form action="{% url 'costs_recurring:create' %}" method="post">
+    <form action="{{ form_action }}" method="post">
         {% csrf_token %}
         {% bootstrap_form form %}
         <input type="submit" class="btn btn-primary btn-lg pull-right" value="Create Recurring Cost">
