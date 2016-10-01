@@ -38,11 +38,6 @@ class CreateRecurringCostView(CreateView):
     form_class = RecurringCostForm
     template_name = 'costs/create_recurring.html'
 
-    def get_context_data(self, **kwargs):
-        return super(CreateRecurringCostView, self).get_context_data(
-            form_action=self.get_success_url()
-        )
-
     def get_success_url(self):
         return reverse('costs:recurring')
 

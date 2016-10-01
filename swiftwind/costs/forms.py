@@ -8,7 +8,7 @@ from swiftwind.utilities.formsets import nested_model_formset_factory
 
 
 class AbstractCostForm(forms.ModelForm):
-    to_account = forms.ModelChoiceField(queryset=Account.objects.all(), to_field_name='uuid')
+    to_account = TreeNodeChoiceField(queryset=Account.objects.all(), to_field_name='uuid')
 
     class Meta:
         model = RecurringCost

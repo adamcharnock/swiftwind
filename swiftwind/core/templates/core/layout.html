@@ -43,7 +43,7 @@
 
             <!-- Sidebar Menu -->
             <ul class="sidebar-menu">
-                <li class="header">HEADER</li>
+                <li class="header">Navigation</li>
 
                 <li><a href="{% url 'dashboard:dashboard' %}"><i class="fa fa-tachometer"></i> Dashboard</a></li>
 
@@ -59,7 +59,6 @@
                 </li>
 
                 <li><a href="{% url 'transactions:create' %}"><i class="fa fa-arrow-circle-right"></i> Create Transaction</a></li>
-                <li><a href="{% url 'transactions:import_create' %}"><i class="fa fa-upload"></i> Import Statement</a></li>
                 <li><a href="{% url 'costs:recurring' %}"><i class="fa fa-clock-o"></i> Recurring Costs</a></li>
                 <li><a href="{% url 'costs:one_off' %}"><i class="fa fa-money"></i> One-off Costs</a></li>
                 <li><a href="{% url 'housemates:list' %}"><i class="fa fa-group"></i> Housemates</a></li>
@@ -93,6 +92,8 @@
                         {% endfor %}
                     </ul>
                 </li>
+
+                <li><a href="{% url 'transactions:import_create' %}"><i class="fa fa-upload"></i> Import Statement</a></li>
             </ul>
             <!-- /.sidebar-menu -->
         </section>
