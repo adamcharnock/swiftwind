@@ -27,7 +27,7 @@ class RecurringCost(models.Model):
     uuid = SmallUUIDField(default=uuid_default(), editable=False)
     timestamp = models.DateTimeField(default=timezone.now, editable=False)
     from_accounts = models.ManyToManyField('hordak.Account',
-                                           through='costs_recurring.RecurringCostSplit',
+                                           through='costs.RecurringCostSplit',
                                            related_name='outbound_costs')
     to_account = models.ForeignKey('hordak.Account', related_name='inbound_costs')
     is_active = models.BooleanField(default=True)

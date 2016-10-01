@@ -4,8 +4,8 @@ from django.test import TestCase
 from django.urls.base import reverse
 from hordak.models import Account
 
-from swiftwind.costs_recurring.forms import RecurringCostForm
-from swiftwind.costs_recurring.models import RecurringCost, RecurringCostSplit
+from .forms import RecurringCostForm
+from .models import RecurringCost, RecurringCostSplit
 
 
 class RecurringCostFormTestCase(TestCase):

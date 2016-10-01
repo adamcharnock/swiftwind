@@ -2,8 +2,8 @@ from django.urls import reverse
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
 
-from swiftwind.costs_recurring.forms import RecurringCostForm, RecurringCostFormSet, OneOffCostFormSet, OneOffCostForm
-from swiftwind.costs_recurring.models import RecurringCost
+from .forms import RecurringCostForm, RecurringCostFormSet, OneOffCostFormSet, OneOffCostForm
+from .models import RecurringCost
 
 
 class RecurringCostsView(UpdateView):

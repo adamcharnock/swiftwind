@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from hordak.models import Account
 from mptt.forms import TreeNodeChoiceField
 
-from swiftwind.costs_recurring.models import RecurringCost, RecurringCostSplit
+from .models import RecurringCost, RecurringCostSplit
 from swiftwind.utilities.formsets import nested_model_formset_factory
 
 
