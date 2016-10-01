@@ -78,7 +78,6 @@ class RecurringCostsViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         context = response.context
 
-        self.assertIn('form_list', context)
-        self.assertEqual(context['form_list'], 3)
+        self.assertIn('formset', context)
 
 
