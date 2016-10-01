@@ -6,18 +6,27 @@
 
 {% block content %}
 
-    {% for cost_form, split_forms in form_list %}
-        <section class="cost">
-            {% bootstrap_form cost_form %}
-            {% for split_form in split_forms %}
-                {% bootstrap_form split_form %}
-            {% empty %}
-                <p>It seems you haven't setup any housemates yet</p>
-            {% endfor %}
-        </section>
-    {% empty %}
-        <p>You don't have any recurring costs yet. Perhaps create some?</p>
-    {% endfor %}
+    <form action="{% url 'costs_recurring:list' %}" method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <section class="cost">
+                {% bootstrap_form form %}
+                {{ form.nested.management_form }}
+                {% for split_form in form.nested %}
+                    {% bootstrap_form split_form %}
+                {% empty %}
+                    <p>It seems you haven't setup any housemates yet</p>
+                {% endfor %}
+            </section>
+            {% if forloop.last %}
+                <input type="submit" class="btn btn-primary btn-lg pull-right" value="Save changes">
+            {% endif %}
+        {% empty %}
+            <p>You don't have any recurring costs yet. Perhaps create some?</p>
+        {% endfor %}
+
+    </form>
 
     <div class="row">
         <div class="col-xs-12">

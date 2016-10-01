@@ -4,6 +4,7 @@ from hordak.models import Account
 from mptt.forms import TreeNodeChoiceField
 
 from swiftwind.costs_recurring.models import RecurringCost, RecurringCostSplit
+from swiftwind.utilities.formsets import nested_model_formset_factory
 
 
 class RecurringCostForm(forms.ModelForm):
@@ -48,6 +49,21 @@ class RecurringCostSplitForm(forms.ModelForm):
     class Meta:
         model = RecurringCostSplit
         fields = ('portion', )
+
+
+RecurringCostFormSet = nested_model_formset_factory(
+    model=RecurringCost,
+    form=RecurringCostForm,
+    extra=0,
+    can_delete=False,
+    nested_formset=forms.inlineformset_factory(
+        parent_model=RecurringCost,
+        model=RecurringCostSplit,
+        form=RecurringCostSplitForm,
+        extra=0,
+        can_delete=False,
+    )
+)
 
 
 RecurringCostSplitFormSet = forms.inlineformset_factory(
