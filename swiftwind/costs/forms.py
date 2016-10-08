@@ -42,15 +42,15 @@ class RecurringCostForm(AbstractCostForm):
     type = forms.ChoiceField(choices=RecurringCost.TYPES, widget=forms.RadioSelect)
 
     class Meta(AbstractCostForm.Meta):
-        fields = ('to_account', 'type', 'is_active', 'fixed_amount')
+        fields = ('to_account', 'type', 'disabled', 'fixed_amount')
         labels = dict(
-            is_active='Enable this recurring cost',
+            disabled='Disable this recurring cost',
         )
 
     def clean_fixed_amount(self):
         value = self.cleaned_data['fixed_amount']
         if value and self.cleaned_data['type'] != RecurringCost.TYPES.normal:
-            raise ValidationError('You cannot specify a fixed amount for the select type of recurring cost')
+            raise ValidationError('You cannot specify a fixed amount for the selected type of recurring cost')
         return value
 
 

@@ -10,7 +10,7 @@ class RecurringCostSplitInline(admin.TabularInline):
 
 @admin.register(RecurringCost)
 class RecurringCostAdmin(admin.ModelAdmin):
-    list_display = ['uuid', 'to_account', 'is_active']
+    list_display = ['uuid', 'to_account', 'disabled']
     inlines = [
         RecurringCostSplitInline,
     ]

@@ -1,0 +1,3 @@
+
+
+class CannotEnactUnenactableRecurringCostError(Exception): pass

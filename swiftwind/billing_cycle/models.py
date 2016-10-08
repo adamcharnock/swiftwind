@@ -2,12 +2,32 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.db import transaction as db_transaction
+from django.db.models.functions import Lower, Upper
 from django.utils.datetime_safe import datetime, date
 from django_smalluuid.models import uuid_default, SmallUUIDField
 from django.conf import settings
-from psycopg2._range import DateRange
 
 from .cycles import get_billing_cycle
+
+
+class BillingCycleManager(models.Manager):
+
+    def get_queryset(self):
+        queryset = super(BillingCycleManager, self).get_queryset()
+        return queryset\
+            .annotate(start_date=Lower('date_range'))\
+            .annotate(end_date=Upper('date_range'))
+
+    def enactable(self, as_of):
+        """Find all billing cycles that should be enacted
+
+        This consists of any billing cycle that has not had transactions created
+        for it, and has a start date prior to `as_of`.
+        """
+        return self.filter(
+            transactions_created=False,
+            start_date__lte=as_of,
+        )
 
 
 class BillingCycle(models.Model):
@@ -20,6 +40,8 @@ class BillingCycle(models.Model):
         default=False,
         help_text='Have transactions been created for this billing cycle?'
     )
+
+    objects = BillingCycleManager()
 
     class Meta:
         ordering = ['date_range']
@@ -54,9 +76,7 @@ class BillingCycle(models.Model):
 
             if delete:
                 # Delete all the future unused transactions
-                cls.objects.filter(
-                    date_range__fully_gt=DateRange(as_of, as_of, bounds='[]')
-                ).delete()
+                cls.objects.filter(start_date__gt=as_of).delete()
 
             # Now recreate the upcoming billing cycles
             for start_date, end_date in date_ranges:

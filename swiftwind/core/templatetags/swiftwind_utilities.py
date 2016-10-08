@@ -30,8 +30,15 @@ def partition(list_, columns=2):
 
 @register.filter
 def short_name(name):
-    bits = name.split(' ')
+    bits = (name or '').split(' ')
     if len(bits) == 0:
         return name
     else:
-        return ' '.join([bits[0], bits[-1][0]])
+        first = bits[0]
+        last = bits[-1]
+        if last:
+            # First + Initial
+            return ' '.join([first, last[0]])
+        else:
+            # No last name, just give the first name
+            return first
