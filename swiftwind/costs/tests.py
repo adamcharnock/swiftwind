@@ -70,10 +70,9 @@ class RecurringCostModelTestCase(TestCase):
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 100)
 
     def test_recurring_arrears_balance_get_amount(self):
-        self.assertFalse('NOTE: We need to update hordak to allow us to get a balance as of a particular date')
-
-        self.to_account.transfer_to(self.bank, 100, date='2000-01-15')
-        self.to_account.transfer_to(self.bank, 50, date='2000-02-15')
+        self.bank.transfer_to(self.to_account, 100, date='2000-01-15')
+        self.bank.transfer_to(self.to_account, 50, date='2000-02-15')
+        self.bank.transfer_to(self.to_account, 10, date='2000-03-01')
 
         recurring_cost = RecurringCost.objects.create(
             to_account=self.to_account,
@@ -83,13 +82,13 @@ class RecurringCostModelTestCase(TestCase):
         self.add_split(recurring_cost)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 100)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 150)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 0)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 160)
 
     def test_recurring_arrears_transactions_get_amount(self):
-        self.assertFalse('NOTE: We need to update hordak to allow us to get a balance as of a particular date')
-
-        self.to_account.transfer_to(self.bank, 100, date='2000-01-15')
-        self.to_account.transfer_to(self.bank, 50, date='2000-02-15')
+        self.bank.transfer_to(self.to_account, 100, date='2000-01-01')
+        self.bank.transfer_to(self.to_account, 20, date='2000-01-31')
+        self.bank.transfer_to(self.to_account, 50, date='2000-02-15')
+        self.bank.transfer_to(self.to_account, 10, date='2000-03-15')
 
         recurring_cost = RecurringCost.objects.create(
             to_account=self.to_account,
@@ -97,9 +96,9 @@ class RecurringCostModelTestCase(TestCase):
             initial_billing_cycle=self.billing_cycle_1,
         )
         self.add_split(recurring_cost)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 100)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 120)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 50)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 0)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 10)
 
     def test_one_off_normal_get_amount(self):
         recurring_cost = RecurringCost.objects.create(

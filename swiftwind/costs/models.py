@@ -1,6 +1,5 @@
 from decimal import Decimal
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db import transaction as db_transaction
 from django.db.models import QuerySet
@@ -111,11 +110,16 @@ class RecurringCost(models.Model):
 
     def get_amount_arrears_balance(self, billing_cycle):
         """Get the balance of to_account at the end of billing_cycle"""
-        pass
+        return self.to_account.balance(
+            transaction__date__lt=billing_cycle.date_range.upper,
+        )
 
     def get_amount_arrears_transactions(self, billing_cycle):
         """Get the sum of all transaction legs in to_account during given billing cycle"""
-        pass
+        return self.to_account.balance(
+            transaction__date__lt=billing_cycle.date_range.upper,
+            transaction__date__gte=billing_cycle.date_range.lower,
+        )
 
     def get_billed_amount(self):
         """Get the total amount billed so far"""
