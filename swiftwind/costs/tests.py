@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from datetime import date
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.testcases import TransactionTestCase
@@ -228,11 +229,13 @@ class RecurringCostModelTestCase(TestCase):
         )
         self.add_split(recurring_cost)
 
-        self.assertFalse(recurring_cost._is_finished())
-        recurring_cost.enact(self.billing_cycle_1)
-        self.assertFalse(recurring_cost._is_finished())
-        recurring_cost.enact(self.billing_cycle_2)
-        self.assertTrue(recurring_cost._is_finished())
+        self.assertFalse(recurring_cost._is_finished(date(1999, 1, 1)))  # before initial cycle
+
+        self.assertFalse(recurring_cost._is_finished(date(2000, 1, 1)))   # first day of first cycle
+        self.assertFalse(recurring_cost._is_finished(date(2000, 2, 29)))  # last day of second cycle (2000 is leap year)
+
+        self.assertTrue(recurring_cost._is_finished(date(2000, 3, 1)))  # First day of third cycle = False
+        self.assertTrue(recurring_cost._is_finished(date(2010, 1, 1)))  # 10 years in the future still False
 
     def test_is_billing_complete(self):
         recurring_cost = RecurringCost.objects.create(
@@ -256,15 +259,13 @@ class RecurringCostModelTestCase(TestCase):
             fixed_amount=100,
             type=RecurringCost.TYPES.normal,
             initial_billing_cycle=self.billing_cycle_1,
-            total_billing_cycles=2,
+            total_billing_cycles=2,  # Two cycles only!
         )
         self.add_split(recurring_cost)
 
-        self.assertTrue(recurring_cost.is_enactable())
-        recurring_cost.enact(self.billing_cycle_1)
-        self.assertTrue(recurring_cost.is_enactable())
-        recurring_cost.enact(self.billing_cycle_2)
-        self.assertFalse(recurring_cost.is_enactable())
+        # Additional testing in test_is_finished()
+        self.assertTrue(recurring_cost.is_enactable(date(2000, 1, 1)))   # first day of first cycle
+        self.assertFalse(recurring_cost.is_enactable(date(2010, 1, 1)))  # 10 years in the future still False
 
     def test_is_enactable_false_because_disabled(self):
         recurring_cost = RecurringCost.objects.create(
@@ -275,7 +276,7 @@ class RecurringCostModelTestCase(TestCase):
             disabled=True,
         )
         self.add_split(recurring_cost)
-        self.assertFalse(recurring_cost.is_enactable())
+        self.assertFalse(recurring_cost.is_enactable(date(2000, 1, 1)))
 
     # Test _get_billing_cycle_number()
 

@@ -134,11 +134,12 @@ class RecurringCost(models.Model):
           - Create a RecurredCost and the relevant Transactions & Transaction Legs
           - Mark this RecurringCost as disabled if this is its final billing cycle
         """
-        if not self.is_enactable():
+        as_of = billing_cycle.date_range.lower
+        if not self.is_enactable(as_of):
             raise CannotEnactUnenactableRecurringCostError(
                 "RecurringCost is unenactable. Disabled: {}, finished: {}, billing complete: {}".format(
                     self.disabled,
-                    self._is_finished(),
+                    self._is_finished(as_of),
                     self._is_billing_complete()
                 )
             )
@@ -158,17 +159,19 @@ class RecurringCost(models.Model):
         self.disable_if_done(billing_cycle)
 
     def disable_if_done(self, commit=True):
-        """Set disabled=True if this cost is done (billing cycles done or billing complete)"""
-        if self._is_finished() or self._is_billing_complete():
+        """Set disabled=True if we have billed all we need to"""
+        if self._is_billing_complete():
             self.disabled = True
 
         if commit:
             self.save()
 
-    def is_enactable(self):
+    def is_enactable(self, as_of):
+        """Can this RecurringCost be enacted"""
         return \
             not self.disabled and \
-            not self._is_finished() and \
+            not self._is_finished(as_of) and \
+            self._is_ready(as_of) and \
             not self._is_billing_complete()
 
     def has_enacted(self, billing_cycle):
@@ -181,15 +184,36 @@ class RecurringCost(models.Model):
     def is_one_off(self):
         return bool(self.total_billing_cycles)
 
-    def _is_finished(self):
-        """Have the specified number of billing cycles been completed?"""
+    def _is_ready(self, as_of):
+        """Is the RecurringCost ready to be enacted as of the date `as_of`
+
+        This determines if `as_of` precedes the start of `initial_billing_cycle`. If so,
+        we should not be enacting this RecurringCost yet.
+
+        Args:
+            as_of (Date):
+        """
         if self.is_one_off():
-            return self.recurrences.count() >= self.total_billing_cycles
+            return self.initial_billing_cycle.date_range.lower <= as_of
+        else:
+            return True
+
+    def _is_finished(self, as_of):
+        """Have the specified number of billing cycles been completed?
+
+        If so, we should not be enacting this RecurringCost.
+        """
+        if self.is_one_off():
+            last_billing_cycle = self.get_billing_cycles()[self.total_billing_cycles - 1]
+            return last_billing_cycle.date_range.upper <= as_of
         else:
             return False
 
     def _is_billing_complete(self):
-        """Has the specified `fixed_amount` been billed?"""
+        """Has the specified `fixed_amount` been billed?
+
+        If so, we should not be enacting this RecurringCost.
+        """
         if self.is_one_off():
             return self.get_billed_amount() >= self.fixed_amount
         else:
@@ -212,6 +236,11 @@ class RecurringCost(models.Model):
         ).count()
 
         return billing_cycle_number
+
+    def get_billing_cycles(self):
+        return BillingCycle.objects.filter(
+            start_date__gte=self.initial_billing_cycle.date_range.lower
+        )[:self.total_billing_cycles]
 
 
 class RecurringCostSplitQuerySet(QuerySet):
