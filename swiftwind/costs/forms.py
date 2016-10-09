@@ -3,12 +3,14 @@ from django.core.exceptions import ValidationError
 from hordak.models import Account
 from mptt.forms import TreeNodeChoiceField
 
+from swiftwind.billing_cycle.models import BillingCycle
 from .models import RecurringCost, RecurringCostSplit
 from swiftwind.utilities.formsets import nested_model_formset_factory
 
 
 class AbstractCostForm(forms.ModelForm):
     to_account = TreeNodeChoiceField(queryset=Account.objects.all(), to_field_name='uuid')
+    initial_billing_cycle = forms.ModelChoiceField(queryset=BillingCycle.objects.all())
 
     class Meta:
         model = RecurringCost

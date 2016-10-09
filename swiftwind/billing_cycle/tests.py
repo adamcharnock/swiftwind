@@ -37,7 +37,18 @@ class BillingCycleConstraintTestCase(TransactionTestCase):
         # No errors
 
 
-class BillingCycleTestCase(TestCase):
+class BillingCycleTestCase(TransactionTestCase):
+
+    def test_populate_no_cycles(self):
+        with self.settings(SWIFTWIND_BILLING_CYCLE_YEARS=2):
+            BillingCycle._populate(as_of=date(2016, 6, 1), delete=False)
+
+        self.assertEqual(BillingCycle.objects.count(), 25)
+
+        first = BillingCycle.objects.first()
+        last = BillingCycle.objects.last()
+        self.assertEqual(first.date_range.lower, date(2016, 6, 1))
+        self.assertEqual(last.date_range.lower, date(2018, 6, 1))
 
     def test_populate_update_only(self):
         cycle1 = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))  # keep
@@ -62,16 +73,17 @@ class BillingCycleTestCase(TestCase):
         self.assertIn(cycle4, BillingCycle.objects.all())
 
     def test_populate_delete(self):
+        """Check that future billing cycles get deleted and recreated"""
         cycle1 = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))  # keep
         cycle2 = BillingCycle.objects.create(date_range=(date(2016, 5, 1), date(2016, 6, 1)))  # keep
         cycle3 = BillingCycle.objects.create(date_range=(date(2016, 6, 1), date(2016, 7, 1)))  # keep
         cycle4 = BillingCycle.objects.create(date_range=(date(2016, 7, 1), date(2016, 8, 1)))  # delete
 
         with self.settings(SWIFTWIND_BILLING_CYCLE_YEARS=2):
-            BillingCycle._populate(as_of=date(2016, 6, 1), delete=True)
+            BillingCycle._populate(as_of=date(2016, 6, 15), delete=True)
 
         # 3 previous cycles kept, and 24 new ones created
-        self.assertEqual(BillingCycle.objects.count(), 3 + 24)
+        self.assertEqual(BillingCycle.objects.filter(start_date__gte=date(2016, 7, 1)).count(), 24)
 
         first = BillingCycle.objects.first()
         last = BillingCycle.objects.last()
@@ -86,7 +98,19 @@ class BillingCycleTestCase(TestCase):
 
 class CycleTestCase(TestCase):
 
-    def test_monthly(self):
+    def test_monthly_get_previous_cycle_start_date(self):
+        cycle = Monthly()
+
+        self.assertEqual(
+            cycle.get_previous_cycle_start_date(date(2016, 6, 15), inclusive=True),
+            date(2016, 6, 1)
+        )
+        self.assertEqual(
+            cycle.get_previous_cycle_start_date(date(2016, 6, 1), inclusive=True),
+            date(2016, 6, 1)
+        )
+
+    def test_monthly_get_next_cycle_start_date(self):
         cycle = Monthly()
 
         self.assertEqual(
@@ -98,6 +122,9 @@ class CycleTestCase(TestCase):
             date(2016, 6, 1)
         )
 
+    def test_monthly_get_cycle_end_date(self):
+        cycle = Monthly()
+
         self.assertEqual(
             cycle.get_cycle_end_date(date(2016, 6, 15)),
             date(2016, 7, 1)
@@ -107,7 +134,18 @@ class CycleTestCase(TestCase):
             date(2016, 7, 1)
         )
 
+    def test_monthly_generate_date_ranges(self):
+        cycle = Monthly()
+
         ranges = cycle.generate_date_ranges(date(2016, 10, 15))
+        self.assertEqual(six.next(ranges), (date(2016, 10, 1), date(2016, 11, 1)))  # starts in Oct
         self.assertEqual(six.next(ranges), (date(2016, 11, 1), date(2016, 12, 1)))
+        self.assertEqual(six.next(ranges), (date(2016, 12, 1), date(2017, 1, 1)))
+
+    def test_monthly_generate_date_ranges_omit_current(self):
+        cycle = Monthly()
+
+        ranges = cycle.generate_date_ranges(date(2016, 10, 15), omit_current=True)
+        self.assertEqual(six.next(ranges), (date(2016, 11, 1), date(2016, 12, 1)))  # starts in Nov
         self.assertEqual(six.next(ranges), (date(2016, 12, 1), date(2017, 1, 1)))
         self.assertEqual(six.next(ranges), (date(2017, 1, 1), date(2017, 2, 1)))

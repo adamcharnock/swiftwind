@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 is_adjacent := previous.date_range -|- row.date_range;
                 IF NOT is_adjacent THEN
                   RAISE EXCEPTION 'Billing cycles % % and % % are not adjacent. All cycles must be adjacent.',
-                    previous.uuid, previous.date_range, previous.uuid, previous.date_range
+                    previous.uuid, previous.date_range, row.uuid, row.date_range
                     USING ERRCODE = 'integrity_constraint_violation';
                 END IF;
 

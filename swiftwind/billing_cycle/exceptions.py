@@ -1,0 +1,2 @@
+
+class CannotPopulateForDateOutsideExistingCycles(Exception): pass

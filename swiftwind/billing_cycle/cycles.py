@@ -29,8 +29,16 @@ class BaseCycle(object):
 
         Args:
             as_of (date):
-            inclusive (bool): May the start date be the specified by `as_of`
-                              (True), or must it come after (False)
+            inclusive (bool):
+        """
+        raise NotImplemented()
+
+    def get_previous_cycle_start_date(self, as_of, inclusive):
+        """Get the starting date of the most cycle that most recently started prior to `as_of`
+
+        Args:
+            as_of (date):
+            inclusive (bool):
         """
         raise NotImplemented()
 
@@ -42,18 +50,23 @@ class BaseCycle(object):
         """
         raise NotImplemented()
 
-    def generate_date_ranges(self, as_of, inclusive=False, stop_date=None):
+    def generate_date_ranges(self, as_of, inclusive=False, omit_current=False, stop_date=None):
         """
 
 
         Args:
             as_of (date): Begin generating ranges on the first start date after `as_of`
-            inclusive (bool): May the first start date be the specified by `as_of`?
+            inclusive (bool): May the first start date be the date specified by `as_of`?
+            omit_current (bool): If True, don't generate a date range containing `as_of`.
             stop_date (date): Stop iterating after this date. Will generate results
                               infinitely if None.
         """
         while True:
-            start_date = self.get_next_cycle_start_date(as_of, inclusive)
+            if omit_current:
+                start_date = self.get_next_cycle_start_date(as_of, inclusive)
+            else:
+                start_date = self.get_previous_cycle_start_date(as_of, inclusive)
+
             end_date = self.get_cycle_end_date(start_date)
             as_of = end_date
             inclusive = True
@@ -72,6 +85,12 @@ class Monthly(BaseCycle):
             return copy(as_of)
         else:
             return date(year=as_of.year, month=as_of.month + 1, day=1)
+
+    def get_previous_cycle_start_date(self, as_of, inclusive):
+        if inclusive and as_of.day == 1:
+            return copy(as_of)
+        else:
+            return date(year=as_of.year, month=as_of.month, day=1)
 
     def get_cycle_end_date(self, start_date):
         next_month = start_date + relativedelta(months=1)

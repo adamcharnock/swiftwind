@@ -7,6 +7,7 @@ from django.utils.datetime_safe import datetime, date
 from django_smalluuid.models import uuid_default, SmallUUIDField
 from django.conf import settings
 
+from swiftwind.billing_cycle.exceptions import CannotPopulateForDateOutsideExistingCycles
 from .cycles import get_billing_cycle
 
 
@@ -29,8 +30,13 @@ class BillingCycleManager(models.Manager):
             start_date__lte=as_of,
         )
 
+    def as_of(self, date):
+        return self.get(start_date__lte=date, end_date__gt=date)
+
 
 class BillingCycle(models.Model):
+    # TODO: Currently does not support changing of billing-cycle type (i.e. monthly/weekly)
+    #       once data has been created
     uuid = SmallUUIDField(default=uuid_default(), editable=False)
     date_range = DateRangeField(
         db_index=True,
@@ -66,30 +72,65 @@ class BillingCycle(models.Model):
 
     @classmethod
     def _populate(cls, as_of=None, delete=False):
-        if as_of is None:
-            as_of = datetime.now().date()
+        """Populate the table with billing cycles starting from `as_of`
 
-        billing_cycle = get_billing_cycle()
+        Args:
+            as_of (date): The date at which to being the populating
+            delete (bool): Should future billing cycles be deleted?
+
+
+        """
+        billing_cycle_helper = get_billing_cycle()
+        billing_cycles_exist = BillingCycle.objects.exists()
+
+        try:
+            current_billing_cycle = BillingCycle.objects.as_of(date=as_of)
+        except BillingCycle.DoesNotExist:
+            current_billing_cycle = None
+
+        # If no cycles exist then disable the deletion logic
+        if not billing_cycles_exist:
+            delete = False
+
+        # Cycles exist, but a date has been specified outside of them
+        if billing_cycles_exist and not current_billing_cycle:
+            raise CannotPopulateForDateOutsideExistingCycles()
+
+        # Omit the current billing cycle if we are deleting (as
+        # deleting the current billing cycle will be a Bad Idea)
+        omit_current = (current_billing_cycle and delete)
+
         stop_date = as_of + relativedelta(years=settings.SWIFTWIND_BILLING_CYCLE_YEARS)
-        date_ranges = billing_cycle.generate_date_ranges(as_of, stop_date=stop_date)
+        date_ranges = billing_cycle_helper.generate_date_ranges(as_of, stop_date=stop_date, omit_current=omit_current)
+        date_ranges = list(date_ranges)
+
+        beginning_date = date_ranges[0][0]
 
         with db_transaction.atomic():
 
             if delete:
                 # Delete all the future unused transactions
-                cls.objects.filter(start_date__gt=as_of).delete()
+                cls.objects.filter(start_date__gte=beginning_date).delete()
 
-            # Now recreate the upcoming billing cycles
             for start_date, end_date in date_ranges:
-                if not delete:
-                    exists = BillingCycle.objects.filter(date_range=[start_date, end_date]).count()
-                    if exists:
-                        # If we are not deleting (i.e. updating only), then don't
-                        # create this BillingCycle if one already exists
-                        continue
+                exists = BillingCycle.objects.filter(date_range=(start_date, end_date)).exists()
+                if exists:
+                    if delete:
+                        raise Exception(
+                            'It should not be possible to get here as future billing cycles have just been deleted'
+                        )
+                    else:
+                        # We're updating, so we can just ignore cycles that already exist
+                        pass
+                else:
+                    BillingCycle.objects.create(
+                        date_range=(start_date, end_date),
+                    )
 
-                BillingCycle.objects.create(
-                    date_range=(start_date, end_date),
-                )
+    def get_next(self):
+        return BillingCycle.objects.filter(date_range__gt=self.date_range).order_by('date_range')[0]
+
+    def get_previous(self):
+        return BillingCycle.objects.filter(date_range__lt=self.date_range).order_by('-date_range')[0]
 
 
