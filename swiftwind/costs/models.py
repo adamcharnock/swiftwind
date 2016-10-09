@@ -9,9 +9,11 @@ from django_smalluuid.models import SmallUUIDField
 from django_smalluuid.models import uuid_default
 from hordak.models import Transaction, Leg
 from model_utils import Choices
+from psycopg2._range import DateRange
 
+from swiftwind.billing_cycle.models import BillingCycle
 from .exceptions import CannotEnactUnenactableRecurringCostError, CannotRecreateTransactionOnRecurredCost, \
-    NoSplitsFoundForRecurringCost
+    NoSplitsFoundForRecurringCost, ProvidedBillingCycleBeginsBeforeInitialBillingCycle
 from swiftwind.utilities.splitting import ratio_split
 
 
@@ -51,11 +53,16 @@ class RecurringCost(models.Model):
     disabled = models.BooleanField(default=False)
     # The amount to be billed per cycle for recurring costs, or the amount to spread
     # across cycles for one-off costs
-    fixed_amount = models.DecimalField(max_digits=13, decimal_places=2)
+    fixed_amount = models.DecimalField(max_digits=13, decimal_places=2, null=True, blank=True)
     total_billing_cycles = models.PositiveIntegerField(default=None, null=True, blank=True,
                                                        help_text='Stop billing after this many billing cycles.')
     type = models.CharField(max_length=20, choices=TYPES, default=TYPES.normal)
+    initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle')
     transactions = models.ManyToManyField(Transaction, through='costs.RecurredCost')
+
+    # TODO: Check: Cannot create RecurredCost instances if disabled=True
+    # TODO: Check: disabled=True XOR initial_billing_cycle HAS a value
+    # TODO: Check: fixed_amount required for type=normal
 
     def save(self, *args, **kwargs):
         # TODO: Check that disabled=True if is_enactable()=False
@@ -69,20 +76,28 @@ class RecurringCost(models.Model):
         }[self.type](billing_cycle)
 
     def get_amount_normal(self, billing_cycle):
-        if self.is_one_off():
-            # TODO: This assumes we are asking about the next billing cycle, not the one specified
-            is_final_billing_cycle = (self.total_billing_cycles == self.recurrences.count() + 1)
+        """Get the amount due on the given billing cycle
 
-            if is_final_billing_cycle:
-                return self.fixed_amount - self.get_billed_amount()
+        For regular recurring costs this is simply `fixed_amount`. For
+        one-off costs this is the portion of `fixed_amount` for the given
+        billing_cycle.
+        """
+        if self.is_one_off():
+            billing_cycle_number = self._get_billing_cycle_number(billing_cycle)
+
+            if billing_cycle_number > self.total_billing_cycles:
+                # A future billing cycle after this one has ended
+                return Decimal('0')
             else:
+                # This is a current cycle. Split the amount into
+                # equal parts then return the part for this cycle
                 splits = ratio_split(
                     amount=self.fixed_amount,
                     ratios=[Decimal('1')] * self.total_billing_cycles,
                 )
-                #TODO: ...as does this
-                return splits[self.recurrences.count()]
+                return splits[billing_cycle_number - 1]
         else:
+            # This is a none-one-off recurring cost, so the logic is simple
             return self.fixed_amount
 
     def get_amount_arrears_balance(self, billing_cycle):
@@ -95,16 +110,16 @@ class RecurringCost(models.Model):
 
     def get_billed_amount(self):
         """Get the total amount billed so far"""
-        return Leg.objects.filter(transaction__recurred_cost__recurring_cost=self).sum_amount()
+        return Leg.objects.debits().filter(transaction__recurred_cost__recurring_cost=self).sum_amount()
 
     @db_transaction.atomic()
     def enact(self, billing_cycle):
-        if not self.is_enactable(billing_cycle):
+        if not self.is_enactable():
             raise CannotEnactUnenactableRecurringCostError(
                 "RecurringCost is unenactable. Disabled: {}, finished: {}, billing complete: {}".format(
                     self.disabled,
                     self._is_finished(),
-                    self._is_billing_complete(billing_cycle)
+                    self._is_billing_complete()
                 )
             )
 
@@ -117,19 +132,19 @@ class RecurringCost(models.Model):
 
         self.disable_if_done(billing_cycle)
 
-    def disable_if_done(self, billing_cycle, commit=True):
+    def disable_if_done(self, commit=True):
         """Set disabled=True if this cost is done (billing cycles done or billing complete)"""
-        if self._is_finished() or self._is_billing_complete(billing_cycle):
+        if self._is_finished() or self._is_billing_complete():
             self.disabled = True
 
         if commit:
             self.save()
 
-    def is_enactable(self, for_billing_cycle):
+    def is_enactable(self):
         return \
             not self.disabled and \
             not self._is_finished() and \
-            not self._is_billing_complete(for_billing_cycle)
+            not self._is_billing_complete()
 
     def is_one_off(self):
         return bool(self.total_billing_cycles)
@@ -141,11 +156,37 @@ class RecurringCost(models.Model):
         else:
             return False
 
-    def _is_billing_complete(self, billing_cycle):
+    def _is_billing_complete(self):
         if self.is_one_off():
-            return self.get_billed_amount() >= self.get_amount(billing_cycle)
+            return self.get_billed_amount() >= self.fixed_amount
         else:
             return False
+
+    def _get_billing_cycle_number(self, billing_cycle):
+        """Gets the number of the billing cycle relative to the provided billing cycle
+
+        Args:
+            billing_cycle (BillingCycle):
+
+        Returns:
+            Int: Number of the billing cycle, where 1 is the first
+
+        """
+        begins_before_initial_date = billing_cycle.date_range.lower < self.initial_billing_cycle.date_range.lower
+        if begins_before_initial_date:
+            raise ProvidedBillingCycleBeginsBeforeInitialBillingCycle(
+                '{} precedes initial cycle {}'.format(billing_cycle, self.initial_billing_cycle)
+            )
+
+        billing_cycle_number = BillingCycle.objects.filter(
+            date_range__contained_by=DateRange(
+                self.initial_billing_cycle.date_range.upper,
+                billing_cycle.date_range.upper,
+                bounds='[]',
+            ),
+        ).count() + 1
+
+        return billing_cycle_number
 
 
 class RecurringCostSplitQuerySet(QuerySet):
@@ -214,7 +255,7 @@ class RecurredCost(models.Model):
             Transaction: The created transaction, also assigned to self.transaction
         """
         try:
-            has_transaction = bool(self.transaction)
+            self.transaction
         except Transaction.DoesNotExist:
             pass
         else:
@@ -223,6 +264,7 @@ class RecurredCost(models.Model):
         self.transaction = Transaction.objects.create(
             description='Created by recurring cost: {}'.format(self.recurring_cost)
         )
+
         amount = self.recurring_cost.get_amount(self.billing_cycle)
         splits = self.recurring_cost.splits.all().split(amount)
 

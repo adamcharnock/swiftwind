@@ -33,6 +33,7 @@ class BillingCycleManager(models.Manager):
 class BillingCycle(models.Model):
     uuid = SmallUUIDField(default=uuid_default(), editable=False)
     date_range = DateRangeField(
+        db_index=True,
         help_text='The start and end date of this billing cycle. '
                   'May not overlay with any other billing cycles.'
     )
