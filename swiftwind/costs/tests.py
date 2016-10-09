@@ -87,7 +87,7 @@ class RecurringCostModelTestCase(TestCase):
 
     def test_recurring_arrears_transactions_get_amount(self):
         self.assertFalse('NOTE: We need to update hordak to allow us to get a balance as of a particular date')
-        
+
         self.to_account.transfer_to(self.bank, 100, date='2000-01-15')
         self.to_account.transfer_to(self.bank, 50, date='2000-02-15')
 
@@ -273,6 +273,22 @@ class RecurringCostModelTestCase(TestCase):
         )
         self.add_split(recurring_cost)
         self.assertFalse(recurring_cost.is_enactable())
+
+    def test_disabled_when_done(self):
+        recurring_cost = RecurringCost.objects.create(
+            to_account=self.to_account,
+            fixed_amount=100,
+            type=RecurringCost.TYPES.normal,
+            initial_billing_cycle=self.billing_cycle_1,
+            total_billing_cycles=2,
+        )
+        self.add_split(recurring_cost)
+
+        self.assertFalse(recurring_cost.disabled)
+        recurring_cost.enact(self.billing_cycle_1)
+        self.assertFalse(recurring_cost.disabled)
+        recurring_cost.enact(self.billing_cycle_2)
+        self.assertTrue(recurring_cost.disabled)
 
     def test_get_billing_cycle_number(self):
         recurring_cost = RecurringCost.objects.create(

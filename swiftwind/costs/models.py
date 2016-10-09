@@ -63,6 +63,7 @@ class RecurringCost(models.Model):
 
     # TODO: Check: Cannot create RecurredCost instances if disabled=True
     # TODO: Check: disabled=True XOR initial_billing_cycle HAS a value
+    #              (we want to make sure initial_billing_cycle is set to something if cost is ever un-disabled)
     # TODO: Check: fixed_amount required for type=normal
 
     def save(self, *args, **kwargs):
