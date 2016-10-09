@@ -54,7 +54,7 @@ class RecurringCostModelTestCase(TestCase):
         recurring_cost.splits.add(split)
         return split
 
-    # Recurring costs
+    # Test get_amount()
 
     def test_recurring_normal_get_amount(self):
         recurring_cost = RecurringCost.objects.create(
@@ -135,6 +135,8 @@ class RecurringCostModelTestCase(TestCase):
                 total_billing_cycles=2,
             )
 
+    # Test enact()
+
     def test_recurring_enact(self):
         recurring_cost = RecurringCost.objects.create(
             to_account=self.to_account,
@@ -193,6 +195,8 @@ class RecurringCostModelTestCase(TestCase):
         recurring_cost.enact(self.billing_cycle_1)
         with self.assertRaises(RecurringCostAlreadyEnactedForBillingCycle):
             recurring_cost.enact(self.billing_cycle_1)
+
+    # Test boolean methods
 
     def test_is_one_off_true(self):
         recurring_cost = RecurringCost.objects.create(
@@ -274,21 +278,7 @@ class RecurringCostModelTestCase(TestCase):
         self.add_split(recurring_cost)
         self.assertFalse(recurring_cost.is_enactable())
 
-    def test_disabled_when_done(self):
-        recurring_cost = RecurringCost.objects.create(
-            to_account=self.to_account,
-            fixed_amount=100,
-            type=RecurringCost.TYPES.normal,
-            initial_billing_cycle=self.billing_cycle_1,
-            total_billing_cycles=2,
-        )
-        self.add_split(recurring_cost)
-
-        self.assertFalse(recurring_cost.disabled)
-        recurring_cost.enact(self.billing_cycle_1)
-        self.assertFalse(recurring_cost.disabled)
-        recurring_cost.enact(self.billing_cycle_2)
-        self.assertTrue(recurring_cost.disabled)
+    # Test _get_billing_cycle_number()
 
     def test_get_billing_cycle_number(self):
         recurring_cost = RecurringCost.objects.create(
@@ -317,7 +307,10 @@ class RecurringCostModelTestCase(TestCase):
 
         self.assertEqual(recurring_cost._get_billing_cycle_number(self.billing_cycle_2), 1)
 
+    # Misc
+
     def test_get_billed_amount(self):
+        """get_billed_amount() show how much has been billed so far"""
         from_account = Account.objects.create(name='Bank', code='1', type=Account.TYPES.expense)
         transaction = from_account.transfer_to(self.to_account, 100)
 
@@ -336,6 +329,23 @@ class RecurringCostModelTestCase(TestCase):
         )
         recurred_cost.save()
         self.assertEqual(recurring_cost.get_billed_amount(), 100)
+
+    def test_disabled_when_done(self):
+        """Test that one-off costs are disabled when their last billing cycle is enacted"""
+        recurring_cost = RecurringCost.objects.create(
+            to_account=self.to_account,
+            fixed_amount=100,
+            type=RecurringCost.TYPES.normal,
+            initial_billing_cycle=self.billing_cycle_1,
+            total_billing_cycles=2,
+        )
+        self.add_split(recurring_cost)
+
+        self.assertFalse(recurring_cost.disabled)
+        recurring_cost.enact(self.billing_cycle_1)
+        self.assertFalse(recurring_cost.disabled)
+        recurring_cost.enact(self.billing_cycle_2)
+        self.assertTrue(recurring_cost.disabled)
 
 
 class RecurringCostSplitModelTestCase(TestCase):

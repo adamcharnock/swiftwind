@@ -51,6 +51,9 @@ class RecurringCost(models.Model):
                                            through='costs.RecurringCostSplit',
                                            related_name='outbound_costs')
     to_account = models.ForeignKey('hordak.Account', related_name='inbound_costs')
+    #: The disabled flag is mostly present for the benefit of the database checks & triggers.
+    #: We could infer the disabled state from other values (billed amount, number of billing
+    #: periods billed, etc), but checking this would make our triggers rather complex.
     disabled = models.BooleanField(default=False)
     # The amount to be billed per cycle for recurring costs, or the amount to spread
     # across cycles for one-off costs
@@ -65,10 +68,6 @@ class RecurringCost(models.Model):
     # TODO: Check: disabled=True XOR initial_billing_cycle HAS a value
     #              (we want to make sure initial_billing_cycle is set to something if cost is ever un-disabled)
     # TODO: Check: fixed_amount required for type=normal
-
-    def save(self, *args, **kwargs):
-        # TODO: Check that disabled=True if is_enactable()=False
-        return super(RecurringCost, self).save(*args, **kwargs)
 
     def get_amount(self, billing_cycle):
         return {
@@ -116,6 +115,13 @@ class RecurringCost(models.Model):
 
     @db_transaction.atomic()
     def enact(self, billing_cycle):
+        """Enact this RecurringCost for the given billing cycle
+
+        This will:
+
+          - Create a RecurredCost and the relevant Transactions & Transaction Legs
+          - Mark this RecurringCost as disabled if this is its final billing cycle
+        """
         if not self.is_enactable():
             raise CannotEnactUnenactableRecurringCostError(
                 "RecurringCost is unenactable. Disabled: {}, finished: {}, billing complete: {}".format(
@@ -154,6 +160,7 @@ class RecurringCost(models.Model):
             not self._is_billing_complete()
 
     def has_enacted(self, billing_cycle):
+        """Has this recurring cost already enacted transactions for given billing cycle?"""
         return RecurredCost.objects.filter(
             recurring_cost=self,
             billing_cycle=billing_cycle,
@@ -170,21 +177,14 @@ class RecurringCost(models.Model):
             return False
 
     def _is_billing_complete(self):
+        """Has the specified `fixed_amount` been billed?"""
         if self.is_one_off():
             return self.get_billed_amount() >= self.fixed_amount
         else:
             return False
 
     def _get_billing_cycle_number(self, billing_cycle):
-        """Gets the number of the billing cycle relative to the provided billing cycle
-
-        Args:
-            billing_cycle (BillingCycle):
-
-        Returns:
-            Int: Number of the billing cycle, where 1 is the first
-
-        """
+        """Gets the 1-indexed number of the billing cycle relative to the provided billing cycle"""
         begins_before_initial_date = billing_cycle.date_range.lower < self.initial_billing_cycle.date_range.lower
         if begins_before_initial_date:
             raise ProvidedBillingCycleBeginsBeforeInitialBillingCycle(
@@ -193,11 +193,11 @@ class RecurringCost(models.Model):
 
         billing_cycle_number = BillingCycle.objects.filter(
             date_range__contained_by=DateRange(
-                self.initial_billing_cycle.date_range.upper,
+                self.initial_billing_cycle.date_range.lower,
                 billing_cycle.date_range.upper,
                 bounds='[]',
             ),
-        ).count() + 1
+        ).count()
 
         return billing_cycle_number
 
