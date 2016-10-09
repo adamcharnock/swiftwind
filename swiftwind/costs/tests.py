@@ -19,7 +19,7 @@ class RecurringCostModelTriggerTestCase(TransactionTestCase):
         # Tests the db trigger
         with self.assertRaises(IntegrityError):
             to_account = Account.objects.create(name='Expense', code='1', type=Account.TYPES.expense)
-            recurring_cost = RecurringCost.objects.create(
+            RecurringCost.objects.create(
                 to_account=to_account,
                 fixed_amount=100,
                 type=RecurringCost.TYPES.normal,
@@ -43,6 +43,8 @@ class RecurringCostModelTestCase(TestCase):
         self.billing_cycle_4.refresh_from_db()
 
     def add_split(self, recurring_cost):
+        # Required by database constraint, but not relevant to most of the tests.
+        # We therefore use this utility method to create this where required.
         recurring_cost.splits.add(RecurringCostSplit.objects.create(
             recurring_cost=recurring_cost,
             from_account=Account.objects.create(name='Income', type=Account.TYPES.income),
@@ -52,6 +54,7 @@ class RecurringCostModelTestCase(TestCase):
     # Recurring costs
 
     def test_recurring_normal_no_recurrences(self):
+        """A recurring normal cost which hasn't been enacted yet"""
         recurring_cost = RecurringCost.objects.create(
             to_account=self.to_account,
             fixed_amount=100,
@@ -222,6 +225,7 @@ class RecurringCostModelTestCase(TestCase):
         self.assertEqual(recurring_cost.is_enactable(), False)
 
     def test_one_off_arrears_balance(self):
+        """type=arrears_balance cannot have total_billing_cycles set"""
         with self.assertRaises(IntegrityError):
             RecurringCost.objects.create(
                 to_account=self.to_account,
@@ -231,6 +235,7 @@ class RecurringCostModelTestCase(TestCase):
             )
 
     def test_one_off_arrears_transactions(self):
+        """type=arrears_balance cannot have arrears_transactions set"""
         with self.assertRaises(IntegrityError):
             RecurringCost.objects.create(
                 to_account=self.to_account,
@@ -361,7 +366,6 @@ class RecurredCostModelTestCase(TestCase):
 
         transaction = self.recurred_cost
         self.assertEqual(transaction.legs.count(), 4)  # 3 splits (from accounts) + 1 to account
-
 
 
 class RecurringCostFormTestCase(TestCase):
