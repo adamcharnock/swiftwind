@@ -23,6 +23,7 @@ class RecurringCostModelTriggerTestCase(TransactionTestCase):
                 to_account=to_account,
                 fixed_amount=100,
                 type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=BillingCycle.objects.create(date_range=('2000-01-01', '2000-02-01')),
             )
 
 
@@ -127,6 +128,7 @@ class RecurringCostModelTestCase(TestCase):
             type=RecurringCost.TYPES.arrears_balance,
             initial_billing_cycle=self.billing_cycle_1,
         )
+        self.add_split(recurring_cost)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 100)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 150)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 0)
@@ -140,6 +142,7 @@ class RecurringCostModelTestCase(TestCase):
             type=RecurringCost.TYPES.arrears_transactions,
             initial_billing_cycle=self.billing_cycle_1,
         )
+        self.add_split(recurring_cost)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 100)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 50)
         self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 0)
@@ -155,25 +158,18 @@ class RecurringCostModelTestCase(TestCase):
             initial_billing_cycle=self.billing_cycle_1,
             total_billing_cycles=3,  # Makes this a one-off cost
         )
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 33.33)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 33.33)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 33.34)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_4), 0)
+        self.add_split(recurring_cost)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), Decimal('33.33'))
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), Decimal('33.33'))
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), Decimal('33.34'))
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_4), Decimal('0'))
 
         self.assertEqual(recurring_cost.get_billed_amount(), 0)
 
         self.assertEqual(recurring_cost.is_one_off(), True)
         self.assertEqual(recurring_cost._is_finished(), False)
-
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_1), False)
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_2), False)
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_3), False)
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_4), True)
-
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_1), True)
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_2), True)
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_3), True)
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_4), False)
+        self.assertEqual(recurring_cost._is_billing_complete(), False)
+        self.assertEqual(recurring_cost.is_enactable(), True)
 
     def test_one_off_with_some_recurrences(self):
         """One-off with one recurrences done"""
@@ -184,27 +180,20 @@ class RecurringCostModelTestCase(TestCase):
             initial_billing_cycle=self.billing_cycle_1,
             total_billing_cycles=3,  # Makes this a one-off cost
         )
+        self.add_split(recurring_cost)
         recurring_cost.enact(self.billing_cycle_1)
 
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 33.33)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 33.33)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 33.34)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_4), 0)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), Decimal('33.33'))
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), Decimal('33.33'))
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), Decimal('33.34'))
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_4), Decimal('0'))
 
-        self.assertEqual(recurring_cost.get_billed_amount(), 33.33)
+        self.assertEqual(recurring_cost.get_billed_amount(), Decimal('33.33'))
 
         self.assertEqual(recurring_cost.is_one_off(), True)
         self.assertEqual(recurring_cost._is_finished(), False)
-
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_1), False)
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_2), False)
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_3), False)
-        self.assertEqual(recurring_cost._is_billing_complete(self.billing_cycle_4), True)
-
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_1), True)
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_2), True)
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_3), True)
-        self.assertEqual(recurring_cost.is_enactable(self.billing_cycle_4), False)
+        self.assertEqual(recurring_cost._is_billing_complete(), False)
+        self.assertEqual(recurring_cost.is_enactable(), True)
 
     def test_one_off_complete(self):
         """One-off cost with all recurrences done"""
