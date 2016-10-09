@@ -68,13 +68,9 @@ class RecurringCost(models.Model):
     total_billing_cycles = models.PositiveIntegerField(default=None, null=True, blank=True,
                                                        help_text='Stop billing after this many billing cycles.')
     type = models.CharField(max_length=20, choices=TYPES, default=TYPES.normal)
-    initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle')
+    #: May only be Null if disabled=True. Enforced by DB constraint.
+    initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', null=True, blank=True)
     transactions = models.ManyToManyField(Transaction, through='costs.RecurredCost')
-
-    # TODO: Check: Cannot create RecurredCost instances if disabled=True
-    # TODO: Check: disabled=True XOR initial_billing_cycle HAS a value
-    #              (we want to make sure initial_billing_cycle is set to something if cost is ever un-disabled)
-    # TODO: Check: fixed_amount required for type=normal
 
     def get_amount(self, billing_cycle):
         return {
