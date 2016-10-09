@@ -1,11 +1,18 @@
+from decimal import Decimal
+
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db import transaction as db_transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 from django_smalluuid.models import SmallUUIDField
 from django_smalluuid.models import uuid_default
-from hordak.models import Transaction
+from hordak.models import Transaction, Leg
 from model_utils import Choices
 
-from swiftwind.costs.exceptions import CannotEnactUnenactableRecurringCostError
+from .exceptions import CannotEnactUnenactableRecurringCostError, CannotRecreateTransactionOnRecurredCost, \
+    NoSplitsFoundForRecurringCost
+from swiftwind.utilities.splitting import ratio_split
 
 
 class RecurringCost(models.Model):
@@ -69,11 +76,11 @@ class RecurringCost(models.Model):
             if is_final_billing_cycle:
                 return self.fixed_amount - self.get_billed_amount()
             else:
-                splits = split_monetary_amount(
+                splits = ratio_split(
                     amount=self.fixed_amount,
-                    total_periods=self.total_billing_cycles,
+                    ratios=[Decimal('1')] * self.total_billing_cycles,
                 )
-                #TODO: As does this
+                #TODO: ...as does this
                 return splits[self.recurrences.count()]
         else:
             return self.fixed_amount
@@ -88,8 +95,9 @@ class RecurringCost(models.Model):
 
     def get_billed_amount(self):
         """Get the total amount billed so far"""
-        pass
+        return Leg.objects.filter(transaction__recurred_cost__recurring_cost=self).sum_amount()
 
+    @db_transaction.atomic()
     def enact(self, billing_cycle):
         if not self.is_enactable(billing_cycle):
             raise CannotEnactUnenactableRecurringCostError(
@@ -100,15 +108,19 @@ class RecurringCost(models.Model):
                 )
             )
 
-        amount = self.get_amount(billing_cycle)
+        recurred_cost = RecurredCost(
+            recurring_cost=self,
+            billing_cycle=billing_cycle,
+        )
+        recurred_cost.make_transaction()
+        recurred_cost.save()
 
-        raise NotImplementedError()
+        self.disable_if_done(billing_cycle)
 
-        self.disable_if_done()
-
-    def disable_if_done(self, commit=True):
+    def disable_if_done(self, billing_cycle, commit=True):
         """Set disabled=True if this cost is done (billing cycles done or billing complete)"""
-        raise NotImplementedError()
+        if self._is_finished() or self._is_billing_complete(billing_cycle):
+            self.disabled = True
 
         if commit:
             self.save()
@@ -131,9 +143,34 @@ class RecurringCost(models.Model):
 
     def _is_billing_complete(self, billing_cycle):
         if self.is_one_off():
-            return self.billed_amount() >= self.get_amount(billing_cycle)
+            return self.get_billed_amount() >= self.get_amount(billing_cycle)
         else:
             return False
+
+
+class RecurringCostSplitQuerySet(QuerySet):
+
+    def split(self, amount):
+        """Split the value given by amount according to the RecurringCostSplit's portions
+
+        Args:
+            amount (Decimal):
+
+        Returns:
+            list[(RecurringCostSplit, Decimal)]: A list with elements in the form (RecurringCostSplit, Decimal)
+        """
+        split_objs = list(self.all())
+        if not split_objs:
+            raise NoSplitsFoundForRecurringCost()
+
+        portions = [split_obj.portion for split_obj in split_objs]
+
+        split_amounts = ratio_split(amount, portions)
+        return [
+            (split_objs[i], split_amount)
+            for i, split_amount
+            in enumerate(split_amounts)
+        ]
 
 
 class RecurringCostSplit(models.Model):
@@ -143,7 +180,10 @@ class RecurringCostSplit(models.Model):
     from_account = models.ForeignKey('hordak.Account')
     portion = models.DecimalField(max_digits=13, decimal_places=2, default=1)
 
+    objects = models.Manager.from_queryset(RecurringCostSplitQuerySet)()
+
     class Meta:
+        base_manager_name = 'objects'
         unique_together = (
             ('recurring_cost', 'from_account'),
         )
@@ -164,4 +204,41 @@ class RecurredCost(models.Model):
         unique_together = (
             ('recurring_cost', 'billing_cycle'),
         )
+
+    def make_transaction(self):
+        """Create the transaction for this RecurredCost
+
+        May only be used to create the RecurredCost's initial transaction.
+
+        Returns:
+            Transaction: The created transaction, also assigned to self.transaction
+        """
+        try:
+            has_transaction = bool(self.transaction)
+        except Transaction.DoesNotExist:
+            pass
+        else:
+            raise CannotRecreateTransactionOnRecurredCost()
+
+        self.transaction = Transaction.objects.create(
+            description='Created by recurring cost: {}'.format(self.recurring_cost)
+        )
+        amount = self.recurring_cost.get_amount(self.billing_cycle)
+        splits = self.recurring_cost.splits.all().split(amount)
+
+        self.transaction.legs.add(Leg.objects.create(
+            transaction=self.transaction,
+            amount=amount,
+            account=self.recurring_cost.to_account,
+        ))
+
+        for split, split_amount in splits:
+            self.transaction.legs.add(Leg.objects.create(
+                transaction=self.transaction,
+                amount=split_amount * -1,
+                account=split.from_account,
+            ))
+
+        return self.transaction
+
 

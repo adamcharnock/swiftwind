@@ -1,12 +1,22 @@
 from decimal import Decimal
 
 
-# All of these functions should be considered for removal
-# unless used following the django-hordak refactoring
+def ratio_split(amount, ratios, precision=2):
+    """ Split in_value according to the ratios specified in `ratios`
 
-def ratio_split(in_value, ratios, precision=2):
+    This is special in that it ensures the returned values always sum to
+    in_value (i.e. we avoid losses or gains due to rounding errors)
+
+    Args:
+        amount (Decimal):
+        ratios (list[Decimal]):
+        precision (int):
+
+    Returns: list(Decimal)
+
+    """
     ratio_total = sum(ratios)
-    divided_value = in_value / ratio_total
+    divided_value = amount / ratio_total
     values = []
     for ratio in ratios:
         value = divided_value * ratio
@@ -18,5 +28,7 @@ def ratio_split(in_value, ratios, precision=2):
     remainder = sum(remainders)
     # Give the last person the (positive or negative) remainder
     rounded[-1] = (rounded[-1] + remainder).quantize(Decimal('0.01'))
+
+    assert sum(rounded) == amount
 
     return rounded
