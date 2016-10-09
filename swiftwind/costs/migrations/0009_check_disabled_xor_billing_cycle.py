@@ -14,13 +14,13 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             """
-            ALTER TABLE costs_recurringcost ADD CONSTRAINT check_disabled_xor_billing_cycle
+            ALTER TABLE costs_recurringcost ADD CONSTRAINT check_disabled_xor_initial_billing_cycle
             CHECK (
                 (disabled AND initial_billing_cycle_id IS NULL)
                 OR
                 (NOT disabled AND initial_billing_cycle_id IS NOT NULL)
             )
             """,
-            "ALTER TABLE costs_recurringcost DROP CONSTRAINT check_disabled_xor_billing_cycles"
+            "ALTER TABLE costs_recurringcost DROP CONSTRAINT check_disabled_xor_initial_billing_cycle"
         )
     ]

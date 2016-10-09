@@ -122,7 +122,6 @@ class RecurringCost(models.Model):
         """Get the total amount billed so far"""
         return Leg.objects.debits().filter(transaction__recurred_cost__recurring_cost=self).sum_amount()
 
-    @db_transaction.atomic()
     def enact(self, billing_cycle):
         """Enact this RecurringCost for the given billing cycle
 
@@ -134,11 +133,7 @@ class RecurringCost(models.Model):
         as_of = billing_cycle.date_range.lower
         if not self.is_enactable(as_of):
             raise CannotEnactUnenactableRecurringCostError(
-                "RecurringCost is unenactable. Disabled: {}, finished: {}, billing complete: {}".format(
-                    self.disabled,
-                    self._is_finished(as_of),
-                    self._is_billing_complete()
-                )
+                "RecurringCost {} is unenactable.".format(self.uuid)
             )
 
         if self.has_enacted(billing_cycle):
@@ -146,18 +141,20 @@ class RecurringCost(models.Model):
                 'RecurringCost cost {} already enacted for {}'.format(self, billing_cycle)
             )
 
-        recurred_cost = RecurredCost(
-            recurring_cost=self,
-            billing_cycle=billing_cycle,
-        )
-        recurred_cost.make_transaction()
-        recurred_cost.save()
+        with db_transaction.atomic():
+            recurred_cost = RecurredCost(
+                recurring_cost=self,
+                billing_cycle=billing_cycle,
+            )
+            recurred_cost.make_transaction()
+            recurred_cost.save()
 
         self.disable_if_done(billing_cycle)
 
     def disable_if_done(self, commit=True):
         """Set disabled=True if we have billed all we need to"""
         if self._is_billing_complete():
+            self.initial_billing_cycle = None
             self.disabled = True
 
         if commit:
