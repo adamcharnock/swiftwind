@@ -557,20 +557,25 @@ class RecurringCostFormTestCase(TestCase):
         self.housemate_2 = Account.objects.create(name='Housemate 2', code='2', parent=self.housemate_parent_account)
         self.housemate_3 = Account.objects.create(name='Housemate 3', code='3', parent=self.housemate_parent_account)
 
+        BillingCycle.populate()
+        self.first_billing_cycle = BillingCycle.objects.first()
+
     def test_valid(self):
         form = RecurringCostForm(data=dict(
             to_account=self.expense_account.uuid,
             type=RecurringCost.TYPES.normal,
             disabled='',
             fixed_amount='100',
+            initial_billing_cycle=self.first_billing_cycle.pk,
         ))
-        self.assertTrue(form.is_valid())
+        self.assertTrue(form.is_valid(), form.errors)
         obj = form.save()
         obj.refresh_from_db()
         self.assertEqual(obj.to_account, self.expense_account)
         self.assertEqual(obj.type, RecurringCost.TYPES.normal)
         self.assertEqual(obj.disabled, False)
         self.assertEqual(obj.fixed_amount, Decimal('100'))
+        self.assertEqual(obj.initial_billing_cycle, self.first_billing_cycle)
 
         splits = obj.splits.all()
         self.assertEqual(splits.count(), 3)
@@ -590,9 +595,45 @@ class RecurringCostFormTestCase(TestCase):
             disabled='',
             fixed_amount='100',
             total_billing_cycles='5',
+            initial_billing_cycle=self.first_billing_cycle.pk,
         ))
         self.assertFalse(form.is_valid())
         self.assertIn('fixed_amount', form.errors)
+
+    def test_fixed_amount_disabled(self):
+        form = RecurringCostForm(data=dict(
+            to_account=self.expense_account.uuid,
+            type=RecurringCost.TYPES.normal,
+            disabled='on',
+            fixed_amount='100',
+            total_billing_cycles='5',
+            initial_billing_cycle=None,
+        ))
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_initial_billing_cycle_required(self):
+        form = RecurringCostForm(data=dict(
+            to_account=self.expense_account.uuid,
+            type=RecurringCost.TYPES.normal,
+            disabled='',
+            fixed_amount='100',
+            total_billing_cycles='5',
+            initial_billing_cycle=None,
+        ))
+        self.assertFalse(form.is_valid())
+        self.assertIn('initial_billing_cycle', form.errors)
+
+    def test_initial_billing_cycle_unrequired(self):
+        form = RecurringCostForm(data=dict(
+            to_account=self.expense_account.uuid,
+            type=RecurringCost.TYPES.normal,
+            disabled='on    ',
+            fixed_amount='100',
+            total_billing_cycles='5',
+            initial_billing_cycle=self.first_billing_cycle,
+        ))
+        self.assertFalse(form.is_valid())
+        self.assertIn('initial_billing_cycle', form.errors)
 
 
 class RecurringCostsViewTestCase(TestCase):

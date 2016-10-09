@@ -70,10 +70,7 @@ class RecurringCost(models.Model):
                                                        help_text='Stop billing after this many billing cycles.')
     type = models.CharField(max_length=20, choices=TYPES, default=TYPES.normal)
     #: May only be Null if disabled=True. Enforced by DB constraint.
-    initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', null=True, blank=True,
-                                              limit_choices_to=lambda: {
-                                                  'end_date__gte': datetime.now().date()[:20]
-                                              })
+    initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', null=True, blank=True)
     transactions = models.ManyToManyField(Transaction, through='costs.RecurredCost')
 
     def get_amount(self, billing_cycle):
