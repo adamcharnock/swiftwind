@@ -26,6 +26,14 @@ class RecurringCost(models.Model):
     One-off costs have a value for `total_billing_cycles` set. This value indicates
     how many billing cycles the one-off cost should be spread. After this point
     the recurring cost will be disabled.
+
+    Additionally, the type field indicates how the cost should calculate the amount
+    to be billed.
+
+    A note on 'enacting': We use the term 'enact' to refer to the creation of a
+    definite RecurredCost from the more conceptual RecurringCost. The former
+    is the creator - and link to - the actual transactions created for the cost in a
+    given billing cycle.
     """
 
     TYPES = Choices(
@@ -256,6 +264,7 @@ class RecurredCost(models.Model):
 
     class Meta:
         unique_together = (
+            # A RecurringCost should only be enacted once per billing cycle
             ('recurring_cost', 'billing_cycle'),
         )
 
@@ -279,8 +288,12 @@ class RecurredCost(models.Model):
         )
 
         amount = self.recurring_cost.get_amount(self.billing_cycle)
+        # Use the SplitManager's custom queryset's split() method to get the
+        # amount to be billed for each split
         splits = self.recurring_cost.splits.all().split(amount)
 
+        # Create the transaction leg for the outbound funds
+        # (normally to an expense account)
         self.transaction.legs.add(Leg.objects.create(
             transaction=self.transaction,
             amount=amount * -1,
@@ -288,6 +301,8 @@ class RecurredCost(models.Model):
         ))
 
         for split, split_amount in splits:
+            # Create the transaction legs for the inbound funds
+            # (from housemate accounts)
             self.transaction.legs.add(Leg.objects.create(
                 transaction=self.transaction,
                 amount=split_amount,
