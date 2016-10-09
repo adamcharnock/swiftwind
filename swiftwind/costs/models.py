@@ -13,7 +13,8 @@ from psycopg2._range import DateRange
 
 from swiftwind.billing_cycle.models import BillingCycle
 from .exceptions import CannotEnactUnenactableRecurringCostError, CannotRecreateTransactionOnRecurredCost, \
-    NoSplitsFoundForRecurringCost, ProvidedBillingCycleBeginsBeforeInitialBillingCycle
+    NoSplitsFoundForRecurringCost, ProvidedBillingCycleBeginsBeforeInitialBillingCycle, \
+    RecurringCostAlreadyEnactedForBillingCycle
 from swiftwind.utilities.splitting import ratio_split
 
 
@@ -123,6 +124,11 @@ class RecurringCost(models.Model):
                 )
             )
 
+        if self.has_enacted(billing_cycle):
+            raise RecurringCostAlreadyEnactedForBillingCycle(
+                'RecurringCost cost {} already enacted for {}'.format(self, billing_cycle)
+            )
+
         recurred_cost = RecurredCost(
             recurring_cost=self,
             billing_cycle=billing_cycle,
@@ -145,6 +151,12 @@ class RecurringCost(models.Model):
             not self.disabled and \
             not self._is_finished() and \
             not self._is_billing_complete()
+
+    def has_enacted(self, billing_cycle):
+        return RecurredCost.objects.filter(
+            recurring_cost=self,
+            billing_cycle=billing_cycle,
+        ).exists()
 
     def is_one_off(self):
         return bool(self.total_billing_cycles)
@@ -270,14 +282,14 @@ class RecurredCost(models.Model):
 
         self.transaction.legs.add(Leg.objects.create(
             transaction=self.transaction,
-            amount=amount,
+            amount=amount * -1,
             account=self.recurring_cost.to_account,
         ))
 
         for split, split_amount in splits:
             self.transaction.legs.add(Leg.objects.create(
                 transaction=self.transaction,
-                amount=split_amount * -1,
+                amount=split_amount,
                 account=split.from_account,
             ))
 
