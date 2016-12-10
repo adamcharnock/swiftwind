@@ -8,6 +8,7 @@ from django_smalluuid.models import SmallUUIDField
 from django_smalluuid.models import uuid_default
 from django.utils.datetime_safe import datetime
 from hordak.models import Transaction, Leg
+from hordak.utilities.currency import Balance
 from model_utils import Choices
 from psycopg2._range import DateRange
 
@@ -73,6 +74,12 @@ class RecurringCost(models.Model):
     initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', null=True, blank=True)
     transactions = models.ManyToManyField(Transaction, through='costs.RecurredCost')
 
+    @property
+    def currency(self):
+        # This is a simplification, but probably ok for now as swiftwind probably won't
+        # need to deal with multiple currencies given its target audience
+        return self.to_account.currencies[0]
+
     def get_amount(self, billing_cycle):
         return {
             RecurringCost.TYPES.normal: self.get_amount_normal,
@@ -120,7 +127,7 @@ class RecurringCost(models.Model):
 
     def get_billed_amount(self):
         """Get the total amount billed so far"""
-        return Leg.objects.debits().filter(transaction__recurred_cost__recurring_cost=self).sum_amount()
+        return Leg.objects.filter(transaction__recurred_cost__recurring_cost=self, amount__gt=0).sum_to_balance()
 
     def enact(self, billing_cycle):
         """Enact this RecurringCost for the given billing cycle
@@ -209,7 +216,7 @@ class RecurringCost(models.Model):
         If so, we should not be enacting this RecurringCost.
         """
         if self.is_one_off():
-            return self.get_billed_amount() >= self.fixed_amount
+            return self.get_billed_amount() >= Balance(self.fixed_amount, self.currency)
         else:
             return False
 
