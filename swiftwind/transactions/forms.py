@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory, formset_factory, BaseModelFormSet, BaseInlineFormSet
+from djmoney.forms.fields import MoneyField
 from hordak.models import Account, Transaction, StatementImport, Leg
 from mptt.forms import TreeNodeChoiceField
 
@@ -11,7 +12,7 @@ from .utilities import DATE_FORMATS
 class SimpleTransactionForm(forms.ModelForm):
     from_account = forms.ModelChoiceField(queryset=Account.objects.filter(children__isnull=True), to_field_name='uuid')
     to_account = forms.ModelChoiceField(queryset=Account.objects.filter(children__isnull=True), to_field_name='uuid')
-    amount = forms.DecimalField(decimal_places=2)
+    amount = MoneyField(decimal_places=2)
 
     class Meta:
         model = Transaction
@@ -30,7 +31,7 @@ class SimpleTransactionForm(forms.ModelForm):
 
 
 class TransactionImportForm(forms.ModelForm):
-    bank_account = forms.ModelChoiceField(Account.objects.filter(has_statements=True), label='Import data for account')
+    bank_account = forms.ModelChoiceField(Account.objects.filter(is_bank_account=True), label='Import data for account')
 
     class Meta:
         model = TransactionImport
@@ -77,7 +78,7 @@ class TransactionForm(forms.ModelForm):
 class LegForm(forms.ModelForm):
     account = TreeNodeChoiceField(Account.objects.all(), to_field_name='uuid')
     description = forms.CharField(required=False)
-    amount = forms.DecimalField(required=True)
+    amount = MoneyField(required=True)
 
     class Meta:
         model = Leg

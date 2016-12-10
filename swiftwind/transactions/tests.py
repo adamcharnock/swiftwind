@@ -9,35 +9,33 @@ from django.utils.datetime_safe import date
 from hordak.models import Account, Transaction, StatementLine, StatementImport
 from django.test import TestCase
 from django.test import Client
+from hordak.utilities.currency import Balance
+from moneyed import Money
 
 from swiftwind.transactions.models import TransactionImportColumn
 from swiftwind.transactions.resources import StatementLineResource
+from swiftwind.utilities.testing import DataProvider
 from .forms import SimpleTransactionForm, TransactionImportForm
 from .models import TransactionImport
 
 
-def hordak_import():
-    return StatementImport.objects.create(
-        bank_account=Account.objects.create(name='Bank', code='1', has_statements=True)
-    )
-
-
-class SimpleTransactionFormTestCase(TestCase):
+class SimpleTransactionFormTestCase(DataProvider, TestCase):
 
     def setUp(self):
-        self.from_account = Account.objects.create(name='From Account', type=Account.TYPES.income, code='1')
-        self.to_account = Account.objects.create(name='To Account', type=Account.TYPES.income, code='2')
+        self.from_account = self.account(name='From Account', type=Account.TYPES.income)
+        self.to_account = self.account(name='To Account', type=Account.TYPES.income)
 
-        self.bank = Account.objects.create(name='Bank', type=Account.TYPES.asset, code='5')
-        self.income = Account.objects.create(name='Income', type=Account.TYPES.income, code='6')
-        self.expense = Account.objects.create(name='Expense', type=Account.TYPES.expense, code='7')
+        self.bank = self.account(name='Bank', type=Account.TYPES.asset)
+        self.income = self.account(name='Income', type=Account.TYPES.income)
+        self.expense = self.account(name='Expense', type=Account.TYPES.expense)
 
     def test_valid_data(self):
         form = SimpleTransactionForm(dict(
             from_account=self.from_account.uuid,
             to_account=self.to_account.uuid,
             description='A test simple transaction',
-            amount='50.00',
+            amount_0='50.00',
+            amount_1='EUR',
         ))
         self.assertTrue(form.is_valid())
         form.save()
@@ -48,16 +46,15 @@ class SimpleTransactionFormTestCase(TestCase):
         self.assertEqual(transaction.legs.count(), 2)
 
         # Account balances changed
-        self.assertEqual(self.from_account.balance(), -50)
-        self.assertEqual(self.to_account.balance(), 50)
+        self.assertEqual(self.from_account.balance(), Balance(-50, 'EUR'))
+        self.assertEqual(self.to_account.balance(), Balance(50, 'EUR'))
 
         # Check transaction legs have amounts set as expected
         from_leg = transaction.legs.get(account=self.from_account)
         to_leg = transaction.legs.get(account=self.to_account)
 
-        self.assertEqual(from_leg.amount, -50)
-        self.assertEqual(to_leg.amount, 50)
-
+        self.assertEqual(from_leg.amount, Money(-50, 'EUR'))
+        self.assertEqual(to_leg.amount, Money(50, 'EUR'))
 
     def test_transfer_from_bank_to_income(self):
         """If we move money out of the bank and into an income account, we expect both values to go up"""
@@ -66,19 +63,21 @@ class SimpleTransactionFormTestCase(TestCase):
             from_account=self.bank.uuid,
             to_account=self.income.uuid,
             description='A test simple transaction',
-            amount='50.00',
+            amount_0='50.00',
+            amount_1='EUR',
         ))
         self.assertTrue(form.is_valid())
         form.save()
-        self.assertEqual(self.bank.balance(), 50)
-        self.assertEqual(self.income.balance(), 50)
+        self.assertEqual(self.bank.balance(), Balance(50, 'EUR'))
+        self.assertEqual(self.income.balance(), Balance(50, 'EUR'))
 
     def test_no_from_account(self):
         form = SimpleTransactionForm(dict(
             from_account='',
             to_account=self.to_account.uuid,
             description='A test simple transaction',
-            amount='50.00',
+            amount_0='50.00',
+            amount_1='EUR',
         ))
         self.assertFalse(form.is_valid())
 
@@ -87,7 +86,8 @@ class SimpleTransactionFormTestCase(TestCase):
             from_account=self.from_account.uuid,
             to_account='',
             description='A test simple transaction',
-            amount='50.00',
+            amount_0='50.00',
+            amount_1='EUR',
         ))
         self.assertFalse(form.is_valid())
 
@@ -96,6 +96,8 @@ class SimpleTransactionFormTestCase(TestCase):
             from_account=self.from_account.uuid,
             to_account=self.to_account.uuid,
             description='',
+            amount_0='50.00',
+            amount_1='EUR',
             amount='50.00',
         ))
         self.assertTrue(form.is_valid())  # valid
@@ -105,12 +107,13 @@ class SimpleTransactionFormTestCase(TestCase):
             from_account=self.from_account.uuid,
             to_account=self.to_account.uuid,
             description='A test simple transaction',
-            amount='',
+            amount_0='',
+            amount_1='',
         ))
         self.assertFalse(form.is_valid())
 
 
-class CreateImportViewTestCase(TestCase):
+class CreateImportViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
         self.view_url = reverse('transactions:import_create')
@@ -123,13 +126,13 @@ class CreateImportViewTestCase(TestCase):
     def test_success_url(self):
         from swiftwind.transactions.views import CreateImportView
         view = CreateImportView()
-        view.object = TransactionImport.objects.create(hordak_import=hordak_import())
+        view.object = TransactionImport.objects.create(hordak_import=self.statement_import())
         self.assertIn(str(view.object.uuid), view.get_success_url())
 
-class TransactionFormTestCase(TestCase):
+class TransactionFormTestCase(DataProvider, TestCase):
 
     def setUp(self):
-        self.account = Account.objects.create(name='Bank', code='1', has_statements=True)
+        self.account = self.account(is_bank_account=True, type=Account.TYPES.asset)
         self.f = SimpleUploadedFile('data.csv',
                                     six.binary_type(b'Number,Date,Account,Amount,Subcategory,Memo'))
 
@@ -143,7 +146,7 @@ class TransactionFormTestCase(TestCase):
 
     def test_edit(self):
         obj = TransactionImport.objects.create(
-            hordak_import=StatementImport.objects.create(bank_account=self.account),
+            hordak_import=self.statement_import(bank_account=self.account),
             has_headings=True,
             file=self.f
         )
@@ -153,10 +156,10 @@ class TransactionFormTestCase(TestCase):
         self.assertEqual(obj.columns.count(), 0)
 
 
-class SetupImportViewTestCase(TestCase):
+class SetupImportViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
-        self.transaction_import = TransactionImport.objects.create(hordak_import=hordak_import())
+        self.transaction_import = TransactionImport.objects.create(hordak_import=self.statement_import())
         self.view_url = reverse('transactions:import_setup', args=[self.transaction_import.uuid])
 
     def test_load(self):
@@ -206,7 +209,7 @@ class SetupImportViewTestCase(TestCase):
 
 
 
-class TransactionImportTestCase(TestCase):
+class TransactionImportTestCase(DataProvider, TestCase):
 
     def test_create_columns_ok(self):
         f = SimpleUploadedFile('data.csv',
@@ -215,7 +218,7 @@ class TransactionImportTestCase(TestCase):
                                    b'1,1/1/1,123456789,123,OTH,Some random notes')
                                )
 
-        inst = TransactionImport.objects.create(has_headings=True, file=f, hordak_import=hordak_import())
+        inst = TransactionImport.objects.create(has_headings=True, file=f, hordak_import=self.statement_import())
         inst.create_columns()
 
         columns = inst.columns.all()
@@ -251,11 +254,11 @@ class TransactionImportTestCase(TestCase):
         self.assertEqual(columns[5].example, 'Some random notes')
 
 
-class StatementLineResourceTestCase(TestCase):
+class StatementLineResourceTestCase(DataProvider, TestCase):
     """Test the resource definition in resources.py"""
 
     def setUp(self):
-        self.account = Account.objects.create(name='Bank', code='1')
+        self.account = self.account(is_bank_account=True, type=Account.TYPES.asset)
         logging.disable(logging.CRITICAL)
 
     def tearDown(self):
@@ -478,7 +481,7 @@ class StatementLineResourceTestCase(TestCase):
         self.assertIn('zero not allowed', str(result.row_errors()[0][1][0].error))
 
 
-class DryRunViewTestCase(TestCase):
+class DryRunViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
         logging.disable(logging.CRITICAL)
@@ -492,7 +495,12 @@ class DryRunViewTestCase(TestCase):
                                    b'Number,Date,Account,Amount,Subcategory,Memo\n'
                                    b'1,1/1/' + year + b',123456789,123,OTH,Some random notes')
                                )
-        self.transaction_import = TransactionImport.objects.create(has_headings=True, file=f, date_format='%d/%m/%Y', hordak_import=hordak_import())
+        self.transaction_import = TransactionImport.objects.create(
+            has_headings=True,
+            file=f,
+            date_format='%d/%m/%Y',
+            hordak_import=self.statement_import(),
+        )
         self.view_url = reverse('transactions:import_dry_run', args=[self.transaction_import.uuid])
         self.transaction_import.create_columns()
 
@@ -535,7 +543,7 @@ class DryRunViewTestCase(TestCase):
         self.assertEqual(StatementLine.objects.count(), 0)
 
 
-class ExecuteViewTestCase(TestCase):
+class ExecuteViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
         logging.disable(logging.CRITICAL)
@@ -549,7 +557,12 @@ class ExecuteViewTestCase(TestCase):
                                    b'Number,Date,Account,Amount,Subcategory,Memo\n'
                                    b'1,1/1/' + year + b',123456789,123,OTH,Some random notes')
                                )
-        self.transaction_import = TransactionImport.objects.create(has_headings=True, file=f, date_format='%d/%m/%Y', hordak_import=hordak_import())
+        self.transaction_import = TransactionImport.objects.create(
+            has_headings=True,
+            file=f,
+            date_format='%d/%m/%Y',
+            hordak_import=self.statement_import()
+        )
         self.view_url = reverse('transactions:import_execute', args=[self.transaction_import.uuid])
         self.transaction_import.create_columns()
 
@@ -591,13 +604,13 @@ class ExecuteViewTestCase(TestCase):
         self.assertEqual(StatementLine.objects.count(), 0)
 
 
-class ReconcileTransactionsViewTestCase(TestCase):
+class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
         self.view_url = reverse('transactions:reconcile')
 
-        self.bank_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.asset)
-        self.income_account = Account.objects.create(name='Bank', code='1', has_statements=True, type=Account.TYPES.income)
+        self.bank_account = self.account(is_bank_account=True, type=Account.TYPES.asset)
+        self.income_account = self.account(is_bank_account=False, type=Account.TYPES.income)
 
         statement_import = StatementImport.objects.create(bank_account=self.bank_account)
 
