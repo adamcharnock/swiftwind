@@ -22,7 +22,7 @@ def currency(value):
         locale_values = []
         for money in value.monies():
             locale_value = locale.currency(abs(money.amount), grouping=True, symbol=money.currency.code)
-            locale_value = locale_value if value >= 0 else "({})".format(locale_value)
+            locale_value = locale_value if money.amount >= 0 else "({})".format(locale_value)
             locale_values.append(locale_value)
     else:
         locale_value = locale.currency(abs(value), grouping=True)
