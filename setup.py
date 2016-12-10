@@ -10,7 +10,7 @@ setup(
     author_email='adam@adamcharnock.com',
     packages=find_packages(),
     scripts=[],
-    url='https://github.com/waldocollective/swiftwind',
+    url='https://github.com/adamcharnock/swiftwind',
     license='MIT',
     description='User-friendly billing for communal households',
     long_description=open('README.rst').read() if exists("README.rst") else "",
