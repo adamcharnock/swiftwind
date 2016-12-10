@@ -1,0 +1,54 @@
+{% extends 'adminlte/lib/_main_sidebar.html' %}
+{% load nav banking %}
+
+{% block nav_links %}
+    <li><a href="{% url 'dashboard:dashboard' %}"><i class="fa fa-tachometer"></i> <span>Dashboard</span></a></li>
+
+    <li>
+        <a href="{% url 'transactions:reconcile' %}">
+            <i class="fa fa-arrows-h"></i>
+            <span>Reconcile Transactions</span>
+            <span class="pull-right-container">
+                {% total_unreconciled as t %}
+                <small class="label pull-right {% if t > 0 %}bg-yellow{% else %}bg-green{% endif %}">{{ t }}</small>
+            </span>
+        </a>
+    </li>
+
+    <li><a href="{% url 'transactions:create' %}"><i class="fa fa-arrow-circle-right"></i> <span>Create Transaction</span></a></li>
+    <li><a href="{% url 'costs:recurring' %}"><i class="fa fa-clock-o"></i> <span>Recurring Costs</span></a></li>
+    <li><a href="{% url 'costs:one_off' %}"><i class="fa fa-money"></i> <span>One-off Costs</span></a></li>
+    <li><a href="{% url 'housemates:list' %}"><i class="fa fa-group"></i> <span>Housemates</span></a></li>
+
+    <li class="treeview">
+        <a href="#">
+            <i class="fa fa-user"></i>
+            <span>Housemate Accounts</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+
+        <ul class="treeview-menu">
+                <li><a href="#"><i class="fa fa-group"></i>Overview</a></li>
+            {% housemate_accounts as housemate_accounts %}
+            {% for account in housemate_accounts %}
+                <li>
+                    <a href="#">
+                        <i class="fa fa-user"></i>
+                        {{ account.name }}
+                        <span class="pull-right-container">
+                            {% with balance=account.balance %}
+                            <small class="label pull-right {% if balance > 0 %}bg-green{% elif balance < 0 %}bg-red{% else %}bg-gray{% endif %}">
+                                {{ balance|currency }}
+                            </small>
+                            {% endwith %}
+                        </span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </li>
+
+    <li><a href="{% url 'transactions:import_create' %}"><i class="fa fa-upload"></i> <span>Import Statement</span></a></li>
+{% endblock nav_links %}

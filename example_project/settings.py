@@ -29,6 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+INTERNAL_IPS = ['127.0.0.1']
 
 # Application definition
 
@@ -59,6 +60,8 @@ INSTALLED_APPS = [
     'swiftwind.dashboard',
     'swiftwind.housemates',
     'swiftwind.transactions',
+
+    'django_adminlte',
 ]
 
 MIDDLEWARE = [
@@ -153,3 +156,18 @@ CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 BROKER_URL = 'redis://localhost'
+
+# Debug toolbar
+if 'ENABLE_DEBUG_TOOLBAR' in os.environ:
+    ENABLE_DEBUG_TOOLBAR =bool(os.environ.get('ENABLE_DEBUG_TOOLBAR'))
+else:
+    try:
+        import debug_toolbar
+    except ImportError:
+        ENABLE_DEBUG_TOOLBAR = False
+    else:
+        ENABLE_DEBUG_TOOLBAR = True
+
+if ENABLE_DEBUG_TOOLBAR:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')

@@ -22,3 +22,9 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^', include('swiftwind.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+if settings.ENABLE_DEBUG_TOOLBAR:
+    import debug_toolbar
+    urlpatterns += [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ]
