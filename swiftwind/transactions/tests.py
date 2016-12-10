@@ -655,7 +655,7 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
         self.assertEqual(transaction_form.initial['description'], 'Item description 1')
 
         leg_formset = response.context['leg_formset']
-        self.assertEqual(leg_formset.forms[0].initial['amount'], Decimal('100.16'))
+        self.assertEqual(leg_formset.forms[0].initial['amount'], Money('100.16', 'EUR'))
 
     def test_post_reconcile_valid_one(self):
         response = self.client.post(self.view_url, data={
@@ -665,13 +665,15 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
             'legs-INITIAL_FORMS': '0',
             'legs-TOTAL_FORMS': '2',
 
-            'legs-0-amount': '100.16',
+            'legs-0-amount_0': '100.16',
+            'legs-0-amount_1': 'EUR',
             'legs-0-account': self.income_account.uuid,
             'legs-0-id': '',
         })
 
         if 'transaction_form' in response.context:
             self.assertFalse(response.context['transaction_form'].errors)
+            self.assertFalse(response.context['leg_formset'].non_form_errors())
             self.assertFalse(response.context['leg_formset'].errors)
 
         self.line1.refresh_from_db()
@@ -689,10 +691,10 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
         leg_in = transaction.legs.get(account=self.bank_account)
         leg_out = transaction.legs.get(account=self.income_account)
 
-        self.assertEqual(leg_in.amount, Decimal('-100.16'))
+        self.assertEqual(leg_in.amount, Money('-100.16', 'EUR'))
         self.assertEqual(leg_in.account, self.bank_account)
 
-        self.assertEqual(leg_out.amount, Decimal('100.16'))
+        self.assertEqual(leg_out.amount, Money('100.16', 'EUR'))
         self.assertEqual(leg_out.account, self.income_account)
 
         self.assertNotIn('leg_formset', response.context)
@@ -706,11 +708,13 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
             'legs-INITIAL_FORMS': '0',
             'legs-TOTAL_FORMS': '2',
 
-            'legs-0-amount': '50.16',
+            'legs-0-amount_0': '50.16',
+            'legs-0-amount_1': 'EUR',
             'legs-0-account': self.income_account.uuid,
             'legs-0-id': '',
 
-            'legs-1-amount': '50.00',
+            'legs-1-amount_0': '50.00',
+            'legs-1-amount_1': 'EUR',
             'legs-1-account': self.income_account.uuid,
             'legs-1-id': '',
         })
@@ -730,7 +734,8 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
             'legs-INITIAL_FORMS': '0',
             'legs-TOTAL_FORMS': '2',
 
-            'legs-0-amount': '1',
+            'legs-0-amount_0': '1',
+            'legs-0-amount_1': 'EUR',
             'legs-0-account': self.income_account.uuid,
             'legs-0-id': '',
         })
@@ -748,7 +753,8 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
             'legs-INITIAL_FORMS': '0',
             'legs-TOTAL_FORMS': '2',
 
-            'legs-0-amount': '-1',
+            'legs-0-amount_0': '-1',
+            'legs-0-amount_1': 'EUR',
             'legs-0-account': self.income_account.uuid,
             'legs-0-id': '',
         })
@@ -765,7 +771,8 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
             'legs-INITIAL_FORMS': '0',
             'legs-TOTAL_FORMS': '2',
 
-            'legs-0-amount': '0',
+            'legs-0-amount_0': '0',
+            'legs-0-amount_1': 'EUR',
             'legs-0-account': self.income_account.uuid,
             'legs-0-id': '',
         })
@@ -783,7 +790,8 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
             'legs-INITIAL_FORMS': '0',
             'legs-TOTAL_FORMS': '2',
 
-            'legs-0-amount': '50.12',
+            'legs-0-amount_0': '50.12',
+            'legs-0-amount_1': 'EUR',
             'legs-0-account': self.income_account.uuid,
             'legs-0-id': '',
         })

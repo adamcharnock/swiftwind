@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory, formset_factory, BaseModelFormSet, BaseInlineFormSet
 from djmoney.forms.fields import MoneyField
 from hordak.models import Account, Transaction, StatementImport, Leg
+from moneyed import Money
 from mptt.forms import TreeNodeChoiceField
 
 from .models import TransactionImportColumn, TransactionImport
@@ -78,7 +79,7 @@ class TransactionForm(forms.ModelForm):
 class LegForm(forms.ModelForm):
     account = TreeNodeChoiceField(Account.objects.all(), to_field_name='uuid')
     description = forms.CharField(required=False)
-    amount = MoneyField(required=True)
+    amount = MoneyField(required=True, decimal_places=2)
 
     class Meta:
         model = Leg
@@ -90,7 +91,7 @@ class LegForm(forms.ModelForm):
 
     def clean_amount(self):
         amount = self.cleaned_data['amount']
-        if amount <= 0:
+        if amount.amount <= 0:
             raise ValidationError('Amount must be greater than zero')
 
         if self.statement_line.amount < 0:
@@ -103,6 +104,7 @@ class BaseLegFormSet(BaseInlineFormSet):
 
     def __init__(self, **kwargs):
         self.statement_line = kwargs.pop('statement_line')
+        self.currency = self.statement_line.statement_import.bank_account.currencies[0]
         super(BaseLegFormSet, self).__init__(**kwargs)
 
     def get_form_kwargs(self, index):
@@ -110,7 +112,7 @@ class BaseLegFormSet(BaseInlineFormSet):
         kwargs.update(statement_line=self.statement_line)
         if index == 0:
             kwargs.update(initial=dict(
-                amount=abs(self.statement_line.amount)
+                amount=Money(abs(self.statement_line.amount), self.currency)
             ))
         return kwargs
 
@@ -121,7 +123,7 @@ class BaseLegFormSet(BaseInlineFormSet):
             return
 
         amounts = [f.cleaned_data['amount'] for f in self.forms if f.has_changed()]
-        if self.statement_line.amount != sum(amounts):
+        if Money(self.statement_line.amount, self.currency) != sum(amounts):
             raise ValidationError('Amounts must add up to {}'.format(self.statement_line.amount))
 
 
