@@ -2,11 +2,12 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from hordak.models import Account
+from hordak.tests.utils import DataProvider
 
 from swiftwind.housemates.models import Housemate
 
 
-class HousemateCreateTestCase(TestCase):
+class HousemateCreateTestCase(DataProvider, TestCase):
 
     def setUp(self):
         self.view_url = reverse('housemates:create')
@@ -16,10 +17,9 @@ class HousemateCreateTestCase(TestCase):
             first_name='Joe',
             last_name='Bloggs',
         )
-        self.parent_account = Account.objects.create(
+        self.parent_account = self.account(
             name='Housemate Income',
             type=Account.TYPES.income,
-            code='1',
         )
 
     def test_get(self):
@@ -27,7 +27,7 @@ class HousemateCreateTestCase(TestCase):
         self.assertIn('form', response.context)
 
     def test_post_success_existing_user_existing_account(self):
-        account = Account.objects.create(
+        account = self.account(
             name='Existing Account',
             parent=self.parent_account,
         )
@@ -58,7 +58,7 @@ class HousemateCreateTestCase(TestCase):
         self.assertEqual(housemate.account.name, 'Joe Bloggs')
 
     def test_post_success_new_user_existing_account(self):
-        account = Account.objects.create(
+        account = self.account(
             name='Existing Account',
             parent=self.parent_account,
         )
@@ -82,9 +82,10 @@ class HousemateCreateTestCase(TestCase):
         self.assertEqual(housemate.user.last_name, 'User')
         self.assertEqual(housemate.account, account)
         self.assertEqual(housemate.account.name, 'Existing Account')
+        self.assertEqual(housemate.account.currencies, ['EUR'])
 
     def test_post_success_new_user_new_account(self):
-        account = Account.objects.create(
+        account = self.account(
             name='Existing Account',
             parent=self.parent_account,
         )
@@ -108,3 +109,4 @@ class HousemateCreateTestCase(TestCase):
 
         self.assertEqual(housemate.account.parent, self.parent_account)
         self.assertEqual(housemate.account.name, 'New User')
+        self.assertEqual(housemate.account.currencies, ['EUR'])

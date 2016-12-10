@@ -1,7 +1,7 @@
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db.models import Max
 from hordak.models import Account
 from mptt.forms import TreeNodeChoiceField
 
@@ -130,6 +130,7 @@ class HousemateForm(forms.ModelForm):
                 name=user.get_full_name(),
                 parent=parent,
                 code=code,
+                currencies=[settings.SWIFTWIND_DEFAULT_CURRENCY],
             )
 
         self.instance.user = user
