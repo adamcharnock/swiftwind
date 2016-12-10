@@ -16,7 +16,7 @@ setup(
     long_description=open('README.rst').read() if exists("README.rst") else "",
     install_requires=[
         'django>=1.8',
-        'django-hordak>=1.0.3',
+        'django-hordak>=1.1.0',
         'path.py',
         'django-model-utils>=2.5.0',
         'gunicorn',

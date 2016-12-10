@@ -2,6 +2,7 @@ import locale
 
 from django import template
 from django.utils.safestring import mark_safe
+from hordak.utilities.currency import Balance
 
 register = template.Library()
 
@@ -17,11 +18,17 @@ def currency(value):
     if not value:
         return None
 
-    locale_values = []
-    for money in value.monies():
-        locale_value = locale.currency(abs(money.amount), grouping=True, symbol=money.currency.code)
+    if isinstance(value, Balance):
+        locale_values = []
+        for money in value.monies():
+            locale_value = locale.currency(abs(money.amount), grouping=True, symbol=money.currency.code)
+            locale_value = locale_value if value >= 0 else "({})".format(locale_value)
+            locale_values.append(locale_value)
+    else:
+        locale_value = locale.currency(abs(value), grouping=True)
         locale_value = locale_value if value >= 0 else "({})".format(locale_value)
-        locale_values.append(locale_value)
+        locale_values = [locale_value]
+
     return ', '.join(locale_values)
 
 
