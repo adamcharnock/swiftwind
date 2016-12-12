@@ -14,7 +14,9 @@ setup(
     license='MIT',
     description='User-friendly billing for communal households',
     long_description=open('README.rst').read() if exists("README.rst") else "",
+    include_package_data=True,
     install_requires=[
+        'django>=1.8',
         'django-hordak>=1.1.0',
         'path.py',
         'django-model-utils>=2.5.0',
@@ -30,6 +32,5 @@ setup(
         'six',
         'python-dateutil',
         'django-adminlte2>=0.1.4',
-        'django>=1.8',
     ],
 )
