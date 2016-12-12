@@ -4,6 +4,16 @@ This file will be added to as part of each release
 
 ----
 
+Version 0.0.4, Mon 12 Dec 2016
+===============================
+
+a5b5b5ea4c	Bumping django-adminlte2 version requirement (Adam Charnock)
+3faa5c49ae	Reversing error fix (didn't work). Adding include_package_data=True as per seed 1.11.2 (Adam Charnock)
+3126d36e8f	Attempt to fix installation error (perhaps similar to https://github.com/fedora-infra/shumgrepper/pull/41) (Adam Charnock)
+3a1b8d0900	Bumping django-adminlte2 version requirement (Adam Charnock)
+3ba422e4ee	Setting django-adminlte2 version requirement in setup.py (Adam Charnock)
+
+
 Version 0.0.3, Mon 12 Dec 2016
 ===============================
 
