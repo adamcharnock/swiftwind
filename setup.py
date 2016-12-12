@@ -30,6 +30,6 @@ setup(
         'django-import-export>=0.5.0',
         'six',
         'python-dateutil',
-        'django-adminlte2',
+        'django-adminlte2>=0.1.3',
     ],
 )
