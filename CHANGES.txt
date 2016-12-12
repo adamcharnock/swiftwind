@@ -4,6 +4,13 @@ This file will be added to as part of each release
 
 ----
 
+Version 0.0.3, Mon 12 Dec 2016
+===============================
+
+533476c547	Migrating to use of django-adminlte2 (Adam Charnock)
+7390afa875	Fixes for currency rendering (needs reworking down the line) (Adam Charnock)
+
+
 Version 0.0.2, Sat 10 Dec 2016
 ===============================
 
