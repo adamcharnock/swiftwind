@@ -6,11 +6,11 @@ python:
 services:
 - postgresql
 env:
-- DJANGO_VERSION=1.10.4
-- DJANGO_VERSION=1.9.12
-- DJANGO_VERSION=1.8.17
-- HORDAK_INSTALL_ARGS=django-hordak
-- HORDAK_INSTALL_ARGS=git+git://github.com/adamcharnock/django-hordak.git@master#egg=django-hordak
+- DJANGO_VERSION=1.10.4 HORDAK_INSTALL_ARGS=django-hordak
+- DJANGO_VERSION=1.9.12 HORDAK_INSTALL_ARGS=django-hordak
+- DJANGO_VERSION=1.8.17 HORDAK_INSTALL_ARGS=django-hordak
+- DJANGO_VERSION=1.10.4 HORDAK_INSTALL_ARGS=django-hordak
+- DJANGO_VERSION=1.10.4 HORDAK_INSTALL_ARGS=git+git://github.com/adamcharnock/django-hordak.git@master#egg=django-hordak
 install:
 - python setup.py develop
 - pip install .
