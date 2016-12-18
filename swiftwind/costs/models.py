@@ -16,7 +16,7 @@ from swiftwind.billing_cycle.models import BillingCycle
 from .exceptions import CannotEnactUnenactableRecurringCostError, CannotRecreateTransactionOnRecurredCost, \
     NoSplitsFoundForRecurringCost, ProvidedBillingCycleBeginsBeforeInitialBillingCycle, \
     RecurringCostAlreadyEnactedForBillingCycle
-from swiftwind.utilities.splitting import ratio_split
+from hordak.utilities.money import ratio_split
 
 
 class RecurringCost(models.Model):
