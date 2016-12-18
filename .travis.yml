@@ -6,13 +6,16 @@ python:
 services:
 - postgresql
 env:
-- DJANGO_VERSION=1.10.1
-- DJANGO_VERSION=1.9.9
-- DJANGO_VERSION=1.8.14
+- DJANGO_VERSION=1.10.4
+- DJANGO_VERSION=1.9.12
+- DJANGO_VERSION=1.8.17
+- HORDAK_INSTALL_ARGS=hordak
+- HORDAK_INSTALL_ARGS=git+git://github.com/adamcharnock/django-hordak.git@master#egg=django-hordak
 install:
 - python setup.py develop
 - pip install .
-- pip install pytest coveralls
+- pip uninstall hordak
+- pip install pytest coveralls $HORDAK_INSTALL_ARGS
 script:
 - env
 - env PYTHONPATH=`pwd` coverage run --source=swiftwind ./manage.py test
