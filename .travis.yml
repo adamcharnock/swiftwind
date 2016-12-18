@@ -14,7 +14,7 @@ env:
 install:
 - python setup.py develop
 - pip install .
-- pip uninstall django-hordak
+- pip uninstall -y django-hordak
 - pip install pytest coveralls $HORDAK_INSTALL_ARGS
 script:
 - env
