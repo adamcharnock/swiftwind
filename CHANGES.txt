@@ -4,6 +4,20 @@ This file will be added to as part of each release
 
 ----
 
+Version 0.1.0, Sun 18 Dec 2016
+===============================
+
+b7c5b968e2	Updating travis to build against both master and stable versions of hordak (work in progress) (Adam Charnock)
+5256d3278c	Updating travis to build against both master and stable versions of hordak (work in progress) (Adam Charnock)
+18d426b57b	Updating travis to build against both master and stable versions of hordak (work in progress) (Adam Charnock)
+ce4babfeea	Updating travis to build against both master and stable versions of hordak (Adam Charnock)
+57447fc53d	Mopping up errors caused during refactoring (Adam Charnock)
+370cd819f5	Moving ratio_split() from Swiftwind -> Hordak (Adam Charnock)
+1fc1fdcfa2	Moving ReconcileTransactionsView from Swiftwind -> Hordak (Adam Charnock)
+0fb4ce03e7	Moving CreateTransactionView from Swiftwind -> Hordak (Adam Charnock)
+68a9363dee	Moving transaction forms from Swiftwind -> Hordak (Adam Charnock)
+
+
 Version 0.0.4, Mon 12 Dec 2016
 ===============================
 
