@@ -1,24 +1,16 @@
+from django.db import transaction as db_transaction
+from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, SingleObjectMixin, UpdateView, FormMixin
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
-from hordak.models import Transaction, StatementLine, Leg
-from django.http import Http404
-from django.db import transaction as db_transaction
+from hordak.forms.transactions import TransactionForm, LegFormSet
+from hordak.models import StatementLine, Leg
 
 from swiftwind.transactions.models import TransactionImport
 from swiftwind.transactions.resources import StatementLineResource
 from .forms import TransactionImportForm, TransactionImportColumnFormSet
-from hordak.forms.transactions import SimpleTransactionForm, TransactionForm, LegFormSet
-
-
-class CreateTransactionView(CreateView):
-    form_class = SimpleTransactionForm
-    template_name = 'transactions/transaction_create.html'
-
-    def get_success_url(self):
-        return reverse('dashboard:dashboard')
 
 
 class CreateImportView(CreateView):

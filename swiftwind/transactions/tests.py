@@ -87,7 +87,6 @@ class SetupImportViewTestCase(DataProvider, TestCase):
         self.assertEqual(column2.to_field, 'amount')
 
 
-
 class TransactionImportTestCase(DataProvider, TestCase):
 
     def test_create_columns_ok(self):
