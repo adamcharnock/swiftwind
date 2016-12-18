@@ -1,116 +1,21 @@
 import logging
+from decimal import Decimal
 
 import six
 import tablib
-from decimal import Decimal
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase
+from django.test import TestCase
 from django.urls import reverse
 from django.utils.datetime_safe import date
 from hordak.models import Account, Transaction, StatementLine, StatementImport
-from django.test import TestCase
-from django.test import Client
-from hordak.utilities.currency import Balance
 from moneyed import Money
+from swiftwind.transactions.forms import TransactionImportForm
 
-from swiftwind.transactions.models import TransactionImportColumn
+from swiftwind.transactions.models import TransactionImportColumn, TransactionImport
 from swiftwind.transactions.resources import StatementLineResource
 from swiftwind.utilities.testing import DataProvider
-from .forms import SimpleTransactionForm, TransactionImportForm
 from .models import TransactionImport
-
-
-class SimpleTransactionFormTestCase(DataProvider, TestCase):
-
-    def setUp(self):
-        self.from_account = self.account(name='From Account', type=Account.TYPES.income)
-        self.to_account = self.account(name='To Account', type=Account.TYPES.income)
-
-        self.bank = self.account(name='Bank', type=Account.TYPES.asset)
-        self.income = self.account(name='Income', type=Account.TYPES.income)
-        self.expense = self.account(name='Expense', type=Account.TYPES.expense)
-
-    def test_valid_data(self):
-        form = SimpleTransactionForm(dict(
-            from_account=self.from_account.uuid,
-            to_account=self.to_account.uuid,
-            description='A test simple transaction',
-            amount_0='50.00',
-            amount_1='EUR',
-        ))
-        self.assertTrue(form.is_valid())
-        form.save()
-
-        # Transaction exists with two legs
-        transaction = Transaction.objects.get()
-        self.assertEqual(transaction.description, 'A test simple transaction')
-        self.assertEqual(transaction.legs.count(), 2)
-
-        # Account balances changed
-        self.assertEqual(self.from_account.balance(), Balance(-50, 'EUR'))
-        self.assertEqual(self.to_account.balance(), Balance(50, 'EUR'))
-
-        # Check transaction legs have amounts set as expected
-        from_leg = transaction.legs.get(account=self.from_account)
-        to_leg = transaction.legs.get(account=self.to_account)
-
-        self.assertEqual(from_leg.amount, Money(-50, 'EUR'))
-        self.assertEqual(to_leg.amount, Money(50, 'EUR'))
-
-    def test_transfer_from_bank_to_income(self):
-        """If we move money out of the bank and into an income account, we expect both values to go up"""
-
-        form = SimpleTransactionForm(dict(
-            from_account=self.bank.uuid,
-            to_account=self.income.uuid,
-            description='A test simple transaction',
-            amount_0='50.00',
-            amount_1='EUR',
-        ))
-        self.assertTrue(form.is_valid())
-        form.save()
-        self.assertEqual(self.bank.balance(), Balance(50, 'EUR'))
-        self.assertEqual(self.income.balance(), Balance(50, 'EUR'))
-
-    def test_no_from_account(self):
-        form = SimpleTransactionForm(dict(
-            from_account='',
-            to_account=self.to_account.uuid,
-            description='A test simple transaction',
-            amount_0='50.00',
-            amount_1='EUR',
-        ))
-        self.assertFalse(form.is_valid())
-
-    def test_no_to_account(self):
-        form = SimpleTransactionForm(dict(
-            from_account=self.from_account.uuid,
-            to_account='',
-            description='A test simple transaction',
-            amount_0='50.00',
-            amount_1='EUR',
-        ))
-        self.assertFalse(form.is_valid())
-
-    def test_no_description_account(self):
-        form = SimpleTransactionForm(dict(
-            from_account=self.from_account.uuid,
-            to_account=self.to_account.uuid,
-            description='',
-            amount_0='50.00',
-            amount_1='EUR',
-            amount='50.00',
-        ))
-        self.assertTrue(form.is_valid())  # valid
-
-    def test_no_amount(self):
-        form = SimpleTransactionForm(dict(
-            from_account=self.from_account.uuid,
-            to_account=self.to_account.uuid,
-            description='A test simple transaction',
-            amount_0='',
-            amount_1='',
-        ))
-        self.assertFalse(form.is_valid())
 
 
 class CreateImportViewTestCase(DataProvider, TestCase):
@@ -128,32 +33,6 @@ class CreateImportViewTestCase(DataProvider, TestCase):
         view = CreateImportView()
         view.object = TransactionImport.objects.create(hordak_import=self.statement_import())
         self.assertIn(str(view.object.uuid), view.get_success_url())
-
-class TransactionFormTestCase(DataProvider, TestCase):
-
-    def setUp(self):
-        self.account = self.account(is_bank_account=True, type=Account.TYPES.asset)
-        self.f = SimpleUploadedFile('data.csv',
-                                    six.binary_type(b'Number,Date,Account,Amount,Subcategory,Memo'))
-
-    def test_create(self):
-        form = TransactionImportForm(data=dict(bank_account=self.account.pk), files=dict(file=self.f))
-        self.assertTrue(form.is_valid(), form.errors)
-        form.save()
-        obj = TransactionImport.objects.get()
-        self.assertEqual(obj.columns.count(), 6)
-        self.assertEqual(obj.hordak_import.bank_account, self.account)
-
-    def test_edit(self):
-        obj = TransactionImport.objects.create(
-            hordak_import=self.statement_import(bank_account=self.account),
-            has_headings=True,
-            file=self.f
-        )
-        form = TransactionImportForm(data=dict(bank_account=self.account.pk), files=dict(file=self.f), instance=obj)
-        self.assertTrue(form.is_valid(), form.errors)
-        form.save()
-        self.assertEqual(obj.columns.count(), 0)
 
 
 class SetupImportViewTestCase(DataProvider, TestCase):
@@ -802,3 +681,30 @@ class ReconcileTransactionsViewTestCase(DataProvider, TestCase):
 
         transaction = Transaction.objects.get()
         self.assertEqual(transaction.legs.count(), 2)
+
+
+class TransactionImportFormTestCase(DataProvider, TestCase):
+
+    def setUp(self):
+        self.account = self.account(is_bank_account=True, type=Account.TYPES.asset)
+        self.f = SimpleUploadedFile('data.csv',
+                                    six.binary_type(b'Number,Date,Account,Amount,Subcategory,Memo'))
+
+    def test_create(self):
+        form = TransactionImportForm(data=dict(bank_account=self.account.pk), files=dict(file=self.f))
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        obj = TransactionImport.objects.get()
+        self.assertEqual(obj.columns.count(), 6)
+        self.assertEqual(obj.hordak_import.bank_account, self.account)
+
+    def test_edit(self):
+        obj = TransactionImport.objects.create(
+            hordak_import=self.statement_import(bank_account=self.account),
+            has_headings=True,
+            file=self.f
+        )
+        form = TransactionImportForm(data=dict(bank_account=self.account.pk), files=dict(file=self.f), instance=obj)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        self.assertEqual(obj.columns.count(), 0)

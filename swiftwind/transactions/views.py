@@ -7,10 +7,10 @@ from hordak.models import Transaction, StatementLine, Leg
 from django.http import Http404
 from django.db import transaction as db_transaction
 
-from swiftwind.transactions.forms import TransactionForm, LegFormSet
-from swiftwind.transactions.models import TransactionImport, TransactionImportColumn
+from swiftwind.transactions.models import TransactionImport
 from swiftwind.transactions.resources import StatementLineResource
-from .forms import SimpleTransactionForm, TransactionImportForm, TransactionImportColumnFormSet
+from .forms import TransactionImportForm, TransactionImportColumnFormSet
+from hordak.forms.transactions import SimpleTransactionForm, TransactionForm, LegFormSet
 
 
 class CreateTransactionView(CreateView):
