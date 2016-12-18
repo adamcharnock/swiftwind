@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'mptt',
     'django_extensions',
     'djcelery',
-    'hordak',
 
     'swiftwind.core',
     'swiftwind.accounts',
@@ -61,6 +60,7 @@ INSTALLED_APPS = [
     'swiftwind.housemates',
     'swiftwind.transactions',
 
+    'hordak',
     'django_adminlte',
 ]
 
