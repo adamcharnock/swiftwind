@@ -5,7 +5,7 @@
     <li><a href="{% url 'dashboard:dashboard' %}"><i class="fa fa-tachometer"></i> <span>Dashboard</span></a></li>
 
     <li>
-        <a href="{% url 'transactions:reconcile' %}">
+        <a href="{% url 'hordak:transactions_reconcile' %}">
             <i class="fa fa-arrows-h"></i>
             <span>Reconcile Transactions</span>
             <span class="pull-right-container">
@@ -15,7 +15,7 @@
         </a>
     </li>
 
-    <li><a href="{% url 'transactions:create' %}"><i class="fa fa-arrow-circle-right"></i> <span>Create Transaction</span></a></li>
+    <li><a href="{% url 'hordak:transactions_create' %}"><i class="fa fa-arrow-circle-right"></i> <span>Create Transaction</span></a></li>
     <li><a href="{% url 'costs:recurring' %}"><i class="fa fa-clock-o"></i> <span>Recurring Costs</span></a></li>
     <li><a href="{% url 'costs:one_off' %}"><i class="fa fa-money"></i> <span>One-off Costs</span></a></li>
     <li><a href="{% url 'housemates:list' %}"><i class="fa fa-group"></i> <span>Housemates</span></a></li>
@@ -50,5 +50,5 @@
         </ul>
     </li>
 
-    <li><a href="{% url 'transactions:import_create' %}"><i class="fa fa-upload"></i> <span>Import Statement</span></a></li>
+    <li><a href="{% url 'hordak:import_create' %}"><i class="fa fa-upload"></i> <span>Import Statement</span></a></li>
 {% endblock nav_links %}

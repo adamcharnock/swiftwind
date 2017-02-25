@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'swiftwind.costs',
     'swiftwind.dashboard',
     'swiftwind.housemates',
-    'swiftwind.transactions',
 
     'hordak',
     'django_adminlte',

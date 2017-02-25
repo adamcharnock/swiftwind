@@ -17,7 +17,6 @@ from django.conf.urls import url, include
 from django.contrib import admin
 
 urlpatterns = [
-    url(r'^transactions/', include('swiftwind.transactions.urls', namespace='transactions')),
     url(r'^housemates/', include('swiftwind.housemates.urls', namespace='housemates')),
     url(r'^costs/', include('swiftwind.costs.urls', namespace='costs')),
     url(r'^', include('swiftwind.dashboard.urls', namespace='dashboard')),

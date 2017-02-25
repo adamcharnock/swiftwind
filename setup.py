@@ -28,7 +28,6 @@ setup(
         'django-extensions',
         'celery>=3.1,<4',
         'django-celery>=3.1',
-        'django-import-export>=0.5.0',
         'six',
         'python-dateutil',
         'django-adminlte2>=0.1.5',
