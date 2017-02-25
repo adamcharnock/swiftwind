@@ -17,7 +17,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'django>=1.8',
-        'django-hordak>=1.1.0',
+        'django-hordak>=1.3.0',
         'path.py',
         'django-model-utils>=2.5.0',
         'gunicorn',
