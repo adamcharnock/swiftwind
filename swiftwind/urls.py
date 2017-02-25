@@ -21,4 +21,6 @@ urlpatterns = [
     url(r'^housemates/', include('swiftwind.housemates.urls', namespace='housemates')),
     url(r'^costs/', include('swiftwind.costs.urls', namespace='costs')),
     url(r'^', include('swiftwind.dashboard.urls', namespace='dashboard')),
+
+    url(r'^', include('hordak.urls', namespace='hordak')),
 ]
