@@ -3,184 +3,284 @@
 {% block page_name %}Dashboard{% endblock %}
 
 {% block content %}
-<h3>Summary</h3>
+    <div class="row">
+        <div class="col-lg-offset-3 col-lg-3 col-xs-6">
+            <div class="small-box bg-primary">
+                <div class="inner">
+                    <h3>{{ net_total }}</h3>
 
-<p>
-    Balance this month: {{ net_total }}
-</p>
+                    <p>Balance this month</p>
+                </div>
+                <div class="icon">
+                    <i class="fa fa-calendar"></i>
+                </div>
+                <a href="#" class="small-box-footer">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
 
-<p>
-    Bank balance: {{ bank_balance }}
-</p>
+        <div class="col-lg-3 col-xs-6">
+            <div class="small-box bg-primary">
+                <div class="inner">
+                    <h3>{{ bank_balance }}</h3>
 
-<h3>Housemate Income</h3>
+                    <p>Total bank balance</p>
+                </div>
+                <div class="icon">
+                    <i class="fa fa-database"></i>
+                </div>
+                <a href="#" class="small-box-footer">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
 
-<p>
-    This is money which has been paid to us by housemates.
-    The aim should be to get these accounts to zero by transferring money
-    to the relevant expense or stockpile accounts.
-</p>
+    </div>
 
-<table>
-    {% for account in housemate_accounts %}
-        <tr>
-            <td>
-                {{ account.name }}
-            </td>
-            <td>
-                {{ account.balance }}
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td>
-                No housemate accounts
-            </td>
-        </tr>
-    {% endfor %}
-</table>
+    <h3>Accounts</h3>
 
-<p>
-    Total: {{ housemate_accounts.net_balance }}
-</p>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <i class="fa fa-female"></i>
 
-<h3>Other Income</h3>
+                    <h3 class="box-title">Housemate Income</h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        This is money which has been paid to us by housemates.
+                        The aim should be to get these accounts to zero by transferring money
+                        to the relevant expense or stockpile accounts.
+                    </p>
 
-<p>
-    This is money which has been received from elsewhere.
-    The aim should be to get these accounts to zero. You can do this
-    but putting it towards this month's expenses, or towards the stockpile.
-    You could also save it for a rainy day by moving it to Retained Earnings.
-</p>
+                    <table class="table table-striped">
+                        {% for account in housemate_accounts %}
+                            <tr>
+                                <td>
+                                    {{ account.name }}
+                                </td>
+                                <td>
+                                    {{ account.balance }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">
+                                    No housemate accounts
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        {% if housemate_accounts %}
+                            <tr>
+                                <td class="text-right text-bold">Total:</td>
+                                <td>{{ housemate_accounts.net_balance }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
 
-<table>
-    {% for account in other_income_accounts %}
-        <tr>
-            <td>
-                {{ account.name }}
-            </td>
-            <td>
-                {{ account.balance }}
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td>
-                No additional income accounts
-            </td>
-        </tr>
-    {% endfor %}
-</table>
+                </div>
+            </div>
+        </div>
 
-<p>
-    Total: {{ other_income_accounts.net_balance }}
-</p>
+        <div class="col-md-6">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <i class="fa fa-users"></i>
 
-<h3>Expenses - money we <em>have</em> spent</h3>
+                    <h3 class="box-title">Other Income</h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        This is money which has been received from elsewhere.
+                        The aim should be to get these accounts to zero. You can do this
+                        but putting it towards this month's expenses, or towards the stockpile.
+                        You could also save it for a rainy day by moving it to Retained Earnings.
+                    </p>
 
-<p>
-    Amounts below are things we have <em>already</em> spent money on.
-    The aim should be to get these accounts to be zero by
-    transferring money in from the income accounts.
-</p>
+                    <table class="table table-striped">
+                        {% for account in other_income_accounts %}
+                            <tr>
+                                <td>
+                                    {{ account.name }}
+                                </td>
+                                <td>
+                                    {{ account.balance }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td>
+                                    No additional income accounts
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        {% if other_income_accounts %}
+                            <tr>
+                                <td class="text-right text-bold">Total:</td>
+                                <td>{{ other_income_accounts.net_balance }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<table>
-    {% for account in expense_accounts %}
-        <tr>
-            <td>
-                {{ account.name }}
-            </td>
-            <td>
-                {{ account.balance }}
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td>
-                No expense accounts
-            </td>
-        </tr>
-    {% endfor %}
-</table>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <i class="fa fa-bolt"></i>
 
-<p>
-    Total: {{ expense_accounts.net_balance }}
-</p>
+                    <h3 class="box-title">Expenses <small>money we <em>have</em> spent</small></h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        Amounts below are things we have <em>already</em> spent money on.
+                        The aim should be to get these accounts to be zero by
+                        transferring money in from the income accounts.
+                    </p>
 
-<h3>Stockpile - money we <em>will</em> spend</h3>
+                    <table class="table table-striped">
+                        {% for account in expense_accounts %}
+                            <tr>
+                                <td>
+                                    {{ account.name }}
+                                </td>
+                                <td>
+                                    {{ account.balance }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td>
+                                    No expense accounts
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        {% if expense_accounts %}
+                            <tr>
+                                <td class="text-right text-bold">Total:</td>
+                                <td>{{ expense_accounts.net_balance }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
 
-<p>
-    This is money we are saving up because we know we are going to have to pay it in the future.
-    When we eventually pay a bill it will come out of an expense account (because it will then
-    be money we <em>have</em> spent). At which point we transfer the relevant stockpile
-    into the expense account, thereby returning both to zero. Congratuations on planning for the
-    future.
-</p>
+        <div class="col-md-6">
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <i class="fa fa-archive"></i>
 
-<table>
-    {% for account in current_liability_accounts %}
-        <tr>
-            <td>
-                {{ account.name }}
-            </td>
-            <td>
-                {{ account.balance }}
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td>
-                No accounts
-            </td>
-        </tr>
-    {% endfor %}
-</table>
+                    <h3 class="box-title">Stockpile <small>money we <em>will</em> spend</small></h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        This is money we are saving up because we know we are going to have to pay it in the future.
+                        When we eventually pay a bill it will come out of an expense account (because it will then
+                        be money we <em>have</em> spent). At which point we transfer the relevant stockpile
+                        into the expense account, thereby returning both to zero. Congratuations on planning for the
+                        future.
+                    </p>
 
-<p>
-    Total: {{ current_liability_accounts.net_balance }}
-</p>
+                    <table class="table table-striped">
+                        {% for account in current_liability_accounts %}
+                            <tr>
+                                <td>
+                                    {{ account.name }}
+                                </td>
+                                <td>
+                                    {{ account.balance }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td>
+                                    No accounts
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        {% if current_liability_accounts %}
+                            <tr>
+                                <td class="text-right text-bold">Total:</td>
+                                <td>{{ current_liability_accounts.net_balance }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<h3>Long-term debts</h3>
 
-<p>
-    Sometimes we may have long-term debts, such as loans from housemates.
-    These don't need to be worried about from month-to-month.
-</p>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="box box-danger">
+                <div class="box-header with-border">
+                    <i class="fa fa-credit-card"></i>
 
-<table>
-    {% for account in long_term_liability_accounts %}
-        <tr>
-            <td>
-                {{ account.name }}
-            </td>
-            <td>
-                {{ account.balance }}
-            </td>
-        </tr>
-    {% empty %}
-        <tr>
-            <td>
-                No long-term debts
-            </td>
-        </tr>
-    {% endfor %}
-</table>
+                    <h3 class="box-title">Long-term debts</h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        Sometimes we may have long-term debts, such as loans from housemates.
+                        These don't need to be worried about from month-to-month.
+                    </p>
 
-<p>
-Total: {{ long_term_liability_accounts.net_balance }}
-</p>
+                    <table class="table table-striped">
+                        {% for account in long_term_liability_accounts %}
+                            <tr>
+                                <td>
+                                    {{ account.name }}
+                                </td>
+                                <td>
+                                    {{ account.balance }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td>
+                                    No long-term debts
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        {% if long_term_liability_accounts %}
+                            <tr>
+                                <td class="text-right text-bold">Total:</td>
+                                <td>{{ long_term_liability_accounts.net_balance }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
 
-<h3>Long-term money - rainy day fund</h3>
+        <div class="col-md-6">
+            <div class="box box-success">
+                <div class="box-header with-border">
+                    <i class="fa fa-money"></i>
 
-<p>
-    Sometimes we end up with more money than we need. In which case we place
-    it into the 'Retained Earnings' account. It is money the house has earnt,
-    and it is retained until a later date when we may choose to spend it.
-</p>
+                    <h3 class="box-title">Long-term money <small>rainy day fund</small></h3>
+                </div>
+                <div class="box-body">
+                    <p>
+                        Sometimes we end up with more money than we need. In which case we place
+                        it into the 'Retained Earnings' account. It is money the house has earnt,
+                        and it is retained until a later date when we may choose to spend it.
+                    </p>
 
-<p>
-    Retained Earnings: {{ retained_earnings_balance }}
-</p>
+                    <p>
+                        Retained Earnings: {{ retained_earnings_balance }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 {% endblock %}
 
