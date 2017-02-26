@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'swiftwind.costs',
     'swiftwind.dashboard',
     'swiftwind.housemates',
+    'swiftwind.transactions',
 
     'hordak',
     'django_adminlte',
@@ -149,6 +150,8 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'example_project', 'media')
+
+LOGIN_URL = '/auth/login/'
 
 # Celery
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'

@@ -25,3 +25,15 @@
     /*Stop the side of the radio button being chopped off*/
     margin-left: 1px;
 }
+
+/*In common with BattleCat*/
+
+form .money input {
+    width: 50%;
+    float: left;
+}
+form .money select {
+    width: 49%;
+    float: right;
+    margin-left: 1%;
+}

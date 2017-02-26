@@ -22,4 +22,6 @@ urlpatterns = [
     url(r'^', include('swiftwind.dashboard.urls', namespace='dashboard')),
 
     url(r'^', include('hordak.urls', namespace='hordak')),
+    url(r'^auth/', include('django.contrib.auth.urls')),
 ]
+
