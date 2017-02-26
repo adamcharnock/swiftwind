@@ -1,11 +1,11 @@
-{% extends 'core/../../../core/templates/swiftwind/base.html' %}
+{% extends 'swiftwind/base.html' %}
 {% load bootstrap3 %}
 
 {% block page_name %}Create Housemate{% endblock %}
 {% block page_description %}Create a new housemate with their own user and account{% endblock %}
 
 {% block content %}
-    <form action="{% url 'housemates:create' %}" method="post">
+    <form action="{% url 'housemates:create' %}" method="post" class="form-horizontal">
         {% csrf_token %}
 
         <div class="row">
@@ -15,10 +15,10 @@
             </div>
             <div class="col-sm-6">
                 <h4>Create a new user</h4>
-                {% bootstrap_field form.new_username %}
-                {% bootstrap_field form.new_email %}
-                {% bootstrap_field form.new_first_name %}
-                {% bootstrap_field form.new_last_name %}
+                {% bootstrap_field form.new_username layout='horizontal' %}
+                {% bootstrap_field form.new_email layout='horizontal' %}
+                {% bootstrap_field form.new_first_name layout='horizontal' %}
+                {% bootstrap_field form.new_last_name layout='horizontal' %}
             </div>
         </div>
 

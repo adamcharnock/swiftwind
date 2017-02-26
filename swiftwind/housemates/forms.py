@@ -8,7 +8,7 @@ from mptt.forms import TreeNodeChoiceField
 from .models import Housemate
 
 
-class HousemateForm(forms.ModelForm):
+class HousemateCreateForm(forms.ModelForm):
     existing_user = forms.ModelChoiceField(required=False, to_field_name='username',
                                            queryset=get_user_model().objects.filter(housemate=None, is_active=True),
     )
@@ -136,4 +136,54 @@ class HousemateForm(forms.ModelForm):
         self.instance.user = user
         self.instance.account = account
 
-        return super(HousemateForm, self).save(commit)
+        return super(HousemateCreateForm, self).save(commit)
+
+
+class HousemateUpdateForm(forms.ModelForm):
+    username = forms.CharField(max_length=150)
+    email = forms.EmailField()
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+
+    class Meta:
+        model = Housemate
+        fields = []
+        exclude = ['account']
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs['instance']
+        user = instance.user
+
+        kwargs.setdefault('initial', {})
+        kwargs['initial'].setdefault('username', user.username)
+        kwargs['initial'].setdefault('email', user.email)
+        kwargs['initial'].setdefault('first_name', user.first_name)
+        kwargs['initial'].setdefault('last_name', user.last_name)
+        super(HousemateUpdateForm, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        user = self.instance.user
+        account = self.instance.account
+        user.username = self.cleaned_data.get('username')
+        user.email = self.cleaned_data.get('email')
+        user.first_name = self.cleaned_data.get('first_name')
+        user.last_name = self.cleaned_data.get('last_name')
+
+        account.name = user.get_full_name()
+        # Save regardless of commit, because saving the Housemate
+        # object will not save the user & account
+        user.save()
+        account.save()
+
+    def clean_username(self):
+        value = self.cleaned_data.get('username')
+        if get_user_model().objects.filter(username=value).exclude(pk=self.instance.user.pk).exists():
+            raise ValidationError('Username already exists')
+        return value
+
+    def clean_email(self):
+        value = self.cleaned_data.get('email')
+        if get_user_model().objects.filter(email=value).exclude(pk=self.instance.user.pk).exists():
+            raise ValidationError('Email address already in use')
+        return value
+

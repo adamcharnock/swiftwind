@@ -1,0 +1,16 @@
+{% extends 'swiftwind/base.html' %}
+{% load bootstrap3 %}
+
+{% block page_name %}Edit Housemate{% endblock %}
+{% block page_description %}Modify a housemate's details{% endblock %}
+
+{% block content %}
+    <form action="{% url 'housemates:update' housemate.uuid %}" method="post" class="form-horizontal">
+        {% csrf_token %}
+
+        {% bootstrap_form form layout='horizontal' %}
+
+        <input type="submit" value="Update Housemate" class="btn btn-success btn-lg pull-right">
+        <a href="{% url 'housemates:list' %}" class="btn btn-lg pull-right">Cancel</a>
+    </form>
+{% endblock %}

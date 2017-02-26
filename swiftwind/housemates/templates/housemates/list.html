@@ -1,4 +1,4 @@
-{% extends 'core/../../../core/templates/swiftwind/base.html' %}
+{% extends 'swiftwind/base.html' %}
 {% load bootstrap3 %}
 
 {% block page_name %}Housemates{% endblock %}
@@ -12,6 +12,7 @@
                 <th>Email</th>
                 <th>Active</th>
                 <th>Last login</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -29,6 +30,9 @@
                         {% endif %}
                     </td>
                     <td>{% firstof housemate.user.last_login 'Never' %}</td>
+                    <td>
+                        <a href="{% url 'housemates:update' housemate.uuid %}" class="btn btn-sm btn-default">Edit</a>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
