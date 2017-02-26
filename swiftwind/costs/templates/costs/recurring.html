@@ -71,7 +71,10 @@
                 </div>
             {% endif %}
         {% empty %}
-            <p>You don't have any recurring costs yet. Perhaps create some?</p>
+            <p>
+                You don't have any recurring costs yet. Perhaps
+                <a href="{% url 'costs:create_recurring' %}">create some</a>?
+            </p>
         {% endfor %}
 
     </form>

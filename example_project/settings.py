@@ -159,6 +159,12 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 BROKER_URL = 'redis://localhost'
 
+# Django Bootstrap
+BOOTSTRAP3 = {
+    'horizontal_label_class': 'col-sm-3 col-lg-2',
+    'horizontal_field_class': 'col-sm-9 col-lg-10',
+}
+
 # Debug toolbar
 if 'ENABLE_DEBUG_TOOLBAR' in os.environ:
     ENABLE_DEBUG_TOOLBAR =bool(os.environ.get('ENABLE_DEBUG_TOOLBAR'))

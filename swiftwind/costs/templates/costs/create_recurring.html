@@ -2,13 +2,12 @@
 {% load bootstrap3 %}
 
 {% block page_name %}Create a Recurring Cost{% endblock %}
-{% block page_description %}{% endblock %}
+{% block page_description %}A recurring cost will be billed to all housemates every billing cycle{% endblock %}
 
 {% block content %}
-
-    <form action="{% url 'costs:create_recurring' %}" method="post">
+    <form action="{% url 'costs:create_recurring' %}" method="post" class="form-horizontal">
         {% csrf_token %}
-        {% bootstrap_form form %}
+        {% bootstrap_form form layout='horizontal' %}
         <input type="submit" class="btn btn-primary btn-lg pull-right" value="Create Recurring Cost">
     </form>
 

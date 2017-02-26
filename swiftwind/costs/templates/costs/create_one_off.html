@@ -6,10 +6,14 @@
 
 
 {% block content %}
+    <p>
+        A one-off cost will be billed to all housemates. You can choose to spread the cost over several
+        months if you wish.
+    </p>
 
-    <form action="{% url 'costs:create_one_off' %}" method="post">
+    <form action="{% url 'costs:create_one_off' %}" method="post" class="form-horizontal">
         {% csrf_token %}
-        {% bootstrap_form form %}
+        {% bootstrap_form form layout='horizontal' %}
         <input type="submit" class="btn btn-primary btn-lg pull-right" value="Create Recurring Cost">
     </form>
 
