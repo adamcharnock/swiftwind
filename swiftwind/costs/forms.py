@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils.datetime_safe import datetime
 from hordak.models import Account
 from mptt.forms import TreeNodeChoiceField
@@ -31,6 +32,7 @@ class AbstractCostForm(forms.ModelForm):
             end_date__gte=datetime.now().date(),
         )
 
+    @transaction.atomic()
     def save(self, commit=True):
         creating = not bool(self.instance.pk)
         recurring_cost = super(AbstractCostForm, self).save(commit)

@@ -685,10 +685,11 @@ class RecurringCostsViewTestCase(DataProvider, TestCase):
         self.housemate_2 = self.account(parent=self.housemate_parent_account)
         self.housemate_3 = self.account(parent=self.housemate_parent_account)
 
-        self.recurring_cost_1 = RecurringCost.objects.create(to_account=self.expense_account, fixed_amount=100, initial_billing_cycle=self.first_billing_cycle)
-        self.split1 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_1)
-        self.split2 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_2)
-        self.split3 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_3)
+        with db_transaction.atomic():
+            self.recurring_cost_1 = RecurringCost.objects.create(to_account=self.expense_account, fixed_amount=100, initial_billing_cycle=self.first_billing_cycle)
+            self.split1 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_1)
+            self.split2 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_2)
+            self.split3 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_3)
 
         self.view_url = reverse('costs:recurring')
 
@@ -778,7 +779,7 @@ class CreateRecurringCostViewTestCase(DataProvider, TestCase):
         self.assertEqual(recurring_cost.splits.count(), 3)
 
 
-class OneOffCostsViewTestCase(DataProvider, TestCase):
+class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
 
     def setUp(self):
         BillingCycle.populate()
@@ -790,11 +791,12 @@ class OneOffCostsViewTestCase(DataProvider, TestCase):
         self.housemate_2 = self.account(parent=self.housemate_parent_account)
         self.housemate_3 = self.account(parent=self.housemate_parent_account)
 
-        self.recurring_cost_1 = RecurringCost.objects.create(to_account=self.expense_account, fixed_amount=100,
-                                                             total_billing_cycles=2, initial_billing_cycle=self.billing_cycle)
-        self.split1 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_1)
-        self.split2 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_2)
-        self.split3 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_3)
+        with db_transaction.atomic():
+            self.recurring_cost_1 = RecurringCost.objects.create(to_account=self.expense_account, fixed_amount=100,
+                                                                 total_billing_cycles=2, initial_billing_cycle=self.billing_cycle)
+            self.split1 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_1)
+            self.split2 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_2)
+            self.split3 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost_1, from_account=self.housemate_3)
 
         self.view_url = reverse('costs:one_off')
 
@@ -842,7 +844,7 @@ class OneOffCostsViewTestCase(DataProvider, TestCase):
         self.assertEqual(self.split3.portion, 4)
 
 
-class CreateOneOffCostViewTestCase(DataProvider, TestCase):
+class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
 
     def setUp(self):
         BillingCycle.populate()
