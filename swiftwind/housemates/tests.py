@@ -8,9 +8,11 @@ from swiftwind.housemates.forms import HousemateUpdateForm
 from swiftwind.housemates.models import Housemate
 
 
-class HousemateCreateTestCase(DataProvider, TestCase):
+class HousemateCreateViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
+        self.login()
+
         self.view_url = reverse('housemates:create')
         self.user = User.objects.create(
             username='testuser',
@@ -116,6 +118,7 @@ class HousemateCreateTestCase(DataProvider, TestCase):
 class HousemateUpdateViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
+        self.login()
         self.user = User.objects.create(
             username='testuser',
             email='test@example.com',

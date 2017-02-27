@@ -386,6 +386,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
     # Test the enact() method which requires transactions
 
     def setUp(self):
+        self.login()
+
         self.bank = self.account(type=Account.TYPES.asset)
         self.to_account = self.account(type=Account.TYPES.expense)
         self.billing_cycle_1 = BillingCycle.objects.create(date_range=('2000-01-01', '2000-02-01'))
@@ -747,6 +749,8 @@ class RecurringCostFormTestCase(DataProvider, TestCase):
 class RecurringCostsViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
+        self.login()
+
         BillingCycle.populate()
         self.first_billing_cycle = BillingCycle.objects.first()
 
@@ -810,6 +814,8 @@ class RecurringCostsViewTestCase(DataProvider, TestCase):
 class CreateRecurringCostViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
+        self.login()
+
         BillingCycle.populate()
         self.billing_cycle = BillingCycle.objects.first()
 
@@ -853,6 +859,8 @@ class CreateRecurringCostViewTestCase(DataProvider, TestCase):
 class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
 
     def setUp(self):
+        self.login()
+
         BillingCycle.populate()
         self.billing_cycle = BillingCycle.objects.first()
 
@@ -918,6 +926,8 @@ class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
 class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
 
     def setUp(self):
+        self.login()
+
         BillingCycle.populate()
         self.billing_cycle = BillingCycle.objects.first()
 

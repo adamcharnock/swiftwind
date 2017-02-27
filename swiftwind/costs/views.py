@@ -1,4 +1,6 @@
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
 
@@ -6,6 +8,7 @@ from .forms import RecurringCostForm, RecurringCostFormSet, OneOffCostFormSet, O
 from .models import RecurringCost
 
 
+@method_decorator(login_required, name='dispatch')
 class RecurringCostsView(UpdateView):
     template_name = 'costs/recurring.html'
     model = RecurringCost
@@ -34,6 +37,7 @@ class RecurringCostsView(UpdateView):
         return reverse('costs:recurring')
 
 
+@method_decorator(login_required, name='dispatch')
 class CreateRecurringCostView(CreateView):
     form_class = RecurringCostForm
     template_name = 'costs/create_recurring.html'
@@ -42,6 +46,7 @@ class CreateRecurringCostView(CreateView):
         return reverse('costs:recurring')
 
 
+@method_decorator(login_required, name='dispatch')
 class OneOffCostsView(RecurringCostsView):
     template_name = 'costs/one_off.html'
     form_class = OneOffCostFormSet
@@ -53,6 +58,7 @@ class OneOffCostsView(RecurringCostsView):
         return reverse('costs:one_off')
 
 
+@method_decorator(login_required, name='dispatch')
 class CreateOneOffCostView(CreateView):
     form_class = OneOffCostForm
     template_name = 'costs/create_one_off.html'
