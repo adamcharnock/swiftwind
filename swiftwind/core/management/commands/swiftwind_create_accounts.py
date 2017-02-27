@@ -29,7 +29,7 @@ class Command(BaseCommand):
         income = Account.objects.create(name='Income', code='1', _type='AS', **kw)
         expenses = Account.objects.create(name='Expenses', code='1', _type='AS', **kw)
 
-        bank = Account.objects.create(name='Bank Account', code='1', is_bank_account=True, _type='AS', parent=assets, **kw)
+        bank = Account.objects.create(name='Bank', code='1', is_bank_account=True, _type='AS', parent=assets, **kw)
 
         housemate_income = Account.objects.create(name='Housemate Income', code='1', parent=income, **kw)
         other_income = Account.objects.create(name='Other Income', code='2', parent=income, **kw)
