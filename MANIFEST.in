@@ -1,4 +1,10 @@
+include *.py
+recursive-include fixtures *.json
+recursive-include swiftwind *.css
+recursive-include swiftwind *.html
+recursive-include swiftwind *.md
+recursive-include docs *
+recursive-include example_project *.txt
 include *.txt
 include *.rst
-recursive-include docs *
 include VERSION
