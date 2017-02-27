@@ -21,15 +21,20 @@ setup(
         'path.py',
         'django-model-utils>=2.5.0',
         'gunicorn',
-        'django-bootstrap3>=7',
+        'django-bootstrap3 >=7, <8',
         'dj-database-url',
         'dj-static',
         'psycopg2',
         'django-extensions',
-        'celery>=3.1,<4',
-        'django-celery>=3.1',
+        'kombu==4.0.2',
+        'celery==4.0.2',
+        'django-celery-beat==1.0.1',
+        'redis==2.10.5',
         'six',
         'python-dateutil',
         'django-adminlte2>=0.1.5',
     ],
 )
+
+
+

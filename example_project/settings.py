@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'bootstrap3',
     'mptt',
     'django_extensions',
-    'djcelery',
+    'django_celery_beat',
 
     'swiftwind.core',
     'swiftwind.accounts',
@@ -154,7 +154,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'example_project', 'media')
 LOGIN_URL = '/auth/login/'
 
 # Celery
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 BROKER_URL = 'redis://localhost'
