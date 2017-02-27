@@ -28,7 +28,12 @@ Requirements
 Installation
 ------------
 
-Installation using pip::
+You can deploy directly to heroku using the swiftwind-heroku_ repository:
+
+.. image:: https://www.herokucdn.com/deploy/button.svg
+    :target: https://heroku.com/deploy?template=https://github.com/adamcharnock/swiftwind-heroku
+
+Or you can install manually using pip::
 
     pip install swiftwind
 
@@ -45,4 +50,5 @@ Credits
 swiftwind is packaged using seed_.
 
 .. _seed: https://github.com/adamcharnock/seed/
+.. _swiftwind-heroku: https://github.com/adamcharnock/swiftwind-heroku
 
