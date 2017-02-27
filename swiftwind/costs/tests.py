@@ -12,8 +12,10 @@ from hordak.utilities.currency import Balance
 from moneyed import Money
 
 from swiftwind.billing_cycle.models import BillingCycle
+from swiftwind.costs import tasks
 from swiftwind.costs.exceptions import ProvidedBillingCycleBeginsBeforeInitialBillingCycle, \
     CannotEnactUnenactableRecurringCostError, RecurringCostAlreadyEnactedForBillingCycle
+from swiftwind.costs.management.commands.enact_costs import Command as EnactCostsCommand
 from swiftwind.costs.models import RecurredCost
 from .forms import RecurringCostForm
 from .models import RecurringCost, RecurringCostSplit
@@ -504,6 +506,75 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         self.assertFalse(recurring_cost.disabled)
         recurring_cost.enact(self.billing_cycle_2)
         self.assertTrue(recurring_cost.disabled)
+
+    def test_enact_costs_manager(self):
+        with db_transaction.atomic():
+            recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle_1,
+            )
+            split1 = self.add_split(recurring_cost)
+            split2 = self.add_split(recurring_cost)
+
+        RecurringCost.objects.enact(as_of=date(2000, 2, 5))
+
+        self.assertBalanceEqual(self.to_account.balance(), 200)
+        self.assertBalanceEqual(split1.from_account.balance(), 100)
+        self.assertBalanceEqual(split2.from_account.balance(), 100)
+
+    def test_enact_costs_task(self):
+        with db_transaction.atomic():
+            recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle_1,
+            )
+            split1 = self.add_split(recurring_cost)
+            split2 = self.add_split(recurring_cost)
+
+        tasks.enact_costs(as_of=date(2000, 2, 5))
+
+        self.assertBalanceEqual(self.to_account.balance(), 200)
+        self.assertBalanceEqual(split1.from_account.balance(), 100)
+        self.assertBalanceEqual(split2.from_account.balance(), 100)
+
+    def test_enact_costs_command_with_as_of(self):
+        with db_transaction.atomic():
+            recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle_1,
+            )
+            split1 = self.add_split(recurring_cost)
+            split2 = self.add_split(recurring_cost)
+
+        EnactCostsCommand().handle(as_of='2000-02-05')
+
+        self.assertBalanceEqual(self.to_account.balance(), 200)
+        self.assertBalanceEqual(split1.from_account.balance(), 100)
+        self.assertBalanceEqual(split2.from_account.balance(), 100)
+
+    def test_enact_costs_command_default_as_of(self):
+        with db_transaction.atomic():
+            recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle_1,
+            )
+            split1 = self.add_split(recurring_cost)
+            split2 = self.add_split(recurring_cost)
+
+        EnactCostsCommand().handle()
+
+        # Uses today's date, so all billing cycles are enacted. Therefore larger balances
+        self.assertBalanceEqual(self.to_account.balance(), 400)
+        self.assertBalanceEqual(split1.from_account.balance(), 200)
+        self.assertBalanceEqual(split2.from_account.balance(), 200)
 
 
 class RecurringCostSplitModelTestCase(DataProvider, TestCase):

@@ -6,7 +6,6 @@ from django.db.models import QuerySet
 from django.utils import timezone
 from django_smalluuid.models import SmallUUIDField
 from django_smalluuid.models import uuid_default
-from django.utils.datetime_safe import datetime
 from hordak.models import Transaction, Leg
 from hordak.utilities.currency import Balance
 from model_utils import Choices
@@ -17,6 +16,15 @@ from .exceptions import CannotEnactUnenactableRecurringCostError, CannotRecreate
     NoSplitsFoundForRecurringCost, ProvidedBillingCycleBeginsBeforeInitialBillingCycle, \
     RecurringCostAlreadyEnactedForBillingCycle
 from hordak.utilities.money import ratio_split
+
+
+class RecurringCostQuerySet(models.QuerySet):
+
+    def enact(self, as_of):
+        costs = [cost for cost in self if cost.is_enactable(as_of)]
+        for billing_cycle in BillingCycle.objects.filter(transactions_created=False, start_date__lte=as_of):
+            for cost in costs:
+                cost.enact(billing_cycle)
 
 
 class RecurringCost(models.Model):
@@ -73,6 +81,8 @@ class RecurringCost(models.Model):
     #: May only be Null if disabled=True. Enforced by DB constraint.
     initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', null=True, blank=True)
     transactions = models.ManyToManyField(Transaction, through='costs.RecurredCost')
+
+    objects = models.Manager.from_queryset(RecurringCostQuerySet)()
 
     @property
     def currency(self):
@@ -159,13 +169,16 @@ class RecurringCost(models.Model):
         self.disable_if_done(billing_cycle)
 
     def disable_if_done(self, commit=True):
-        """Set disabled=True if we have billed all we need to"""
-        if self._is_billing_complete():
+        """Set disabled=True if we have billed all we need to
+
+        Will only have an effect on one-off costs.
+        """
+        if self._is_billing_complete() and not self.disabled:
             self.initial_billing_cycle = None
             self.disabled = True
 
-        if commit:
-            self.save()
+            if commit:
+                self.save()
 
     def is_enactable(self, as_of):
         """Can this RecurringCost be enacted"""
