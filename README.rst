@@ -33,22 +33,27 @@ You can deploy directly to heroku using the swiftwind-heroku_ repository:
 .. image:: https://www.herokucdn.com/deploy/button.svg
     :target: https://heroku.com/deploy?template=https://github.com/adamcharnock/swiftwind-heroku
 
-Or you can install manually using pip::
-
-    pip install swiftwind
+You can also deploy Swiftwind within you own Django project. Good examples
+of this are the `example_project`_ within this directory, and the
+separate `swiftwind-heroku`_ project.
 
 Usage
 -----
 
-Docs TBA
+Once installed you will need to run the following ``manage.py`` commands::
+
+    ./manage.py migrate
+    ./manage.py createsuperuser
+    ./manage.py create_chart_of_accounts
 
 Credits
 -------
 
-*Any credits here*
+Developed by `Adam Charnock`_. I'm a freelance developer, so do get in touch if you have a project.
 
 swiftwind is packaged using seed_.
 
 .. _seed: https://github.com/adamcharnock/seed/
 .. _swiftwind-heroku: https://github.com/adamcharnock/swiftwind-heroku
-
+.. _example_project: https://github.com/adamcharnock/swiftwind/tree/master/example_project
+.. _Adam Charnock: https://adamcharnock.com
