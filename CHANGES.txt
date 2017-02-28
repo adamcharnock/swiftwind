@@ -4,6 +4,34 @@ This file will be added to as part of each release
 
 ----
 
+Version 0.2.0, Tue 28 Feb 2017
+===============================
+
+f211d39789	Expanding readme (Adam Charnock)
+8395a4073c	Updating manifest to correctly include files (Adam Charnock)
+b5a6d1fbb7	Fixing account name (Adam Charnock)
+c57828daed	Adding command to create swiftwind accounts (Adam Charnock)
+dcfc4daf4d	Adding deploy-to-heroku button (Adam Charnock)
+08b9136110	Moving auth urls include into example project (Adam Charnock)
+d1133a6f20	Adding login required decorator to views (Adam Charnock)
+44dca55ac8	Setting allowed hosts to * (Adam Charnock)
+b40dbf3c39	Updating requirements and work on Heroku deployment (Adam Charnock)
+5101db5bb7	Adding missing management command (Adam Charnock)
+c4ebedd274	Adding command and tasks to enact costs (Adam Charnock)
+442be6acde	Minor ui tweaks (Adam Charnock)
+5fb24c487c	Formatting dashboard layout (Adam Charnock)
+87e1b97c42	Fixing constraint violation when creating costs (Adam Charnock)
+b00bc1699f	Work on costs ui (Adam Charnock)
+72ba8a15f2	Adding housemate editing and fixing some template refactoring errors (Adam Charnock)
+8e80d964fc	Adding in additional hordak views under an 'extra' menu (Adam Charnock)
+4b28ab46ef	Updating templates for recent hordak changes (Adam Charnock)
+4f6fabb1dd	Moving statement import code into Hordak (Adam Charnock)
+83e3ab3471	Fixing URL namespace issue relating to hordak (Adam Charnock)
+37b330bbd4	Bumping hordak version requirement (Adam Charnock)
+52271749fd	Updating readme (Adam Charnock)
+ac7760e298	Fixes for changes in hordak (Adam Charnock)
+
+
 Version 0.1.0, Sun 18 Dec 2016
 ===============================
 
