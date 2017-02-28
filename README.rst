@@ -44,7 +44,7 @@ Once installed you will need to run the following ``manage.py`` commands::
 
     ./manage.py migrate
     ./manage.py createsuperuser
-    ./manage.py create_chart_of_accounts
+    ./manage.py swiftwind_create_accounts
 
 Credits
 -------
