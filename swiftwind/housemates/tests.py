@@ -114,6 +114,21 @@ class HousemateCreateViewTestCase(DataProvider, TestCase):
         self.assertEqual(housemate.account.name, 'New User')
         self.assertEqual(housemate.account.currencies, ['EUR'])
 
+    def test_post_success_existing_user_no_name(self):
+        self.user.first_name = ''
+        self.user.last_name = ''
+        self.user.save()
+
+        response = self.client.post(self.view_url, data=dict(
+            existing_user=self.user.username,
+        ))
+        if response.context and 'form' in response.context:
+            self.assertFalse(response.context['form'].errors)
+
+        housemate = Housemate.objects.get()
+        # Check the account name is set to the username, rather than just being blank
+        self.assertEqual(housemate.account.name, 'testuser')
+
 
 class HousemateUpdateViewTestCase(DataProvider, TestCase):
 

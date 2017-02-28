@@ -127,7 +127,7 @@ class HousemateCreateForm(forms.ModelForm):
                 code = str(int(max_code) + 1).zfill(code_length)
 
             account = Account.objects.create(
-                name=user.get_full_name(),
+                name=user.get_full_name() or user.username,
                 parent=parent,
                 code=code,
                 currencies=[settings.SWIFTWIND_DEFAULT_CURRENCY],
