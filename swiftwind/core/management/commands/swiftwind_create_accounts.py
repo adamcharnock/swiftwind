@@ -23,13 +23,13 @@ class Command(BaseCommand):
 
         kw = dict(currencies=[options.get('currency', 'USD')])
 
-        assets = Account.objects.create(name='Assets', code='1', _type='AS', **kw)
-        liabilities = Account.objects.create(name='Liabilities', code='1', _type='AS', **kw)
-        equity = Account.objects.create(name='Equity', code='1', _type='AS', **kw)
-        income = Account.objects.create(name='Income', code='1', _type='AS', **kw)
-        expenses = Account.objects.create(name='Expenses', code='1', _type='AS', **kw)
+        assets = Account.objects.create(name='Assets', code='1', type='AS', **kw)
+        liabilities = Account.objects.create(name='Liabilities', code='2', type='AS', **kw)
+        equity = Account.objects.create(name='Equity', code='3', type='AS', **kw)
+        income = Account.objects.create(name='Income', code='4', type='AS', **kw)
+        expenses = Account.objects.create(name='Expenses', code='5', type='AS', **kw)
 
-        bank = Account.objects.create(name='Bank', code='1', is_bank_account=True, _type='AS', parent=assets, **kw)
+        bank = Account.objects.create(name='Bank', code='1', is_bank_account=True, type='AS', parent=assets, **kw)
 
         housemate_income = Account.objects.create(name='Housemate Income', code='1', parent=income, **kw)
         other_income = Account.objects.create(name='Other Income', code='2', parent=income, **kw)

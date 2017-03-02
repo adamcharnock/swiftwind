@@ -12,8 +12,8 @@ class DashboardView(TemplateView):
 
     def get_balance_context(self):
         """Get the high level balances"""
-        income_accounts = Account.objects.filter(_type=Account.TYPES.income)
-        expense_accounts = Account.objects.filter(_type=Account.TYPES.expense)
+        income_accounts = Account.objects.filter(type=Account.TYPES.income)
+        expense_accounts = Account.objects.filter(type=Account.TYPES.expense)
 
         net_income = income_accounts.net_balance()
         net_expense = expense_accounts.net_balance()
