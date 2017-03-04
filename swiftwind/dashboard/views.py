@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
+from django.conf import settings
 from hordak.models import Account
+from hordak.utilities.currency import Balance
 
 
 @method_decorator(login_required, name='dispatch')
@@ -14,15 +15,21 @@ class DashboardView(TemplateView):
         """Get the high level balances"""
         income_accounts = Account.objects.filter(type=Account.TYPES.income)
         expense_accounts = Account.objects.filter(type=Account.TYPES.expense)
+        bank_account = Account.objects.get(name='Bank')
 
         net_income = income_accounts.net_balance()
         net_expense = expense_accounts.net_balance()
+        net_total = net_income - net_expense
+
+        # Ensure we have a zero value if we have no income or expense accounts
+        if not net_total.monies():
+            net_total += Balance('0', settings.SWIFTWIND_DEFAULT_CURRENCY)
 
         return dict(
             net_income=net_income,
             net_expense=net_expense,
-            net_total=net_income - net_expense,
-            bank_balance=Account.objects.get(name='Bank').balance(),
+            net_total=net_total,
+            bank_balance=bank_account.balance(),
             retained_earnings_balance=Account.objects.get(name='Retained Earnings').balance(),
         )
 
@@ -41,7 +48,6 @@ class DashboardView(TemplateView):
             long_term_liability_accounts=Account.objects.filter(parent=long_term_liabilities_parent),
             other_income_accounts=Account.objects.filter(~Q(pk=housemate_parent.pk), parent=income_parent)
         )
-
 
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data()

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from hordak.models import Account
@@ -13,15 +14,16 @@ class Command(BaseCommand):
             help='Exit normally if any accounts already exist.',
         )
         parser.add_argument(
-            '--currency', dest='currency', default='USD', action='store',
-            help='Account currencies.',
+            '--currency', dest='currency', default=[settings.SWIFTWIND_DEFAULT_CURRENCY],
+            help='Account currencies, can be specified multiple times. Defaults to SWIFTWIND_DEFAULT_CURRENCY setting.',
+            nargs='+',
         )
 
     def handle(self, *args, **options):
         if options.get('preserve') and Account.objects.count():
             self.stdout.write('Exiting normally because accounts already exist and --preserve flag was present')
 
-        kw = dict(currencies=[options.get('currency', 'USD')])
+        kw = dict(currencies=options.get('currency'))
 
         assets = Account.objects.create(name='Assets', code='1', type='AS', **kw)
         liabilities = Account.objects.create(name='Liabilities', code='2', type='AS', **kw)
