@@ -210,9 +210,9 @@ class RecurringCostModelTestCase(DataProvider, BalanceUtils, TestCase):
             initial_billing_cycle=self.billing_cycle_1,
         )
         self.add_split(recurring_cost)
-        self.assertBalanceEqual(recurring_cost.get_amount(self.billing_cycle_1), 100)
-        self.assertBalanceEqual(recurring_cost.get_amount(self.billing_cycle_2), 150)
-        self.assertBalanceEqual(recurring_cost.get_amount(self.billing_cycle_3), 160)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 100)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 150)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 160)
 
     def test_recurring_arrears_transactions_get_amount(self):
         self.bank.transfer_to(self.to_account, Money(100, 'EUR'), date='2000-01-01')
@@ -226,9 +226,9 @@ class RecurringCostModelTestCase(DataProvider, BalanceUtils, TestCase):
             initial_billing_cycle=self.billing_cycle_1,
         )
         self.add_split(recurring_cost)
-        self.assertBalanceEqual(recurring_cost.get_amount(self.billing_cycle_1), 120)
-        self.assertBalanceEqual(recurring_cost.get_amount(self.billing_cycle_2), 50)
-        self.assertBalanceEqual(recurring_cost.get_amount(self.billing_cycle_3), 10)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 120)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 50)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 10)
 
     def test_one_off_normal_get_amount(self):
         recurring_cost = RecurringCost.objects.create(
@@ -389,8 +389,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
     def setUp(self):
         self.login()
 
-        self.bank = self.account(type=Account.TYPES.asset)
-        self.to_account = self.account(type=Account.TYPES.expense)
+        self.bank = self.account(type=Account.TYPES.asset, currencies=['GBP'])
+        self.to_account = self.account(type=Account.TYPES.expense, currencies=['GBP'])
         self.billing_cycle_1 = BillingCycle.objects.create(date_range=('2000-01-01', '2000-02-01'))
         self.billing_cycle_2 = BillingCycle.objects.create(date_range=('2000-02-01', '2000-03-01'))
         self.billing_cycle_3 = BillingCycle.objects.create(date_range=('2000-03-01', '2000-04-01'))
@@ -401,12 +401,12 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         self.billing_cycle_3.refresh_from_db()
         self.billing_cycle_4.refresh_from_db()
 
-    def add_split(self, recurring_cost):
+    def add_split(self, recurring_cost, account_currency='EUR'):
         # Required by database constraint, but not relevant to most of the tests.
         # We therefore use this utility method to create this where required.
         split = RecurringCostSplit.objects.create(
             recurring_cost=recurring_cost,
-            from_account=self.account(type=Account.TYPES.income),
+            from_account=self.account(type=Account.TYPES.income, currencies=[account_currency]),
             portion=Decimal('1'),
         )
         recurring_cost.splits.add(split)
@@ -420,8 +420,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 type=RecurringCost.TYPES.normal,
                 initial_billing_cycle=self.billing_cycle_1,
             )
-            split1 = self.add_split(recurring_cost)
-            split2 = self.add_split(recurring_cost)
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         recurring_cost.enact(self.billing_cycle_1)
         self.assertBalanceEqual(self.to_account.balance(), 100)  # 100 every month
@@ -442,8 +442,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 initial_billing_cycle=self.billing_cycle_1,
                 total_billing_cycles=2,
             )
-            split1 = self.add_split(recurring_cost)
-            split2 = self.add_split(recurring_cost)
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         recurring_cost.enact(self.billing_cycle_1)
         self.assertBalanceEqual(self.to_account.balance(), 50)  # 100 spread across 2 months
@@ -466,8 +466,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 type=RecurringCost.TYPES.normal,
                 initial_billing_cycle=self.billing_cycle_1,
             )
-            split1 = self.add_split(recurring_cost)
-            split2 = self.add_split(recurring_cost)
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         recurring_cost.enact(self.billing_cycle_1)
         with self.assertRaises(RecurringCostAlreadyEnactedForBillingCycle):
@@ -484,7 +484,7 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 initial_billing_cycle=self.billing_cycle_1,
                 total_billing_cycles=2,  # _is_billing_complete only apples to one-off costs
             )
-            self.add_split(recurring_cost)
+            self.add_split(recurring_cost, account_currency='GBP')
 
         self.assertFalse(recurring_cost._is_billing_complete())
         recurring_cost.enact(self.billing_cycle_1)
@@ -502,7 +502,7 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 initial_billing_cycle=self.billing_cycle_1,
                 total_billing_cycles=2,
             )
-            self.add_split(recurring_cost)
+            self.add_split(recurring_cost, account_currency='GBP')
 
         self.assertFalse(recurring_cost.disabled)
         recurring_cost.enact(self.billing_cycle_1)
@@ -518,8 +518,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 type=RecurringCost.TYPES.normal,
                 initial_billing_cycle=self.billing_cycle_1,
             )
-            split1 = self.add_split(recurring_cost)
-            split2 = self.add_split(recurring_cost)
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         RecurringCost.objects.enact(as_of=date(2000, 2, 5))
 
@@ -535,8 +535,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 type=RecurringCost.TYPES.normal,
                 initial_billing_cycle=self.billing_cycle_1,
             )
-            split1 = self.add_split(recurring_cost)
-            split2 = self.add_split(recurring_cost)
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         tasks.enact_costs(as_of=date(2000, 2, 5))
 
@@ -552,8 +552,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 type=RecurringCost.TYPES.normal,
                 initial_billing_cycle=self.billing_cycle_1,
             )
-            split1 = self.add_split(recurring_cost)
-            split2 = self.add_split(recurring_cost)
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         EnactCostsCommand().handle(as_of='2000-02-05')
 
@@ -569,8 +569,8 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
                 type=RecurringCost.TYPES.normal,
                 initial_billing_cycle=self.billing_cycle_1,
             )
-            split1 = self.add_split(recurring_cost)
-            split2 = self.add_split(recurring_cost)
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         EnactCostsCommand().handle()
 
@@ -583,7 +583,7 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
 class RecurringCostSplitModelTestCase(DataProvider, TestCase):
 
     def setUp(self):
-        to_account = self.account(type=Account.TYPES.expense)
+        to_account = self.account(type=Account.TYPES.expense, currencies=['GBP'])
         self.recurring_cost = RecurringCost.objects.create(
             to_account=to_account,
             fixed_amount=100,
@@ -592,17 +592,17 @@ class RecurringCostSplitModelTestCase(DataProvider, TestCase):
         )
         self.split1 = RecurringCostSplit.objects.create(
             recurring_cost=self.recurring_cost,
-            from_account=self.account(type=Account.TYPES.income),
+            from_account=self.account(type=Account.TYPES.income, currencies=['GBP']),
             portion='1.00'
         )
         self.split2 = RecurringCostSplit.objects.create(
             recurring_cost=self.recurring_cost,
-            from_account=self.account(type=Account.TYPES.income),
+            from_account=self.account(type=Account.TYPES.income, currencies=['GBP']),
             portion='0.50'
         )
         self.split3 = RecurringCostSplit.objects.create(
             recurring_cost=self.recurring_cost,
-            from_account=self.account(type=Account.TYPES.income),
+            from_account=self.account(type=Account.TYPES.income, currencies=['GBP']),
             portion='0.50'
         )
 
@@ -619,7 +619,7 @@ class RecurredCostModelTestCase(DataProvider, TestCase):
 
     def setUp(self):
         self.billing_cycle = BillingCycle.objects.create(date_range=('2000-01-01', '2000-02-01'))
-        to_account = self.account(type=Account.TYPES.expense)
+        to_account = self.account(type=Account.TYPES.expense, currencies=['GBP'])
 
         self.recurring_cost = RecurringCost.objects.create(
             to_account=to_account,
@@ -629,17 +629,17 @@ class RecurredCostModelTestCase(DataProvider, TestCase):
         )
         self.split1 = RecurringCostSplit.objects.create(
             recurring_cost=self.recurring_cost,
-            from_account=self.account(type=Account.TYPES.income),
+            from_account=self.account(type=Account.TYPES.income, currencies=['GBP']),
             portion='1.00'
         )
         self.split2 = RecurringCostSplit.objects.create(
             recurring_cost=self.recurring_cost,
-            from_account=self.account(type=Account.TYPES.income),
+            from_account=self.account(type=Account.TYPES.income, currencies=['GBP']),
             portion='0.50'
         )
         self.split3 = RecurringCostSplit.objects.create(
             recurring_cost=self.recurring_cost,
-            from_account=self.account(type=Account.TYPES.income),
+            from_account=self.account(type=Account.TYPES.income, currencies=['GBP']),
             portion='0.50'
         )
 

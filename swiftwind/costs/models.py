@@ -6,6 +6,8 @@ from django.db.models import QuerySet
 from django.utils import timezone
 from django_smalluuid.models import SmallUUIDField
 from django_smalluuid.models import uuid_default
+from moneyed import Money
+
 from hordak.models import Transaction, Leg
 from hordak.utilities.currency import Balance
 from model_utils import Choices
@@ -97,11 +99,19 @@ class RecurringCost(models.Model):
         return self.to_account.currencies[0]
 
     def get_amount(self, billing_cycle):
-        return {
+        amount = {
             RecurringCost.TYPES.normal: self.get_amount_normal,
             RecurringCost.TYPES.arrears_balance: self.get_amount_arrears_balance,
             RecurringCost.TYPES.arrears_transactions: self.get_amount_arrears_transactions,
         }[self.type](billing_cycle)
+
+        if isinstance(amount, Balance):
+            # Convert balances into decimals
+            monies = amount.monies()
+            assert len(monies) in (0, 1)
+            amount = monies[0].amount if amount else Decimal('0')
+
+        return amount
 
     def get_amount_normal(self, billing_cycle):
         """Get the amount due on the given billing cycle
@@ -349,7 +359,7 @@ class RecurredCost(models.Model):
         # (normally to an expense account)
         self.transaction.legs.add(Leg.objects.create(
             transaction=self.transaction,
-            amount=amount * -1,
+            amount=Money(amount * -1, self.recurring_cost.currency),
             account=self.recurring_cost.to_account,
         ))
 
@@ -358,7 +368,7 @@ class RecurredCost(models.Model):
             # (from housemate accounts)
             self.transaction.legs.add(Leg.objects.create(
                 transaction=self.transaction,
-                amount=split_amount,
+                amount=Money(split_amount, self.recurring_cost.currency),
                 account=split.from_account,
             ))
 
