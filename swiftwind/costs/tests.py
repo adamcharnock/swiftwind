@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.test.testcases import TransactionTestCase
 from django.urls.base import reverse
 from hordak.models import Account
-from hordak.tests.utils import DataProvider, BalanceUtils
+from hordak.tests.utils import BalanceUtils
 from hordak.utilities.currency import Balance
 from moneyed import Money
 
@@ -17,6 +17,7 @@ from swiftwind.costs.exceptions import ProvidedBillingCycleBeginsBeforeInitialBi
     CannotEnactUnenactableRecurringCostError, RecurringCostAlreadyEnactedForBillingCycle
 from swiftwind.costs.management.commands.enact_costs import Command as EnactCostsCommand
 from swiftwind.costs.models import RecurredCost
+from swiftwind.utilities.testing import DataProvider
 from .forms import RecurringCostForm, OneOffCostForm
 from .models import RecurringCost, RecurringCostSplit
 
@@ -769,6 +770,8 @@ class RecurringCostsViewTestCase(DataProvider, TestCase):
         self.view_url = reverse('costs:recurring')
 
     def test_get(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
@@ -776,6 +779,8 @@ class RecurringCostsViewTestCase(DataProvider, TestCase):
         self.assertIn('formset', context)
 
     def test_post_valid(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.post(self.view_url, data={
             'form-TOTAL_FORMS': 1,
             'form-INITIAL_FORMS': 1,
@@ -828,6 +833,8 @@ class CreateRecurringCostViewTestCase(DataProvider, TestCase):
         self.view_url = reverse('costs:create_recurring')
 
     def test_get(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
@@ -835,6 +842,8 @@ class CreateRecurringCostViewTestCase(DataProvider, TestCase):
         self.assertIn('form', context)
 
     def test_post_valid(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.post(self.view_url, data={
             'to_account': self.expense_account.uuid,
             'fixed_amount': Decimal('200'),
@@ -880,13 +889,25 @@ class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
         self.view_url = reverse('costs:one_off')
 
     def test_get(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
 
         self.assertIn('formset', context)
 
+    def test_get_no_housemates(self):
+        response = self.client.get(self.view_url)
+        self.assertEqual(response.status_code, 200)
+        context = response.context
+
+        # HousematesRequiredMixin should show a 'create some housemates' error instead
+        self.assertNotIn('formset', context)
+
     def test_post_valid(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.post(self.view_url, data={
             'form-TOTAL_FORMS': 1,
             'form-INITIAL_FORMS': 1,
@@ -956,7 +977,6 @@ class OneOffCostFormTestCase(DataProvider, TestCase):
         self.assertIn('fixed_amount', form.errors)
 
 
-
 class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
 
     def setUp(self):
@@ -974,13 +994,25 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.view_url = reverse('costs:create_one_off')
 
     def test_get(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
 
         self.assertIn('form', context)
 
+    def test_get_no_housemates(self):
+        response = self.client.get(self.view_url)
+        self.assertEqual(response.status_code, 200)
+        context = response.context
+
+        # HousematesRequiredMixin should show a 'create some housemates' error instead
+        self.assertNotIn('formset', context)
+
     def test_post_valid(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.post(self.view_url, data={
             'to_account': self.expense_account.uuid,
             'fixed_amount': Decimal('200'),
@@ -1002,6 +1034,8 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.assertEqual(recurring_cost.splits.count(), 3)
 
     def test_post_invalid_missing_total_billing_cycles(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.post(self.view_url, data={
             'to_account': self.expense_account.uuid,
             'fixed_amount': Decimal('200'),
@@ -1011,6 +1045,8 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.assertFalse(form.is_valid())
 
     def test_post_invalid_missing_fixed_amount(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.post(self.view_url, data={
             'to_account': self.expense_account.uuid,
             'fixed_amount': '',
@@ -1020,6 +1056,8 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.assertFalse(form.is_valid())
 
     def test_post_invalid_missing_to_account(self):
+        self.housemate()  # Keeps HousematesRequiredMixin happy
+
         response = self.client.post(self.view_url, data={
             'to_account': '',
             'fixed_amount': Decimal('200'),

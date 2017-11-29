@@ -15,6 +15,8 @@ import getpass
 import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+import sys
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -75,6 +77,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'swiftwind.system_setup.middleware.CheckSetupDoneMiddleware',
 ]
+
+if 'test' in sys.argv:
+    MIDDLEWARE.remove('swiftwind.system_setup.middleware.CheckSetupDoneMiddleware')
 
 ROOT_URLCONF = 'example_project.urls'
 

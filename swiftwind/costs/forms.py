@@ -89,8 +89,13 @@ class OneOffCostForm(AbstractCostForm):
 
     def clean_fixed_amount(self):
         amount = self.cleaned_data['fixed_amount']
-        # Mirroring the simplification in RecurringCost.currency
-        currency = self.cleaned_data['to_account'].currencies[0]
+
+        try:
+            # Mirroring the simplification in RecurringCost.currency
+            currency = self.cleaned_data['to_account'].currencies[0]
+        except KeyError:
+            return amount
+        
         balance = Balance(amount, currency)
         billed_amount = self.instance.get_billed_amount()
 
