@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.test.testcases import TransactionTestCase
 from django.urls.base import reverse
 from hordak.models import Account
+from hordak.models.core import Transaction
 from hordak.tests.utils import BalanceUtils
 from hordak.utilities.currency import Balance
 from moneyed import Money
@@ -472,6 +473,22 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         recurring_cost.enact(self.billing_cycle_1)
         with self.assertRaises(RecurringCostAlreadyEnactedForBillingCycle):
             recurring_cost.enact(self.billing_cycle_1)
+
+    def test_enact_zero_amount(self):
+        # The account will have a zero balance, so this so not create a transaction
+        with db_transaction.atomic():
+            recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                type=RecurringCost.TYPES.arrears_balance,
+                initial_billing_cycle=self.billing_cycle_1,
+            )
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
+
+        recurring_cost.enact(self.billing_cycle_1)
+        self.assertFalse(Transaction.objects.exists())
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 0)
+        self.assertTrue(recurring_cost.has_enacted(self.billing_cycle_1))
 
     # Misc other tests that use enact()
 

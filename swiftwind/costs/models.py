@@ -323,7 +323,7 @@ class RecurredCost(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, editable=False)
     recurring_cost = models.ForeignKey(RecurringCost, related_name='recurrences')
     billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', related_name='recurring_costs')
-    transaction = models.OneToOneField(Transaction, related_name='recurred_cost', unique=True)
+    transaction = models.OneToOneField(Transaction, related_name='recurred_cost', unique=True, null=True)
 
     class Meta:
         unique_together = (
@@ -339,18 +339,21 @@ class RecurredCost(models.Model):
         Returns:
             Transaction: The created transaction, also assigned to self.transaction
         """
-        try:
-            self.transaction
-        except Transaction.DoesNotExist:
-            pass
-        else:
+        if self.pk:
             raise CannotRecreateTransactionOnRecurredCost()
+
+        amount = self.recurring_cost.get_amount(self.billing_cycle)
+
+        # It is quite possible that there will be nothing to bill, in which
+        # case we cannot create a transaction with no legs, not can we create
+        # legs with zero values. Therefore we don't create any transaction.
+        if not amount:
+            return None
 
         self.transaction = Transaction.objects.create(
             description='Created by recurring cost: {}'.format(self.recurring_cost)
         )
 
-        amount = self.recurring_cost.get_amount(self.billing_cycle)
         # Use the SplitManager's custom queryset's split() method to get the
         # amount to be billed for each split
         splits = self.recurring_cost.splits.all().split(amount)
