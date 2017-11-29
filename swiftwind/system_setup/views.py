@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login
+from django.db import transaction
 from django.http.response import HttpResponseRedirect
 from django.urls.base import reverse_lazy, reverse
 from django.views.generic import FormView
@@ -19,7 +20,8 @@ class SetupView(FormView):
             return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        form.save()
+        with transaction.atomic():
+            form.save()
 
         # Now login as the newly created user
         user = authenticate(

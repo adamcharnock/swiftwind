@@ -5,27 +5,52 @@
 {% block page_description %}Create a new housemate with their own user and account{% endblock %}
 
 {% block content %}
-    <form action="{% url 'housemates:create' %}" method="post" class="form-horizontal">
+    <form action="{% url 'housemates:create' %}" method="post">
         {% csrf_token %}
 
-        <div class="row">
-            <div class="col-sm-6">
-                <h4>Select an existing user</h4>
-                {% bootstrap_field form.existing_user show_label=False %}
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">New housemate login</h3>
             </div>
-            <div class="col-sm-6">
-                <h4>Create a new user</h4>
-                {% bootstrap_field form.new_username layout='horizontal' %}
-                {% bootstrap_field form.new_email layout='horizontal' %}
-                {% bootstrap_field form.new_first_name layout='horizontal' %}
-                {% bootstrap_field form.new_last_name layout='horizontal' %}
+            <div class="box-body">
+                <p>
+                    Each housemate has a swiftwind login, allowing them to access their account history.
+                    You can select an existing login or (more likely), create a new login for the new housemate.
+                </p>
+
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h4>Select an existing login, or...</h4>
+                        {% bootstrap_field form.existing_user show_label=False %}
+                    </div>
+                    <div class="col-sm-6">
+                        <h4>...create a new login</h4>
+                        {% bootstrap_field form.new_username layout='horizontal' %}
+                        {% bootstrap_field form.new_email layout='horizontal' %}
+                        {% bootstrap_field form.new_first_name layout='horizontal' %}
+                        {% bootstrap_field form.new_last_name layout='horizontal' %}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-sm-offset-4 col-xs-4">
-                <h4>Select an account (optional)</h4>
-                {% bootstrap_field form.account %}
+        <div class="box">
+            <div class="box-header">
+                <h3 class="box-title">New housemate financial account</h3>
+            </div>
+            <div class="box-body">
+                <p>
+                    Each housemate has their own financial account. By default we will create a
+                    financial account for the new housemate automatically, so you can probably ignore this
+                    unless you want to do something fancy.
+                </p>
+
+                <div class="row">
+                    <div class="col-xs-4">
+                        <h4>Select an account (optional)</h4>
+                        {% bootstrap_field form.account %}
+                    </div>
+                </div>
             </div>
         </div>
 

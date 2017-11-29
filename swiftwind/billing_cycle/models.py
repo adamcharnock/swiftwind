@@ -3,6 +3,7 @@ from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.db import transaction as db_transaction
 from django.db.models.functions import Lower, Upper
+from django.utils import formats
 from django.utils.datetime_safe import datetime, date
 from django_smalluuid.models import uuid_default, SmallUUIDField
 from django.conf import settings
@@ -54,6 +55,9 @@ class BillingCycle(models.Model):
         ordering = ['date_range']
 
     def __str__(self):
+        return 'Cycle starting {}'.format(formats.localize(self.date_range.lower, use_l10n=True))
+
+    def __repr__(self):
         return 'BillingCycle <{}>'.format(self.date_range)
 
     @classmethod

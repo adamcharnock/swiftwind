@@ -7,8 +7,10 @@ from django.core.exceptions import ValidationError
 from djmoney.settings import CURRENCY_CHOICES
 
 from hordak.models import Account
+from swiftwind.billing_cycle.models import BillingCycle
 from swiftwind.core.management.commands.swiftwind_create_accounts import Command as SwiftwindCreateAccountsCommand
 from swiftwind.core.models import Settings
+from swiftwind.housemates.models import Housemate
 
 User = get_user_model()
 
@@ -20,7 +22,7 @@ class SetupForm(forms.Form):
     password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput, strip=False,
                                 help_text='Enter the same password as before, for verification.')
 
-    default_currency = forms.ChoiceField(choices=CURRENCY_CHOICES)
+    default_currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='EUR')
     additional_currencies = forms.MultipleChoiceField(choices=CURRENCY_CHOICES, widget=forms.SelectMultiple(),
                                                       required=False)
 
@@ -60,3 +62,18 @@ class SetupForm(forms.Form):
             SwiftwindCreateAccountsCommand().handle(
                 currency=self.cleaned_data['default_currency'],
             )
+
+        # Create a housemate & account
+        account = Account.objects.create(
+            name=user.get_full_name() or user.username,
+            parent=Account.objects.get(name='Housemate Income'),
+            code='00',
+            currencies=[self.cleaned_data['default_currency']],
+        )
+        Housemate.objects.create(
+            account=account,
+            user=user,
+        )
+
+        # Create the billing cycles
+        BillingCycle.populate()
