@@ -5,6 +5,7 @@ from django.utils.datetime_safe import datetime
 from hordak.models import Account
 from mptt.forms import TreeNodeChoiceField
 
+from hordak.utilities.currency import Balance
 from swiftwind.billing_cycle.models import BillingCycle
 from .models import RecurringCost, RecurringCostSplit
 from swiftwind.utilities.formsets import nested_model_formset_factory
@@ -85,6 +86,20 @@ class OneOffCostForm(AbstractCostForm):
     def save(self, commit=True):
         self.instance.type = RecurringCost.TYPES.normal
         return super(OneOffCostForm, self).save(commit)
+
+    def clean_fixed_amount(self):
+        amount = self.cleaned_data['fixed_amount']
+        # Mirroring the simplification in RecurringCost.currency
+        currency = self.cleaned_data['to_account'].currencies[0]
+        balance = Balance(amount, currency)
+        billed_amount = self.instance.get_billed_amount()
+
+        if balance < billed_amount:
+            raise ValidationError(
+                "This cost has already billed for {}. You therefore cannot set the amount to less than this."
+                "".format(billed_amount)
+            )
+        return amount
 
 
 class RecurringCostSplitForm(forms.ModelForm):

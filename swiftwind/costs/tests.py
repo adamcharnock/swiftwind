@@ -17,7 +17,7 @@ from swiftwind.costs.exceptions import ProvidedBillingCycleBeginsBeforeInitialBi
     CannotEnactUnenactableRecurringCostError, RecurringCostAlreadyEnactedForBillingCycle
 from swiftwind.costs.management.commands.enact_costs import Command as EnactCostsCommand
 from swiftwind.costs.models import RecurredCost
-from .forms import RecurringCostForm
+from .forms import RecurringCostForm, OneOffCostForm
 from .models import RecurringCost, RecurringCostSplit
 
 
@@ -921,6 +921,40 @@ class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
         self.assertEqual(self.split1.portion, 2)
         self.assertEqual(self.split2.portion, 3)
         self.assertEqual(self.split3.portion, 4)
+
+
+class OneOffCostFormTestCase(DataProvider, TestCase):
+
+    def setUp(self):
+        BillingCycle.populate()
+        self.billing_cycle = BillingCycle.objects.first()
+
+        self.expense_account = self.account(type=Account.TYPES.expense)
+        self.housemate_parent_account = self.account(name='Housemate Income', type=Account.TYPES.income)
+        self.housemate_1 = self.account(parent=self.housemate_parent_account)
+        self.housemate_2 = self.account(parent=self.housemate_parent_account)
+        self.housemate_3 = self.account(parent=self.housemate_parent_account)
+
+        with db_transaction.atomic():
+            self.recurring_cost = RecurringCost.objects.create(to_account=self.expense_account, fixed_amount=100,
+                                                               total_billing_cycles=2, initial_billing_cycle=self.billing_cycle)
+            self.split1 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate_1)
+            self.split2 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate_2)
+            self.split3 = RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate_3)
+
+    def test_cannot_set_amount_less_than_billed_amount(self):
+        self.recurring_cost.enact(self.billing_cycle)
+        # Billed amount is now 50 EUR
+
+        form = OneOffCostForm(data=dict(
+            to_account=self.expense_account.uuid,
+            initial_billing_cycle=self.billing_cycle.pk,
+            fixed_amount=30,
+            total_billing_cycles=2,
+        ), instance=self.recurring_cost)
+        self.assertFalse(form.is_valid())
+        self.assertIn('fixed_amount', form.errors)
+
 
 
 class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
