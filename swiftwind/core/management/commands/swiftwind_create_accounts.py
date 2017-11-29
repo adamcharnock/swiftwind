@@ -23,7 +23,7 @@ class Command(BaseCommand):
         if options.get('preserve') and Account.objects.count():
             self.stdout.write('Exiting normally because accounts already exist and --preserve flag was present')
 
-        kw = dict(currencies=options.get('currency'))
+        kw = dict(currencies=[options.get('currency')])
 
         assets = Account.objects.create(name='Assets', code='1', type='AS', **kw)
         liabilities = Account.objects.create(name='Liabilities', code='2', type='AS', **kw)
