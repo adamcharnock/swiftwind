@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'swiftwind.costs',
     'swiftwind.dashboard',
     'swiftwind.housemates',
+    'swiftwind.system_setup',
     'swiftwind.transactions',
 
     'hordak',
