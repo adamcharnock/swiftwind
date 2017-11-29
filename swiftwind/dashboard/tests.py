@@ -9,7 +9,7 @@ class DashboardViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
         self.url = reverse('dashboard:dashboard')
-        Command().handle(currency=['GBP'])
+        Command().handle(currency='GBP')
 
     def test_get(self):
         self.login()
