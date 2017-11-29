@@ -73,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'swiftwind.system_setup.middleware.CheckSetupDoneMiddleware',
 ]
 
 ROOT_URLCONF = 'example_project.urls'
@@ -101,7 +102,7 @@ DATABASES = {
     # The default settings may work well for local development.
     'default': dj_database_url.config() or {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'swiftwind',
+        'NAME': 'postgres',
         'HOST': '127.0.0.1',
         'PORT': '5432',
         'USER': 'postgres',

@@ -1,8 +1,14 @@
-{% extends "adminlte/base.html" %}
-{% load i18n static %}
+{% extends "adminlte/login.html" %}
+{% load i18n static bootstrap3 %}
 
 {% block body_class %}login-page{% endblock %}
 
-{% block body %}
-    Hey?
+{% block logo_text %}Swiftwind Setup{% endblock %}
+
+{% block login_form %}
+    <form action="{% url 'setup:index' %}" method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <input type="submit" class="btn btn-primary btn-lg btn-block" value="I'm ready, let's go!">
+    </form>
 {% endblock %}
