@@ -57,3 +57,13 @@ class SetupViewTestCase(DataProvider, TestCase):
         # Now check we can load the dashboard
         response = self.client.get(reverse('dashboard:dashboard'))
         self.assertEqual(response.status_code, 200)
+
+    def test_get_when_already_setup(self):
+        Settings.objects.create()
+        response = self.client.get(self.view_url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_post_when_already_setup(self):
+        Settings.objects.create()
+        response = self.client.post(self.view_url)
+        self.assertEqual(response.status_code, 302)
