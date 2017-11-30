@@ -34,6 +34,14 @@ class RecurringCostQuerySet(models.QuerySet):
         for cost in self:
             cost.disable_if_done()
 
+    def one_off(self):
+        """Filter for one-off costs"""
+        return self.filter(total_billing_cycles__isnull=False)
+
+    def recurring(self):
+        """Filter for recurring costs"""
+        return self.filter(total_billing_cycles__isnull=True)
+
 
 class RecurringCost(models.Model):
     """ Represents recurring costs and one-off costs

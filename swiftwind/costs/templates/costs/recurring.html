@@ -56,7 +56,7 @@
                                         </div>
                                     {% endfor %}
                                 </div>
-                            {% empty %}
+                                {% empty %}
                                 <p>It seems you haven't setup any housemates yet</p>
                             {% endfor %}
                         </div>
@@ -71,12 +71,60 @@
                 </div>
             {% endif %}
         {% empty %}
-            <p>
-                You don't have any recurring costs yet. Perhaps
-                <a href="{% url 'costs:create_recurring' %}">create some</a>?
-            </p>
+            <div class="row">
+                <div class="col-xs-12 col-md-6 col-md-offset-3">
+                    <div class="box">
+                    <div class="alert alert-primary alert-main">
+                        <h4><i class="icon fa fa-clock-o"></i> {% block explanation_title %}There are no active recurring costs{% endblock %}</h4>
+                        {% block explanation %}
+                            <p>
+                                Recurring costs allow you to automate common household costs.
+                                These will feature on each housemates' bill.
+                            </p>
+
+                            <p class="text-bold">Examples: rent, gas bill, food</p>
+                        {% endblock %}
+                    </div>
+                </div>
+                </div>
+            </div>
         {% endfor %}
 
     </form>
+
+    {% if disabled_costs %}
+
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Disabled costs</h3>
+            </div>
+            <div class="box-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Total billing cycles</th>
+                        <th>Billed amount</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for cost in disabled_costs %}
+                        <tr>
+                            <td>{{ cost.to_account }}</td>
+                            <td>{{ cost.recurrences.count }}</td>
+                            <td>{{ cost.get_billed_amount }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <table>
+        </table>
+
+
+    {% endif %}
 
 {% endblock %}

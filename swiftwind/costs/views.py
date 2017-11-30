@@ -23,10 +23,11 @@ class RecurringCostsView(HousematesRequiredMixin, UpdateView):
         context = super(RecurringCostsView, self).get_context_data(**kwargs)
         context['formset'] = context['form']
         context['form_action'] = self.get_success_url()
+        context['disabled_costs'] = RecurringCost.objects.filter(disabled=True).recurring()
         return context
 
     def get_queryset(self):
-        return RecurringCost.objects.filter(total_billing_cycles=None)
+        return RecurringCost.objects.filter(total_billing_cycles=None, disabled=False)
 
     def get_form_kwargs(self):
         kwargs = super(RecurringCostsView, self).get_form_kwargs()
@@ -53,7 +54,12 @@ class OneOffCostsView(RecurringCostsView):
     form_class = OneOffCostFormSet
 
     def get_queryset(self):
-        return RecurringCost.objects.exclude(total_billing_cycles=None)
+        return RecurringCost.objects.filter(disabled=False).one_off()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['disabled_costs'] = RecurringCost.objects.filter(disabled=True).one_off()
+        return context
 
     def get_success_url(self):
         return reverse('costs:one_off')
