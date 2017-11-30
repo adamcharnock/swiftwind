@@ -79,7 +79,7 @@ class BillingCycle(models.Model):
         """Populate the table with billing cycles starting from `as_of`
 
         Args:
-            as_of (date): The date at which to being the populating
+            as_of (date): The date at which to begin the populating
             delete (bool): Should future billing cycles be deleted?
 
 
