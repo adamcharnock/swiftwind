@@ -65,16 +65,20 @@ class RecurringCost(models.Model):
         (
             'normal',
             "We will not have spent this yet. We will estimate "
-            "a fixed amount per billing cycle."
+            "a fixed amount per billing cycle. (You should select a "
+            "'liabilities' account)."
         ),
         (
             'arrears_balance',
             "We will have already spent this in the previous billing "
-            "cycle, so bill the account's balance."),
+            "cycle, so bill the account's balance. (You should select "
+            "an 'expenses' account)"
+        ),
         (
             'arrears_transactions',
             "We will have already spent this in the previous cycle, "
-            "so bill the total amount spent in the previous cycle."
+            "so bill the total amount spent in the previous cycle. "
+            "(You should select an 'expenses' account)"
         ),
     )
 

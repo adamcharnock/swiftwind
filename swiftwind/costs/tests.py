@@ -18,6 +18,7 @@ from swiftwind.costs.exceptions import ProvidedBillingCycleBeginsBeforeInitialBi
     CannotEnactUnenactableRecurringCostError, RecurringCostAlreadyEnactedForBillingCycle
 from swiftwind.costs.management.commands.enact_costs import Command as EnactCostsCommand
 from swiftwind.costs.models import RecurredCost
+from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.testing import DataProvider
 from .forms import RecurringCostForm, OneOffCostForm
 from .models import RecurringCost, RecurringCostSplit
@@ -842,16 +843,14 @@ class CreateRecurringCostViewTestCase(DataProvider, TestCase):
         self.billing_cycle = BillingCycle.objects.first()
 
         self.expense_account = self.account(type=Account.TYPES.expense)
-        self.housemate_parent_account = self.account(name='Housemate Income', type=Account.TYPES.income)
-        self.housemate_1 = self.account(parent=self.housemate_parent_account)
-        self.housemate_2 = self.account(parent=self.housemate_parent_account)
-        self.housemate_3 = self.account(parent=self.housemate_parent_account)
+        self.account(name='Housemate Income', type=Account.TYPES.income)
+        self.housemate_account_1 = self.housemate().account
+        self.housemate_account_2 = self.housemate().account
+        self.housemate_account_3 = self.housemate().account
 
         self.view_url = reverse('costs:create_recurring')
 
     def test_get(self):
-        self.housemate()  # Keeps HousematesRequiredMixin happy
-
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
@@ -859,8 +858,6 @@ class CreateRecurringCostViewTestCase(DataProvider, TestCase):
         self.assertIn('form', context)
 
     def test_post_valid(self):
-        self.housemate()  # Keeps HousematesRequiredMixin happy
-
         response = self.client.post(self.view_url, data={
             'to_account': self.expense_account.uuid,
             'fixed_amount': Decimal('200'),
@@ -915,6 +912,8 @@ class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
         self.assertIn('formset', context)
 
     def test_get_no_housemates(self):
+        Housemate.objects.all().delete()
+
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
@@ -1003,16 +1002,14 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.billing_cycle = BillingCycle.objects.first()
 
         self.expense_account = self.account(type=Account.TYPES.expense)
-        self.housemate_parent_account = self.account(name='Housemate Income', type=Account.TYPES.income)
-        self.housemate_1 = self.account(parent=self.housemate_parent_account)
-        self.housemate_2 = self.account(parent=self.housemate_parent_account)
-        self.housemate_3 = self.account(parent=self.housemate_parent_account)
+        self.account(name='Housemate Income', type=Account.TYPES.income)
+        self.housemate_account_1 = self.housemate().account
+        self.housemate_account_2 = self.housemate().account
+        self.housemate_account_3 = self.housemate().account
 
         self.view_url = reverse('costs:create_one_off')
 
     def test_get(self):
-        self.housemate()  # Keeps HousematesRequiredMixin happy
-
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
@@ -1020,6 +1017,8 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.assertIn('form', context)
 
     def test_get_no_housemates(self):
+        Housemate.objects.all().delete()
+
         response = self.client.get(self.view_url)
         self.assertEqual(response.status_code, 200)
         context = response.context
@@ -1028,8 +1027,6 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.assertNotIn('formset', context)
 
     def test_post_valid(self):
-        self.housemate()  # Keeps HousematesRequiredMixin happy
-
         response = self.client.post(self.view_url, data={
             'to_account': self.expense_account.uuid,
             'fixed_amount': Decimal('200'),
