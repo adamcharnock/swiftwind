@@ -46,6 +46,7 @@ class HousemateCreateViewTestCase(DataProvider, TestCase):
         housemate = Housemate.objects.get()
         self.assertEqual(housemate.user, self.user)
         self.assertEqual(housemate.account, account)
+        self.assertEqual(housemate.account.type, Account.TYPES.income)
 
     def test_post_success_existing_user_new_account(self):
         response = self.client.post(self.view_url, data=dict(
@@ -59,6 +60,7 @@ class HousemateCreateViewTestCase(DataProvider, TestCase):
         self.assertEqual(housemate.user, self.user)
         self.assertEqual(housemate.account.parent, self.parent_account)
         self.assertEqual(housemate.account.name, 'Joe Bloggs')
+        self.assertEqual(housemate.account.type, Account.TYPES.income)
 
     def test_post_success_new_user_existing_account(self):
         account = self.account(
@@ -86,6 +88,7 @@ class HousemateCreateViewTestCase(DataProvider, TestCase):
         self.assertEqual(housemate.account, account)
         self.assertEqual(housemate.account.name, 'Existing Account')
         self.assertEqual(housemate.account.currencies, ['EUR'])
+        self.assertEqual(housemate.account.type, Account.TYPES.income)
 
     def test_post_success_new_user_new_account(self):
         account = self.account(
@@ -113,6 +116,7 @@ class HousemateCreateViewTestCase(DataProvider, TestCase):
         self.assertEqual(housemate.account.parent, self.parent_account)
         self.assertEqual(housemate.account.name, 'New User')
         self.assertEqual(housemate.account.currencies, ['EUR'])
+        self.assertEqual(housemate.account.type, Account.TYPES.income)
 
     def test_post_success_existing_user_no_name(self):
         self.user.first_name = ''

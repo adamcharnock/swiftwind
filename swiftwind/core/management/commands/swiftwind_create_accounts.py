@@ -25,11 +25,12 @@ class Command(BaseCommand):
 
         kw = dict(currencies=[options.get('currency')])
 
-        assets = Account.objects.create(name='Assets', code='1', type='AS', **kw)
-        liabilities = Account.objects.create(name='Liabilities', code='2', type='AS', **kw)
-        equity = Account.objects.create(name='Equity', code='3', type='AS', **kw)
-        income = Account.objects.create(name='Income', code='4', type='AS', **kw)
-        expenses = Account.objects.create(name='Expenses', code='5', type='AS', **kw)
+        T = Account.TYPES
+        assets = Account.objects.create(name='Assets', code='1', type=T.asset, **kw)
+        liabilities = Account.objects.create(name='Liabilities', code='2', type=T.liability, **kw)
+        equity = Account.objects.create(name='Equity', code='3', type=T.equity, **kw)
+        income = Account.objects.create(name='Income', code='4', type=T.income, **kw)
+        expenses = Account.objects.create(name='Expenses', code='5', type=T.expense, **kw)
 
         bank = Account.objects.create(name='Bank', code='1', is_bank_account=True, type='AS', parent=assets, **kw)
 

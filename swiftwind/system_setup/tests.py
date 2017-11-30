@@ -2,7 +2,9 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from hordak.models.core import Account
 from swiftwind.core.models import Settings
+from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.testing import DataProvider
 
 
@@ -43,6 +45,10 @@ class SetupViewTestCase(DataProvider, TestCase):
         self.assertEqual(settings.additional_currencies, ['EUR', 'USD'])
 
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
+
+        housemate = Housemate.objects.get()
+        self.assertEqual(housemate.user, user)
+        self.assertEqual(housemate.account.type, Account.TYPES.income)
 
     def test_can_load_dashboard_after_setup(self):
         self.client.post(self.view_url, data={
