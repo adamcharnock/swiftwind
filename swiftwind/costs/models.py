@@ -159,6 +159,8 @@ class RecurringCost(models.Model):
     def get_amount_arrears_transactions(self, billing_cycle):
         """Get the sum of all transaction legs in to_account during given billing cycle"""
         previous_billing_cycle = billing_cycle.get_previous()
+        if not previous_billing_cycle:
+            return Decimal(0)
         return self.to_account.balance(
             transaction__date__lt=previous_billing_cycle.date_range.upper,
             transaction__date__gte=previous_billing_cycle.date_range.lower,

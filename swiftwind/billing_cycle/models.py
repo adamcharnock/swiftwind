@@ -132,9 +132,11 @@ class BillingCycle(models.Model):
                     )
 
     def get_next(self):
-        return BillingCycle.objects.filter(date_range__gt=self.date_range).order_by('date_range')[0]
+        """Get the billing cycle after this one. May return None"""
+        return BillingCycle.objects.filter(date_range__gt=self.date_range).order_by('date_range').first()
 
     def get_previous(self):
-        return BillingCycle.objects.filter(date_range__lt=self.date_range).order_by('-date_range')[0]
+        """Get the billing cycle prior to this one. May return None"""
+        return BillingCycle.objects.filter(date_range__lt=self.date_range).order_by('date_range').last()
 
 

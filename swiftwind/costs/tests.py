@@ -212,9 +212,9 @@ class RecurringCostModelTestCase(DataProvider, BalanceUtils, TestCase):
             initial_billing_cycle=self.billing_cycle_1,
         )
         self.add_split(recurring_cost)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 100)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 150)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 160)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 0)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 100)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 150)
 
     def test_recurring_arrears_transactions_get_amount(self):
         self.bank.transfer_to(self.to_account, Money(100, 'EUR'), date='2000-01-01')
@@ -228,9 +228,9 @@ class RecurringCostModelTestCase(DataProvider, BalanceUtils, TestCase):
             initial_billing_cycle=self.billing_cycle_1,
         )
         self.add_split(recurring_cost)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 120)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 50)
-        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 10)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_1), 0)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_2), 120)
+        self.assertEqual(recurring_cost.get_amount(self.billing_cycle_3), 50)
 
     def test_one_off_normal_get_amount(self):
         recurring_cost = RecurringCost.objects.create(
