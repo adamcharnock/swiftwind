@@ -153,14 +153,15 @@ class RecurringCost(models.Model):
     def get_amount_arrears_balance(self, billing_cycle):
         """Get the balance of to_account at the end of billing_cycle"""
         return self.to_account.balance(
-            transaction__date__lt=billing_cycle.date_range.upper,
+            transaction__date__lt=billing_cycle.date_range.lower,
         )
 
     def get_amount_arrears_transactions(self, billing_cycle):
         """Get the sum of all transaction legs in to_account during given billing cycle"""
+        previous_billing_cycle = billing_cycle.get_previous()
         return self.to_account.balance(
-            transaction__date__lt=billing_cycle.date_range.upper,
-            transaction__date__gte=billing_cycle.date_range.lower,
+            transaction__date__lt=previous_billing_cycle.date_range.upper,
+            transaction__date__gte=previous_billing_cycle.date_range.lower,
         )
 
     def get_billed_amount(self):
@@ -374,7 +375,7 @@ class RecurredCost(models.Model):
         # (normally to an expense account)
         self.transaction.legs.add(Leg.objects.create(
             transaction=self.transaction,
-            amount=Money(amount * -1, self.recurring_cost.currency),
+            amount=Money(amount, self.recurring_cost.currency),
             account=self.recurring_cost.to_account,
         ))
 
@@ -383,7 +384,7 @@ class RecurredCost(models.Model):
             # (from housemate accounts)
             self.transaction.legs.add(Leg.objects.create(
                 transaction=self.transaction,
-                amount=Money(split_amount, self.recurring_cost.currency),
+                amount=Money(split_amount * -1, self.recurring_cost.currency),
                 account=split.from_account,
             ))
 

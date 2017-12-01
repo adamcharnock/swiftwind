@@ -1,7 +1,9 @@
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from hordak.models import Account
+
+from swiftwind.core.models import Settings
 
 
 class Command(BaseCommand):
@@ -14,8 +16,8 @@ class Command(BaseCommand):
             help='Exit normally if any accounts already exist.',
         )
         parser.add_argument(
-            '--currency', dest='currency', default=[settings.SWIFTWIND_DEFAULT_CURRENCY],
-            help='Account currencies, can be specified multiple times. Defaults to SWIFTWIND_DEFAULT_CURRENCY setting.',
+            '--currency', dest='currency',
+            help='Account currencies, can be specified multiple times. Defaults to the default currency setting.',
             nargs='+',
         )
 
@@ -23,7 +25,15 @@ class Command(BaseCommand):
         if options.get('preserve') and Account.objects.count():
             self.stdout.write('Exiting normally because accounts already exist and --preserve flag was present')
 
-        kw = dict(currencies=[options.get('currency')])
+        if options.get('currency'):
+            currency = options['currency']
+        else:
+            try:
+                currency = Settings.objects.get().default_currency
+            except Settings.DoesNotExist:
+                raise CommandError('No currency specified by either --currency or by the swiftwind settings.')
+
+        kw = dict(currencies=[currency])
 
         T = Account.TYPES
         assets = Account.objects.create(name='Assets', code='1', type=T.asset, **kw)
