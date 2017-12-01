@@ -352,15 +352,17 @@ class RecurredCost(models.Model):
         May only be used to create the RecurredCost's initial transaction.
 
         Returns:
-            Transaction: The created transaction, also assigned to self.transaction
+            Transaction: The created transaction, also assigned to self.transaction. None if the amount is zero.
         """
         if self.pk:
-            raise CannotRecreateTransactionOnRecurredCost()
+            raise CannotRecreateTransactionOnRecurredCost(
+                'The transaction for this recurred cost has already been created. You cannot create it again.'
+            )
 
         amount = self.recurring_cost.get_amount(self.billing_cycle)
 
         # It is quite possible that there will be nothing to bill, in which
-        # case we cannot create a transaction with no legs, not can we create
+        # case we cannot create a transaction with no legs, nor can we create
         # legs with zero values. Therefore we don't create any transaction.
         if not amount:
             return None
