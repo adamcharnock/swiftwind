@@ -426,14 +426,14 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
             split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         recurring_cost.enact(self.billing_cycle_1)
-        self.assertBalanceEqual(self.to_account.balance(), 100)  # 100 every month
-        self.assertBalanceEqual(split1.from_account.balance(), 50)
-        self.assertBalanceEqual(split2.from_account.balance(), 50)
+        self.assertBalanceEqual(self.to_account.balance(), -100)  # 100 every month
+        self.assertBalanceEqual(split1.from_account.balance(), -50)
+        self.assertBalanceEqual(split2.from_account.balance(), -50)
 
         recurring_cost.enact(self.billing_cycle_2)
-        self.assertBalanceEqual(self.to_account.balance(), 200)
-        self.assertBalanceEqual(split1.from_account.balance(), 100)
-        self.assertBalanceEqual(split2.from_account.balance(), 100)
+        self.assertBalanceEqual(self.to_account.balance(), -200)
+        self.assertBalanceEqual(split1.from_account.balance(), -100)
+        self.assertBalanceEqual(split2.from_account.balance(), -100)
 
     def test_one_off_enact(self):
         with db_transaction.atomic():
@@ -448,14 +448,14 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
             split2 = self.add_split(recurring_cost, account_currency='GBP')
 
         recurring_cost.enact(self.billing_cycle_1)
-        self.assertBalanceEqual(self.to_account.balance(), 50)  # 100 spread across 2 months
-        self.assertBalanceEqual(split1.from_account.balance(), 25)
-        self.assertBalanceEqual(split2.from_account.balance(), 25)
+        self.assertBalanceEqual(self.to_account.balance(), -50)  # 100 spread across 2 months
+        self.assertBalanceEqual(split1.from_account.balance(), -25)
+        self.assertBalanceEqual(split2.from_account.balance(), -25)
 
         recurring_cost.enact(self.billing_cycle_2)
-        self.assertBalanceEqual(self.to_account.balance(), 100)
-        self.assertBalanceEqual(split1.from_account.balance(), 50)
-        self.assertBalanceEqual(split2.from_account.balance(), 50)
+        self.assertBalanceEqual(self.to_account.balance(), -100)
+        self.assertBalanceEqual(split1.from_account.balance(), -50)
+        self.assertBalanceEqual(split2.from_account.balance(), -50)
 
         with self.assertRaises(CannotEnactUnenactableRecurringCostError):
             recurring_cost.enact(self.billing_cycle_3)
@@ -541,9 +541,9 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
 
         RecurringCost.objects.enact(as_of=date(2000, 2, 5))
 
-        self.assertBalanceEqual(self.to_account.balance(), 200)
-        self.assertBalanceEqual(split1.from_account.balance(), 100)
-        self.assertBalanceEqual(split2.from_account.balance(), 100)
+        self.assertBalanceEqual(self.to_account.balance(), -200)
+        self.assertBalanceEqual(split1.from_account.balance(), -100)
+        self.assertBalanceEqual(split2.from_account.balance(), -100)
 
     def test_enact_costs_task(self):
         with db_transaction.atomic():
@@ -558,9 +558,9 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
 
         tasks.enact_costs(as_of=date(2000, 2, 5))
 
-        self.assertBalanceEqual(self.to_account.balance(), 200)
-        self.assertBalanceEqual(split1.from_account.balance(), 100)
-        self.assertBalanceEqual(split2.from_account.balance(), 100)
+        self.assertBalanceEqual(self.to_account.balance(), -200)
+        self.assertBalanceEqual(split1.from_account.balance(), -100)
+        self.assertBalanceEqual(split2.from_account.balance(), -100)
 
     def test_enact_costs_command_with_as_of(self):
         with db_transaction.atomic():
@@ -575,9 +575,9 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
 
         EnactCostsCommand().handle(as_of='2000-02-05')
 
-        self.assertBalanceEqual(self.to_account.balance(), 200)
-        self.assertBalanceEqual(split1.from_account.balance(), 100)
-        self.assertBalanceEqual(split2.from_account.balance(), 100)
+        self.assertBalanceEqual(self.to_account.balance(), -200)
+        self.assertBalanceEqual(split1.from_account.balance(), -100)
+        self.assertBalanceEqual(split2.from_account.balance(), -100)
 
     def test_enact_costs_command_default_as_of(self):
         with db_transaction.atomic():
@@ -593,9 +593,9 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         EnactCostsCommand().handle()
 
         # Uses today's date, so all billing cycles are enacted. Therefore larger balances
-        self.assertBalanceEqual(self.to_account.balance(), 400)
-        self.assertBalanceEqual(split1.from_account.balance(), 200)
-        self.assertBalanceEqual(split2.from_account.balance(), 200)
+        self.assertBalanceEqual(self.to_account.balance(), -400)
+        self.assertBalanceEqual(split1.from_account.balance(), -200)
+        self.assertBalanceEqual(split2.from_account.balance(), -200)
 
 
 class RecurringCostSplitModelTestCase(DataProvider, TestCase):
