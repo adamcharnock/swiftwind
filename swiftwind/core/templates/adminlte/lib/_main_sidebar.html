@@ -30,7 +30,7 @@
         </a>
 
         <ul class="treeview-menu">
-                <li><a href="#"><i class="fa fa-group"></i>Overview</a></li>
+                <li><a href="{% url 'accounts:overview' %}"><i class="fa fa-group"></i>Overview</a></li>
             {% housemate_accounts as housemate_accounts %}
             {% for account in housemate_accounts %}
                 <li>

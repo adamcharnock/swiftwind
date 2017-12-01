@@ -1,0 +1,88 @@
+{% extends 'swiftwind/base.html' %}
+{% load bootstrap3 %}
+
+{% block page_name %}Accounts{% endblock %}
+{% block page_description %}{% endblock %}
+
+{% block content %}
+
+    <div class="box box-primary">
+        <div class="box-header with-border">
+            <i class="fa fa-female"></i>
+
+            <h3 class="box-title">Housemates</h3>
+        </div>
+        <div class="box-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Balance</th>
+                    <th>Last transaction</th>
+                    <th>Payment since last bill?</th>
+                    <td></td>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for account in accounts %}
+                    {% if account.display_type == 'housemate' %}
+                        <tr>
+                            <td>
+                                {{ account.name }}
+                            </td>
+                            <td>{{ account.simple_balance }}</td>
+                            <td>{% firstof account.latest_transaction_date '-' %}</td>
+                            <td>
+                                {% if account.payment_since_last_bill %}
+                                    <i class="fa fa-check-circle text-success"></i>
+                                {% else %}
+                                    <i class="fa fa-times-circle text-danger"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <div class="box box-warning">
+        <div class="box-header with-border">
+            <i class="fa fa-bolt"></i>
+            <h3 class="box-title">Expenses</h3>
+        </div>
+        <div class="box-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Balance</th>
+                    <th>Last transaction</th>
+                    <td></td>
+                </tr>
+                </thead>
+                <tbody>
+
+                {% for account in accounts %}
+                    {% if account.display_type == 'expense' %}
+                        <tr>
+                            <td>
+                                {{ account.name }}
+                            </td>
+                            <td>{{ account.simple_balance }}</td>
+                            <td>{% firstof account.latest_transaction_date '-' %}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+{% endblock %}

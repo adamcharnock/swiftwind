@@ -20,13 +20,13 @@ from hordak import views as hordak_views
 
 
 hordak_urls = [
-    url(r'^transactions/create/$', hordak_views.TransactionCreateView.as_view(), name='transactions_create'),
-    url(r'^transactions/currency/$', hordak_views.CurrencyTradeView.as_view(), name='currency_trade'),
-    url(r'^transactions/reconcile/$', hordak_views.TransactionsReconcileView.as_view(), name='transactions_reconcile'),
-    url(r'^accounts/$', hordak_views.AccountListView.as_view(), name='accounts_list'),
-    url(r'^accounts/create/$', hordak_views.AccountCreateView.as_view(), name='accounts_create'),
-    url(r'^accounts/update/(?P<uuid>.+)/$', hordak_views.AccountUpdateView.as_view(), name='accounts_update'),
-    url(r'^accounts/(?P<uuid>.+)/$', hordak_views.AccountTransactionsView.as_view(), name='accounts_transactions'),
+    url(r'^extra/transactions/create/$', hordak_views.TransactionCreateView.as_view(), name='transactions_create'),
+    url(r'^extra/transactions/currency/$', hordak_views.CurrencyTradeView.as_view(), name='currency_trade'),
+    url(r'^extra/transactions/reconcile/$', hordak_views.TransactionsReconcileView.as_view(), name='transactions_reconcile'),
+    url(r'^extra/accounts/$', hordak_views.AccountListView.as_view(), name='accounts_list'),
+    url(r'^extra/accounts/create/$', hordak_views.AccountCreateView.as_view(), name='accounts_create'),
+    url(r'^extra/accounts/update/(?P<uuid>.+)/$', hordak_views.AccountUpdateView.as_view(), name='accounts_update'),
+    url(r'^extra/accounts/(?P<uuid>.+)/$', hordak_views.AccountTransactionsView.as_view(), name='accounts_transactions'),
 
     url(r'^import/$', hordak_views.CreateImportView.as_view(), name='import_create'),
     url(r'^import/(?P<uuid>.*)/setup/$', hordak_views.SetupImportView.as_view(), name='import_setup'),
@@ -36,6 +36,7 @@ hordak_urls = [
 
 urlpatterns = [
     url(r'^housemates/', include('swiftwind.housemates.urls', namespace='housemates')),
+    url(r'^accounts/', include('swiftwind.accounts.urls', namespace='accounts')),
     url(r'^costs/', include('swiftwind.costs.urls', namespace='costs')),
     url(r'^setup/', include('swiftwind.system_setup.urls', namespace='setup')),
     url(r'^', include('swiftwind.dashboard.urls', namespace='dashboard')),
