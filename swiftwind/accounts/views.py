@@ -1,13 +1,17 @@
-from datetime import date
+import datetime
+from datetime import timedelta
 
 from django.db import models
 from django.db.models import Q, Sum, When, Case, Value, Subquery, OuterRef, Exists
 from django.db.models.functions import Cast
+from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from djmoney.models.fields import MoneyField
 
 from hordak.models.core import Account, Transaction, Leg
 from swiftwind.billing_cycle.models import BillingCycle
+from swiftwind.costs.models import RecurringCostSplit
+from swiftwind.housemates.models import Housemate
 
 
 class OverviewView(ListView):
@@ -17,13 +21,7 @@ class OverviewView(ListView):
     def get_queryset(self):
         housemate_income = Account.objects.get(name='Housemate Income')
         expenses = Account.objects.get(name='Expenses')
-        current_billing_cycle = BillingCycle.objects.as_of(date.today())
-
-        money_field = MoneyField(
-            max_digits=13,
-            decimal_places=2,
-            currency_field_name='currency'
-        )
+        current_billing_cycle = BillingCycle.objects.as_of(datetime.date.today())
 
         return Account.objects.filter(
 
@@ -61,6 +59,46 @@ class OverviewView(ListView):
             )
 
         )\
-            .order_by('-display_type')
+            .order_by('-display_type')\
+            .select_related('housemate')
 
 
+class HousemateStatementView(DetailView):
+    template_name = 'accounts/housemate_statement.html'
+    slug_url_kwarg = 'uuid'
+    slug_field = 'uuid'
+    context_object_name = 'housemate'
+    queryset = Housemate.objects.all().select_related('account', 'user')
+
+    def get_context_data(self, date=None, **kwargs):
+        housemate = self.object
+        billing_cycle = BillingCycle.objects.as_of(
+            date=datetime.date(*date.split('-')) if date else datetime.date.today()
+        )
+
+        legs = Leg.objects.filter(
+            transaction__recurred_cost__billing_cycle=billing_cycle,
+            account=housemate.account,
+        ).select_related(
+            'transaction',
+            'transaction__recurred_cost__recurring_cost__to_account',
+        )
+        recurring_legs = [l for l in legs if not l.transaction.recurred_cost.recurring_cost.is_one_off()]
+        one_off_legs = [l for l in legs if l.transaction.recurred_cost.recurring_cost.is_one_off()]
+        other_legs = Leg.objects.filter(
+            transaction__date__gte=billing_cycle.date_range.lower,
+            transaction__date__lt=billing_cycle.date_range.upper,
+            account=housemate.account,
+        ).exclude(pk__in=[l.pk for l in legs]).select_related('transaction')
+
+        return super(HousemateStatementView, self).get_context_data(
+            billing_cycle=billing_cycle,
+            start_date=billing_cycle.date_range.lower,
+            end_date=billing_cycle.date_range.upper - timedelta(days=1),
+            recurring_legs=recurring_legs,
+            one_off_legs=one_off_legs,
+            other_legs=other_legs,
+            recurring_total=sum(l.amount for l in recurring_legs),
+            one_off_total=sum(l.amount for l in one_off_legs),
+            other_total=sum(l.amount for l in other_legs),
+        )

@@ -1,7 +1,7 @@
 {% extends 'swiftwind/base.html' %}
 {% load bootstrap3 %}
 
-{% block page_name %}Accounts{% endblock %}
+{% block page_name %}Accounts Overview{% endblock %}
 {% block page_description %}{% endblock %}
 
 {% block content %}
@@ -29,7 +29,9 @@
                     {% if account.display_type == 'housemate' %}
                         <tr>
                             <td>
-                                {{ account.name }}
+                                <a href="{% url 'accounts:housemate_statement' account.housemate.uuid %}">
+                                    {% firstof account.name 'Unnamed account' %}
+                                </a>
                             </td>
                             <td>{{ account.simple_balance }}</td>
                             <td>{% firstof account.latest_transaction_date '-' %}</td>

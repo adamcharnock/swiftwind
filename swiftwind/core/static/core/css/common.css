@@ -11,6 +11,10 @@
 .panel-heading .form-group {
     margin: 0;
 }
+.note {
+    color: #666;
+    font-style: italic;
+}
 
 /*Layout*/
 .content-header h1 {

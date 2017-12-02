@@ -19,7 +19,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if 'as_of' in options:
+        if options.get('as_of'):
             as_of = date(*map(int, options['as_of'].split('-')))
         else:
             as_of = date.today()
