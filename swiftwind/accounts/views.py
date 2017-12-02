@@ -104,5 +104,6 @@ class HousemateStatementView(DetailView):
             total=housemate.account.balance(
                 transaction__date__gte=billing_cycle.date_range.lower,
                 transaction__date__lt=billing_cycle.date_range.upper,
-            )
+            ),
+            payment_history=housemate.account.legs.all().order_by('-transaction__date', '-transaction__pk'),
         )

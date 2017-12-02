@@ -367,9 +367,7 @@ class RecurredCost(models.Model):
         if not amount:
             return None
 
-        self.transaction = Transaction.objects.create(
-            description='Created by recurring cost: {}'.format(self.recurring_cost)
-        )
+        self.transaction = Transaction.objects.create(description='Created by recurring cost')
 
         # Use the SplitManager's custom queryset's split() method to get the
         # amount to be billed for each split

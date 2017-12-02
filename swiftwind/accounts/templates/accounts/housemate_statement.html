@@ -52,26 +52,27 @@
                 <div class="box-header with-border">
                     <h3 class="box-title">
                         Total for this period
+                        <small>Further cost breakdowns follow below</small>
                     </h3>
                 </div>
                 <div class="box-body">
                     <table class="table table-striped">
                         <tbody>
                         <tr>
-                            <td>Recurring costs</td>
-                            <td>{{ recurring_total }}</td>
+                            <td class="col-xs-10">Recurring costs</td>
+                            <td class="col-xs-2">{{ recurring_total|inv }}</td>
                         </tr>
                         <tr>
                             <td>One-off costs</td>
-                            <td>{{ one_off_total }}</td>
+                            <td>{{ one_off_total|inv }}</td>
                         </tr>
                         <tr>
                             <td>Other transactions</td>
-                            <td>{{ other_total }}</td>
+                            <td>{{ other_total|inv }}</td>
                         </tr>
                         <tr>
                             <th>Total for this period</th>
-                            <th>{{ total }}</th>
+                            <th>{{ total|inv }}</th>
                         </tr>
                         </tbody>
                     </table>
@@ -96,14 +97,14 @@
                             {% for leg in recurring_legs %}
                                 {% with recurring_cost=leg.transaction.recurred_cost.recurring_cost %}
                                     <tr>
-                                        <td>{{ recurring_cost.to_account.name }}</td>
-                                        <td>{{ leg.amount }}</td>
+                                        <td class="col-xs-10">{{ recurring_cost.to_account.name }}</td>
+                                        <td class="col-xs-2">{{ leg.amount|inv }}</td>
                                     </tr>
                                 {% endwith %}
                             {% endfor %}
                             <tr>
                                 <td></td>
-                                <th>{{ recurring_total }}</th>
+                                <th>{{ recurring_total|inv }}</th>
                             </tr>
                             </tbody>
                         </table>
@@ -131,14 +132,14 @@
                             {% for leg in one_off_legs %}
                                 {% with recurring_cost=leg.transaction.recurred_cost.recurring_cost %}
                                     <tr>
-                                        <td>{{ recurring_cost.to_account.name }}</td>
-                                        <td>{{ leg.amount }}</td>
+                                        <td class="col-xs-10">{{ recurring_cost.to_account.name }}</td>
+                                        <td class="col-xs-2">{{ leg.amount|inv }}</td>
                                     </tr>
                                 {% endwith %}
                             {% endfor %}
                             <tr>
                                 <td></td>
-                                <th>{{ one_off_total }}</th>
+                                <th>{{ one_off_total|inv }}</th>
                             </tr>
                             </tbody>
                         </table>
@@ -164,7 +165,7 @@
                             <tbody>
                             {% for leg in other_legs %}
                                 <tr>
-                                    <td>
+                                    <td class="col-xs-3">
                                         {% for other_leg in leg.transaction.legs.all %}
                                             {% if other_leg != leg %}
                                                 {# TODO: The will print an extra comma sometimes #}
@@ -172,8 +173,8 @@
                                             {% endif %}
                                         {% endfor %}
                                     </td>
-                                    <td>{% firstof leg.transaction.description 'No transaction description' %}</td>
-                                    <td>{{ leg.amount }}</td>
+                                    <td class="col-xs-7">{% firstof leg.transaction.description 'No transaction description' %}</td>
+                                    <td class="col-xs-2">{{ leg.amount }}</td>
                                 </tr>
                             {% endfor %}
                             <tr>
@@ -191,6 +192,61 @@
         </div>
     </div>
 
+    <h3>Payment history</h3>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box box-default">
+                <div class="box-body">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <td>Date</td>
+                            <td>Type</td>
+                            <td>Debit</td>
+                            <td>Credit</td>
+                            <td>Balance</td>
+                            <td>Notes</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for leg in payment_history %}
+                            <tr>
+                                <td>{{ leg.transaction.date }}</td>
+                                <td>
+                                    {% if leg.is_debit %}
+                                        {% for debit_leg in leg.transaction.legs.debits %}
+                                            {{ debit_leg.account.name }}{% if not forloop.last %},{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for credit_leg in leg.transaction.legs.credits %}
+                                            {{ credit_leg.account.name }}{% if not forloop.last %},{% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                <td>{% if leg.is_debit %}{{ leg.amount|abs }}{% endif %}</td>
+                                <td>{% if leg.is_credit %}{{ leg.amount|abs }}{% endif %}</td>
+                                <td>{{ leg.account_balance_after|color_currency }}</td>
+                                <td>{{ leg.transaction.description }}</td>
+                            </tr>
+
+                            {% if forloop.last %}
+                                <tr>
+                                    <td colspan="5"></td>
+                                    <td>Account opened</td>
+                                </tr>
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No transactions</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 {% endblock %}
