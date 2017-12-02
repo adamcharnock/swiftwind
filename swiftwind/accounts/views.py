@@ -101,4 +101,8 @@ class HousemateStatementView(DetailView):
             recurring_total=sum(l.amount for l in recurring_legs),
             one_off_total=sum(l.amount for l in one_off_legs),
             other_total=sum(l.amount for l in other_legs),
+            total=housemate.account.balance(
+                transaction__date__gte=billing_cycle.date_range.lower,
+                transaction__date__lt=billing_cycle.date_range.upper,
+            )
         )
