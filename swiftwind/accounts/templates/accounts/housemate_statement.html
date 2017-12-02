@@ -9,7 +9,7 @@
     {% with balance=housemate.account.balance %}
         <div class="row">
             <div class="col-lg-offset-3 col-lg-6 col-md-offset-3 col-md-6 col-xs-12">
-                {% if balance > 0 %}
+                {% if balance < 0 %}
                     <div class="small-box bg-danger">
                         <div class="inner">
                             <p>You currently owe:</p>
@@ -130,11 +130,20 @@
                             <tbody>
                             {% for leg in other_legs %}
                                 <tr>
+                                    <td>
+                                        {% for other_leg in leg.transaction.legs.all %}
+                                            {% if other_leg != leg %}
+                                                {# TODO: The will print an extra comma sometimes #}
+                                                {{ other_leg.account.name }}{% if not forloop.last %},{% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
                                     <td>{% firstof leg.transaction.description 'No transaction description' %}</td>
                                     <td>{{ leg.amount }}</td>
                                 </tr>
                             {% endfor %}
                                 <tr>
+                                    <td></td>
                                     <td></td>
                                     <th>{{ other_total }}</th>
                                 </tr>
