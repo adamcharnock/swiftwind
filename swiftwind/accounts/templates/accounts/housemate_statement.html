@@ -201,12 +201,12 @@
                     <table class="table table-striped">
                         <thead>
                         <tr>
-                            <td>Date</td>
-                            <td>Type</td>
-                            <td>Debit</td>
-                            <td>Credit</td>
-                            <td>Balance</td>
-                            <td>Notes</td>
+                            <th>Date</th>
+                            <th>Account</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                            <th>Balance</th>
+                            <th>Notes</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -216,11 +216,11 @@
                                 <td>
                                     {% if leg.is_debit %}
                                         {% for debit_leg in leg.transaction.legs.debits %}
-                                            {{ debit_leg.account.name }}{% if not forloop.last %},{% endif %}
+                                            <a href="{% url 'hordak:accounts_transactions' debit_leg.account.uuid %}">{{ debit_leg.account.name }}</a>{% if not forloop.last %},{% endif %}
                                         {% endfor %}
                                     {% else %}
                                         {% for credit_leg in leg.transaction.legs.credits %}
-                                            {{ credit_leg.account.name }}{% if not forloop.last %},{% endif %}
+                                            <a href="{% url 'hordak:accounts_transactions' credit_leg.account.uuid %}">{{ credit_leg.account.name }}</a>{% if not forloop.last %},{% endif %}
                                         {% endfor %}
                                     {% endif %}
                                 </td>
