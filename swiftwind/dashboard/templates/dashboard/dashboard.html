@@ -23,14 +23,14 @@
         <div class="col-lg-4 col-md-6 col-xs-12">
             <div class="small-box bg-primary">
                 <div class="inner">
-                    <h3>{{ bank_balance }}</h3>
+                    <h3>{{ bank.balance }}</h3>
 
                     <p>Total bank balance</p>
                 </div>
                 <div class="icon">
                     <i class="fa fa-database"></i>
                 </div>
-                <a href="#" class="small-box-footer">
+                <a href="{% url 'hordak:accounts_transactions' bank.uuid %}" class="small-box-footer">
                     More info <i class="fa fa-arrow-circle-right"></i>
                 </a>
             </div>
@@ -59,7 +59,7 @@
                         {% for account in housemate_accounts %}
                             <tr>
                                 <td>
-                                    {{ account.name }}
+                                    <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
                                 <td>
                                     {{ account.balance }}
@@ -103,7 +103,7 @@
                         {% for account in other_income_accounts %}
                             <tr>
                                 <td>
-                                    {{ account.name }}
+                                    <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
                                 <td>
                                     {{ account.balance }}
@@ -147,7 +147,7 @@
                         {% for account in expense_accounts %}
                             <tr>
                                 <td>
-                                    {{ account.name }}
+                                    <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
                                 <td>
                                     {{ account.balance }}
@@ -191,7 +191,7 @@
                         {% for account in current_liability_accounts %}
                             <tr>
                                 <td>
-                                    {{ account.name }}
+                                    <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
                                 <td>
                                     {{ account.balance }}
@@ -235,7 +235,7 @@
                         {% for account in long_term_liability_accounts %}
                             <tr>
                                 <td>
-                                    {{ account.name }}
+                                    <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
                                 <td>
                                     {{ account.balance }}
@@ -274,7 +274,8 @@
                     </p>
 
                     <p>
-                        Retained Earnings: {{ retained_earnings_balance }}
+                        <a href="{% url 'hordak:accounts_transactions' retained_earnings.uuid %}">Retained Earnings</a>:
+                        {{ retained_earnings.balance }}
                     </p>
                 </div>
             </div>

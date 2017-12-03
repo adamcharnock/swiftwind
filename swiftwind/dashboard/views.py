@@ -29,8 +29,8 @@ class DashboardView(TemplateView):
             net_income=net_income,
             net_expense=net_expense,
             net_total=net_total,
-            bank_balance=bank_account.balance(),
-            retained_earnings_balance=Account.objects.get(name='Retained Earnings').balance(),
+            bank=bank_account,
+            retained_earnings=Account.objects.get(name='Retained Earnings'),
         )
 
     def get_accounts_context(self):

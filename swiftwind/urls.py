@@ -19,6 +19,7 @@ from django.contrib import admin
 from hordak import views as hordak_views
 
 
+# All the following will appear in the 'hordak' namespace (i.e. 'hordak:accounts_transactions')
 hordak_urls = [
     url(r'^extra/transactions/create/$', hordak_views.TransactionCreateView.as_view(), name='transactions_create'),
     url(r'^extra/transactions/currency/$', hordak_views.CurrencyTradeView.as_view(), name='currency_trade'),
