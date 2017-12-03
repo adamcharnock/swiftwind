@@ -11,7 +11,7 @@ from swiftwind.costs.models import RecurringCost
 def enact_costs(as_of=None):
     if as_of is None:
         as_of = date.today()
-    RecurringCost.objects.all().enact(as_of)
+    enacted = RecurringCost.objects.all().enact(as_of)
 
 
 @shared_task
