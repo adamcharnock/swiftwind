@@ -24,11 +24,19 @@ class Settings(models.Model):
     be the Django convention), as a single model holds many settings.
     """
     default_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='EUR')
-    additional_currencies = ArrayField(base_field=models.CharField(choices=CURRENCY_CHOICES, default='EUR', max_length=3),
-                                       choices=CURRENCY_CHOICES, # needed?
+    additional_currencies = ArrayField(base_field=models.CharField(choices=CURRENCY_CHOICES, default=[], max_length=3),
+                                       choices=CURRENCY_CHOICES,  # needed?
                                        default=[], blank=True)
+    payment_information = models.TextField(default='', blank=True,
+                                           help_text='Enter information on how payment should be made, such as the '
+                                                     'bank account details housemates should pay into.')
+    email_from_address = models.EmailField(default='', blank=True,
+                                           help_text='What email address should emails appear to be sent from?')
 
     objects = SettingsManager()
+
+    class Meta:
+        verbose_name_plural = 'settings'
 
     def save(self, *args, **kwargs):
         if not self.pk and Settings.objects.exists():

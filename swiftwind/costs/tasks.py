@@ -11,7 +11,7 @@ from swiftwind.costs.models import RecurringCost
 def enact_costs(as_of=None):
     if as_of is None:
         as_of = date.today()
-    enacted = RecurringCost.objects.all().enact(as_of)
+    RecurringCost.objects.all().enact(as_of)
 
 
 @shared_task
@@ -19,3 +19,5 @@ def enact_costs(as_of=None):
 def disable_costs():
     """Disable any costs that have completed all their billing cycles"""
     RecurringCost.objects.all().disable_if_done()
+
+

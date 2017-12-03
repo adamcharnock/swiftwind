@@ -1,14 +1,18 @@
 from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import DateRangeField
-from django.db import models
+from django.core.mail import send_mail
+from django.db import models, transaction
 from django.db import transaction as db_transaction
 from django.db.models.functions import Lower, Upper
+from django.urls.base import reverse
 from django.utils import formats
 from django.utils.datetime_safe import datetime, date
 from django_smalluuid.models import uuid_default, SmallUUIDField
 from django.conf import settings
 
 from swiftwind.billing_cycle.exceptions import CannotPopulateForDateOutsideExistingCycles
+from swiftwind.core.models import Settings
+from swiftwind.housemates.models import Housemate
 from .cycles import get_billing_cycle
 
 
@@ -47,6 +51,10 @@ class BillingCycle(models.Model):
     transactions_created = models.BooleanField(
         default=False,
         help_text='Have transactions been created for this billing cycle?'
+    )
+    statements_sent = models.BooleanField(
+        default=False,
+        help_text='Have we sent housemates their statements for this billing cycle?'
     )
 
     objects = BillingCycleManager()
@@ -139,4 +147,25 @@ class BillingCycle(models.Model):
         """Get the billing cycle prior to this one. May return None"""
         return BillingCycle.objects.filter(date_range__lt=self.date_range).order_by('date_range').last()
 
+    @transaction.atomic()
+    def send_statements(self, force=False):
+        from swiftwind.accounts.views import StatementEmailView
 
+        should_send = force or (not self.statements_sent and self.transactions_created)
+        if not should_send:
+            return False
+
+        for housemate in Housemate.objects.filter(user__is_active=True):
+            html = StatementEmailView.get_html(housemate=housemate, billing_cycle=self)
+            send_mail(
+                subject='{}, your house statement for {}'.format(
+                    housemate.user.first_name or housemate.user.username,
+                    self.date_range.upper,
+                ),
+                message='See {}'.format(
+                    reverse('accounts:housemate_statement_email',
+                            args=[housemate.uuid, str(self.date_range.lower)])),
+                from_email=Settings.objects.get().email_from_address,
+                recipient_list=[housemate.user.email],
+                html_message=html,
+            )

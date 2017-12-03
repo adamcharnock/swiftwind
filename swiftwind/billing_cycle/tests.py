@@ -95,6 +95,9 @@ class BillingCycleTestCase(TransactionTestCase):
         self.assertIn(cycle3, BillingCycle.objects.all())
         self.assertNotIn(cycle4, BillingCycle.objects.all())
 
+    def test_send_statements(self):
+        assert False
+
 
 class CycleTestCase(TestCase):
 
