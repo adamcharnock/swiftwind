@@ -22,6 +22,8 @@ class SetupViewTestCase(DataProvider, TestCase):
 
     def test_post_valid(self):
         response = self.client.post(self.view_url, data={
+            'first_name': 'First',
+            'last_name': 'Last',
             'email': 'test@example.com',
             'username': 'testuser',
             'password1': 'mypassword',
@@ -34,6 +36,8 @@ class SetupViewTestCase(DataProvider, TestCase):
             self.assertFalse(context['formset'].errors)
 
         user = User.objects.get()
+        self.assertEqual(user.first_name, 'First')
+        self.assertEqual(user.last_name, 'Last')
         self.assertEqual(user.email, 'test@example.com')
         self.assertEqual(user.username, 'testuser')
         self.assertTrue(user.check_password('mypassword'))
@@ -52,6 +56,8 @@ class SetupViewTestCase(DataProvider, TestCase):
 
     def test_can_load_dashboard_after_setup(self):
         self.client.post(self.view_url, data={
+            'first_name': 'First',
+            'last_name': 'Last',
             'email': 'test@example.com',
             'username': 'testuser',
             'password1': 'mypassword',

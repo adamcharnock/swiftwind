@@ -6,6 +6,11 @@
 {% block logo_text %}Swiftwind Setup{% endblock %}
 
 {% block login_form %}
+    <p>
+        Welcome to your new Swiftwind installation. We need a
+        little information in order to get everything setup.
+        We'll also set you up as a housemate and administrator.
+    </p>
     <form action="{% url 'setup:index' %}" method="post">
         {% csrf_token %}
         {% bootstrap_form form %}

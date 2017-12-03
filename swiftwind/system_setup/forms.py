@@ -16,6 +16,8 @@ User = get_user_model()
 
 
 class SetupForm(forms.Form):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
     email = forms.EmailField()
     username = UsernameField()
     password1 = forms.CharField(label='Password', strip=False, widget=forms.PasswordInput)
@@ -43,6 +45,8 @@ class SetupForm(forms.Form):
     def save(self):
         # Create the superuser
         user = User.objects.create(
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
             email=self.cleaned_data['email'],
             username=self.cleaned_data['username'],
             is_superuser=True,
