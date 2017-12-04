@@ -19,6 +19,19 @@ class SetupView(FormView):
         else:
             return super().dispatch(request, *args, **kwargs)
 
+    def get_initial(self):
+        initial = super(SetupView, self).get_initial()
+        port = self.request.get_port()
+        domain = self.request.get_host()
+        if port != '80' and ':' not in domain:
+            domain = '{}:{}'.format(domain, port)
+
+        initial.update(
+            site_domain=domain,
+            use_https=self.request.is_secure(),
+        )
+        return initial
+
     def form_valid(self, form):
         with transaction.atomic():
             form.save()

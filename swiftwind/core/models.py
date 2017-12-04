@@ -32,6 +32,7 @@ class Settings(models.Model):
                                                      'bank account details housemates should pay into.')
     email_from_address = models.EmailField(default='', blank=True,
                                            help_text='What email address should emails appear to be sent from?')
+    use_https = models.BooleanField(default=False)
 
     objects = SettingsManager()
 
