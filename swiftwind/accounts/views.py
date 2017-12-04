@@ -1,10 +1,13 @@
 import datetime
 from datetime import timedelta
 
+from django.contrib.sites.models import Site
 from django.db import models
 from django.db.models import Q, Sum, When, Case, Value, Subquery, OuterRef, Exists
 from django.db.models.functions import Cast
 from django.test import RequestFactory
+from django.views import View
+from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from djmoney.models.fields import MoneyField
@@ -14,6 +17,8 @@ from swiftwind.billing_cycle.models import BillingCycle
 from swiftwind.core.models import Settings
 from swiftwind.costs.models import RecurringCostSplit
 from swiftwind.housemates.models import Housemate
+from swiftwind.utilities.emails import EmailViewMixin
+from swiftwind.utilities.site import get_site_root
 
 
 class OverviewView(ListView):
@@ -115,13 +120,9 @@ class HousemateStatementView(DetailView):
         )
 
 
-class StatementEmailView(HousemateStatementView):
-    template_name = 'accounts/email.html'
+class StatementEmailView(EmailViewMixin, HousemateStatementView):
+    template_name = 'accounts/statement_email.html'
 
-    @classmethod
-    def get_html(cls, housemate, billing_cycle):
-        fake_request = RequestFactory().get('/foo')
-        view = cls.as_view()
-        response = view(fake_request, uuid=housemate.uuid, date=str(billing_cycle.date_range.lower))
-        response.render()
-        return response.content.decode('utf8')
+
+class ReconciliationRequiredEmailView(EmailViewMixin, TemplateView):
+    template_name = 'accounts/reconciliation_required_email.html'

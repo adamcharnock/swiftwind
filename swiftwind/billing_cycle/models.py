@@ -7,12 +7,16 @@ from django.db.models.functions import Lower, Upper
 from django.urls.base import reverse
 from django.utils import formats
 from django.utils.datetime_safe import datetime, date
+from django.utils.timezone import make_aware
 from django_smalluuid.models import uuid_default, SmallUUIDField
 from django.conf import settings
+from pytz import UTC
 
 from swiftwind.billing_cycle.exceptions import CannotPopulateForDateOutsideExistingCycles
 from swiftwind.core.models import Settings
 from swiftwind.housemates.models import Housemate
+from swiftwind.utilities.site import get_site_root
+
 from .cycles import get_billing_cycle
 
 
@@ -147,6 +151,57 @@ class BillingCycle(models.Model):
         """Get the billing cycle prior to this one. May return None"""
         return BillingCycle.objects.filter(date_range__lt=self.date_range).order_by('date_range').last()
 
+    def is_reconciled(self):
+        """Have transactions been imported and reconciled for this billing cycle?"""
+        from hordak.models import StatementImport, StatementLine
+        since = datetime(
+            self.date_range.lower.year,
+            self.date_range.lower.month,
+            self.date_range.lower.day,
+            tzinfo=UTC
+        )
+        if not StatementImport.objects.filter(timestamp__gte=since).exists():
+            # No import done since the end of the above billing cycle, and reconciliation
+            # requires an import. Therefore reconciliation can not have been done
+            return False
+
+        if StatementLine.objects.filter(
+            transaction__isnull=True,
+            date__gte=self.date_range.lower,
+            date__lt=self.date_range.upper
+        ).exists():
+            # There are statement lines for this period which have not been reconciled
+            return False
+
+        return True
+
+    def notify_housemates(self):
+        """Notify housemates in one of two ways:
+
+        1. Reconciliation is required before statements can be sent
+        2. Send a statement
+        """
+        if self.is_reconciled():
+            self.send_statements()
+        else:
+            self.send_reconciliation_required()
+
+    def send_reconciliation_required(self):
+        from swiftwind.accounts.views import ReconciliationRequiredEmailView
+
+        for housemate in Housemate.objects.filter(user__is_active=True):
+            html = ReconciliationRequiredEmailView.get_html()
+            send_mail(
+                subject='Reconciliation required'.format(),
+                message='See {}{}'.format(
+                    get_site_root(),
+                    reverse('accounts:housemate_reconciliation_required_email')
+                ),
+                from_email=Settings.objects.get().email_from_address,
+                recipient_list=[housemate.user.email],
+                html_message=html,
+            )
+
     @transaction.atomic()
     def send_statements(self, force=False):
         from swiftwind.accounts.views import StatementEmailView
@@ -156,15 +211,21 @@ class BillingCycle(models.Model):
             return False
 
         for housemate in Housemate.objects.filter(user__is_active=True):
-            html = StatementEmailView.get_html(housemate=housemate, billing_cycle=self)
+            html = StatementEmailView.get_html(
+                uuid=housemate.uuid,
+                date=str(self.date_range.lower)
+            )
             send_mail(
                 subject='{}, your house statement for {}'.format(
                     housemate.user.first_name or housemate.user.username,
                     self.date_range.upper,
                 ),
-                message='See {}'.format(
+                message='See {}{}'.format(
+                    get_site_root(),
                     reverse('accounts:housemate_statement_email',
-                            args=[housemate.uuid, str(self.date_range.lower)])),
+                            args=[housemate.uuid, str(self.date_range.lower)]
+                            )
+                ),
                 from_email=Settings.objects.get().email_from_address,
                 recipient_list=[housemate.user.email],
                 html_message=html,

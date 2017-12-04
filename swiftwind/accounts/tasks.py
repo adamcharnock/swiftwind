@@ -6,6 +6,6 @@ from swiftwind.billing_cycle.models import BillingCycle
 
 @shared_task
 @transaction.atomic()
-def send_statements():
+def notify_housemates():
     for billing_cycle in BillingCycle.objects.filter(transactions_created=True, statements_sent=False):
-        pass  # TODO
+        billing_cycle.notify_housemates()

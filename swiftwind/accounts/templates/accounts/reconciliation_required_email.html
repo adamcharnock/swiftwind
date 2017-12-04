@@ -1,0 +1,20 @@
+{% extends 'swiftwind/base_email.html' %}
+{% load bootstrap3 hordak %}
+
+{% block title %}Reconciliation required{% endblock %}
+
+{% block content %}
+
+    <h2>Reconciliation required</h2>
+
+    <p>
+        You need to import your bank data and reconcile transactions before we can send you
+        household statement for this month.
+    </p>
+
+    <p>
+        <a href="{{ site_root }}{% url 'hordak:transactions_reconcile' %}">Reconcile statements now</a>
+    </p>
+
+
+{% endblock %}

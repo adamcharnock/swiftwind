@@ -1,7 +1,12 @@
 import six
 from django.db.utils import IntegrityError
 from django.test import TestCase, TransactionTestCase
-from django.utils.datetime_safe import date
+from django.core import mail
+from datetime import date
+from django.utils.timezone import datetime
+from hordak.models.core import StatementImport, Account, StatementLine
+from pytz import UTC
+from swiftwind.utilities.testing import DataProvider
 
 from .cycles import Monthly
 from .models import BillingCycle
@@ -37,7 +42,7 @@ class BillingCycleConstraintTestCase(TransactionTestCase):
         # No errors
 
 
-class BillingCycleTestCase(TransactionTestCase):
+class BillingCycleTestCase(DataProvider, TransactionTestCase):
 
     def test_populate_no_cycles(self):
         with self.settings(SWIFTWIND_BILLING_CYCLE_YEARS=2):
@@ -95,8 +100,98 @@ class BillingCycleTestCase(TransactionTestCase):
         self.assertIn(cycle3, BillingCycle.objects.all())
         self.assertNotIn(cycle4, BillingCycle.objects.all())
 
+    def test_is_reconciled_true(self):
+        bank = self.account(name='Bank', type=Account.TYPES.asset)
+        other_account = self.account()
+        billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        billing_cycle.refresh_from_db()
+        statement_import = StatementImport.objects.create(
+            timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
+            bank_account=bank
+        )
+        statement_line = StatementLine.objects.create(
+            timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
+            date=date(2016, 4, 10),
+            statement_import=statement_import,
+            amount=10,
+        )
+        statement_line.create_transaction(to_account=other_account)
+
+        self.assertTrue(billing_cycle.is_reconciled())
+
+    def test_is_reconciled_no_statement_lines(self):
+        bank = self.account(name='Bank', type=Account.TYPES.asset)
+        other_account = self.account()
+        billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        billing_cycle.refresh_from_db()
+        statement_import = StatementImport.objects.create(
+            timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
+            bank_account=bank
+        )
+
+        self.assertTrue(billing_cycle.is_reconciled())
+
+    def test_is_reconciled_no_transaction(self):
+        bank = self.account(name='Bank', type=Account.TYPES.asset)
+        other_account = self.account()
+        billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        billing_cycle.refresh_from_db()
+        statement_import = StatementImport.objects.create(
+            timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
+            bank_account=bank
+        )
+        statement_line = StatementLine.objects.create(
+            timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
+            date=date(2016, 4, 10),
+            statement_import=statement_import,
+            amount=10,
+        )
+        # No transaction created
+
+        self.assertFalse(billing_cycle.is_reconciled())
+
+    def test_is_reconciled_old_import(self):
+        bank = self.account(name='Bank', type=Account.TYPES.asset)
+        other_account = self.account()
+        billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        billing_cycle.refresh_from_db()
+        statement_import = StatementImport.objects.create(
+            timestamp=datetime(2016, 4, 25, 9, 30, 00, tzinfo=UTC),
+            bank_account=bank
+        )
+        statement_line = StatementLine.objects.create(
+            timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
+            date=date(2016, 4, 10),
+            statement_import=statement_import,
+            amount=10,
+        )
+        # No transaction created
+
+        self.assertFalse(billing_cycle.is_reconciled())
+
+    def test_send_reconciliation_required(self):
+        billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        billing_cycle.refresh_from_db()
+        self.housemate(user_kwargs=dict(email='user@example.com'))
+        billing_cycle.send_reconciliation_required()
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].recipients(), ['user@example.com'])
+        content, mime = mail.outbox[0].alternatives[0]
+        self.assertEqual(mime, 'text/html')
+        self.assertIn('<html', content)
+
     def test_send_statements(self):
-        assert False
+        billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        billing_cycle.refresh_from_db()
+        self.housemate(user_kwargs=dict(email='user@example.com'))
+        billing_cycle.send_statements(force=True)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].recipients(), ['user@example.com'])
+        content, mime = mail.outbox[0].alternatives[0]
+        self.assertEqual(mime, 'text/html')
+        self.assertIn('<html', content)
 
 
 class CycleTestCase(TestCase):
