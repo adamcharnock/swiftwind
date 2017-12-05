@@ -279,13 +279,13 @@ class BillingCycleListViewTestCase(DataProvider, TestCase):
 class CreateTransactionsViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
-        self.housemate1 = self.housemate()
-        self.housemate2 = self.housemate()
+        self.housemate1 = self.housemate(account_kwargs=dict(currencies=['GBP']))
+        self.housemate2 = self.housemate(account_kwargs=dict(currencies=['GBP']))
 
         self.billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
         self.billing_cycle.refresh_from_db()
 
-        self.to_account = self.account()
+        self.to_account = self.account(currencies=['GBP'])
         with transaction.atomic():
             self.recurring_cost = RecurringCost.objects.create(
                 to_account=self.to_account,
