@@ -1,7 +1,10 @@
 from celery import shared_task
 from django.db import transaction
 
+from hordak.data_sources import tellerio
+from hordak.models.core import Account
 from swiftwind.billing_cycle.models import BillingCycle
+from swiftwind.settings.models import Settings
 
 
 @shared_task
@@ -9,3 +12,21 @@ from swiftwind.billing_cycle.models import BillingCycle
 def notify_housemates():
     for billing_cycle in BillingCycle.objects.filter(transactions_created=True, statements_sent=False):
         billing_cycle.notify_housemates()
+
+
+@shared_task
+@transaction.atomic()
+def import_tellerio():
+    settings = Settings.objects.get()
+    first_billing_cycle = BillingCycle.objects.first()
+
+    if settings.tellerio_enable:
+        tellerio.do_import(
+            token=settings.tellerio_token,
+            account_uuid=settings.tellerio_account_id,
+            bank_account=Account.objects.filter(is_bank_account=True)[0],
+            since=first_billing_cycle.date_range.lower,
+        )
+        return True
+    else:
+        return False

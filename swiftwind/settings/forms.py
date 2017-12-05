@@ -51,6 +51,7 @@ class TechnicalSettingsForm(forms.ModelForm):
 
 
 class TellerSettingsForm(forms.ModelForm):
+    tellerio_token = forms.CharField(max_length=100, widget=forms.PasswordInput)
 
     class Meta:
         model = Settings
