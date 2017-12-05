@@ -36,6 +36,7 @@ class Settings(models.Model):
                                            help_text='What email address should emails appear to be sent from?')
     use_https = models.BooleanField(default=False)
 
+    tellerio_enable = models.BooleanField(default=False, verbose_name='Enable daily teller.io imports')
     tellerio_token = models.CharField(max_length=100)
     tellerio_account_id = models.CharField(max_length=100)
 

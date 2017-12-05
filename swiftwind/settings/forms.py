@@ -57,4 +57,5 @@ class TellerSettingsForm(forms.ModelForm):
         fields = [
             'tellerio_token',
             'tellerio_account_id',
+            'tellerio_enable',
         ]
