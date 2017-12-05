@@ -126,7 +126,8 @@ class BillingCycleTestCase(DataProvider, TransactionTestCase):
         billing_cycle.refresh_from_db()
         statement_import = StatementImport.objects.create(
             timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
-            bank_account=bank
+            bank_account=bank,
+            source='csv',
         )
 
         self.assertTrue(billing_cycle.is_reconciled())
@@ -138,7 +139,8 @@ class BillingCycleTestCase(DataProvider, TransactionTestCase):
         billing_cycle.refresh_from_db()
         statement_import = StatementImport.objects.create(
             timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
-            bank_account=bank
+            bank_account=bank,
+            source='csv',
         )
         statement_line = StatementLine.objects.create(
             timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
@@ -157,7 +159,8 @@ class BillingCycleTestCase(DataProvider, TransactionTestCase):
         billing_cycle.refresh_from_db()
         statement_import = StatementImport.objects.create(
             timestamp=datetime(2016, 4, 25, 9, 30, 00, tzinfo=UTC),
-            bank_account=bank
+            bank_account=bank,
+            source='csv',
         )
         statement_line = StatementLine.objects.create(
             timestamp=datetime(2016, 5, 1, 9, 30, 00, tzinfo=UTC),
