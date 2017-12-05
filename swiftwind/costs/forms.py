@@ -1,3 +1,4 @@
+from datetime import timedelta, date
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -25,12 +26,14 @@ class AbstractCostForm(forms.ModelForm):
         if instance:
             kwargs['initial'].update(to_account=instance.to_account.uuid)
 
+        kwargs['initial'].update(initial_billing_cycle=BillingCycle.objects.as_of(date.today()))
+
         super(AbstractCostForm, self).__init__(*args, **kwargs)
         self.fields['initial_billing_cycle'].queryset = self.get_initial_billing_cycle_queryset()
 
     def get_initial_billing_cycle_queryset(self):
         return BillingCycle.objects.filter(
-            end_date__gte=datetime.now().date(),
+            end_date__gte=datetime.now().date() - timedelta(days=31 * 6),
         )
 
     @transaction.atomic()
@@ -95,7 +98,7 @@ class OneOffCostForm(AbstractCostForm):
             currency = self.cleaned_data['to_account'].currencies[0]
         except KeyError:
             return amount
-        
+
         balance = Balance(amount, currency)
         billed_amount = self.instance.get_billed_amount()
 
