@@ -1,11 +1,19 @@
 import six
+from django.db import transaction
 from django.db.utils import IntegrityError
 from django.test import TestCase, TransactionTestCase
 from django.core import mail
 from datetime import date
+from unittest.mock import patch
+
+from django.urls.base import reverse
 from django.utils.timezone import datetime
-from hordak.models.core import StatementImport, Account, StatementLine
+from freezegun.api import freeze_time
+
+from hordak.models.core import StatementImport, Account, StatementLine, Transaction
 from pytz import UTC
+
+from swiftwind.costs.models import RecurringCost, RecurringCostSplit
 from swiftwind.utilities.testing import DataProvider
 
 from .cycles import Monthly
@@ -250,3 +258,77 @@ class CycleTestCase(TestCase):
         self.assertEqual(six.next(ranges), (date(2016, 11, 1), date(2016, 12, 1)))  # starts in Nov
         self.assertEqual(six.next(ranges), (date(2016, 12, 1), date(2017, 1, 1)))
         self.assertEqual(six.next(ranges), (date(2017, 1, 1), date(2017, 2, 1)))
+
+
+class BillingCycleListViewTestCase(DataProvider, TestCase):
+
+    def test_get(self):
+        cycle1 = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        cycle2 = BillingCycle.objects.create(date_range=(date(2016, 5, 1), date(2016, 6, 1)))
+        cycle3 = BillingCycle.objects.create(date_range=(date(2016, 6, 1), date(2016, 7, 1)))
+        cycle3 = BillingCycle.objects.create(date_range=(date(2016, 7, 1), date(2016, 8, 1)))
+        cycle3 = BillingCycle.objects.create(date_range=(date(2016, 8, 1), date(2016, 9, 1)))
+
+        with freeze_time('2016-06-15'):
+            response = self.client.get(reverse('billing_cycles:list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['billing_cycles']), 3)
+
+
+class CreateTransactionsViewTestCase(DataProvider, TestCase):
+
+    def setUp(self):
+        self.housemate1 = self.housemate()
+        self.housemate2 = self.housemate()
+
+        self.billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        self.billing_cycle.refresh_from_db()
+
+        self.to_account = self.account()
+        with transaction.atomic():
+            self.recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle,
+            )
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate1.account)
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate2.account)
+
+    @patch.object(BillingCycle, 'send_statements')
+    def test_transactions_not_yet_created(self, mock):
+        response = self.client.post(reverse('billing_cycles:enact', args=[self.billing_cycle.uuid]))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Transaction.objects.count(), 1)  # One transaction per recurring cost
+
+    @patch.object(BillingCycle, 'send_statements')
+    def test_already_enacted(self, mock):
+        self.billing_cycle.enact_all_costs()
+        self.assertEqual(Transaction.objects.count(), 1)
+
+        response = self.client.post(reverse('billing_cycles:enact', args=[self.billing_cycle.uuid]))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Transaction.objects.count(), 1)
+
+
+class SendNotificationsViewTestCase(DataProvider, TestCase):
+
+    @patch.object(BillingCycle, 'send_statements')
+    def test_transactions_not_yet_created(self, mock):
+        self.housemate()
+        cycle1 = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        response = self.client.post(reverse('billing_cycles:send', args=[cycle1.uuid]))
+        self.assertEqual(response.status_code, 302)
+        mock.assert_not_called()
+
+    @patch.object(BillingCycle, 'send_statements')
+    def test_transactions_created(self, mock):
+        self.housemate()
+        cycle1 = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        cycle1.transactions_created = True
+        cycle1.save()
+        response = self.client.post(reverse('billing_cycles:send', args=[cycle1.uuid]))
+        self.assertEqual(response.status_code, 302)
+        mock.assert_called()
+

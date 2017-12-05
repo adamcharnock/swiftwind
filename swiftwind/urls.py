@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^housemates/', include('swiftwind.housemates.urls', namespace='housemates')),
     url(r'^accounts/', include('swiftwind.accounts.urls', namespace='accounts')),
     url(r'^costs/', include('swiftwind.costs.urls', namespace='costs')),
+    url(r'^billing-cycles/', include('swiftwind.billing_cycle.urls', namespace='billing_cycles')),
     url(r'^setup/', include('swiftwind.system_setup.urls', namespace='setup')),
     url(r'^settings/', include('swiftwind.settings.urls', namespace='settings')),
     url(r'^', include('swiftwind.dashboard.urls', namespace='dashboard')),

@@ -13,6 +13,8 @@ from django.conf import settings
 from pytz import UTC
 
 from swiftwind.billing_cycle.exceptions import CannotPopulateForDateOutsideExistingCycles
+from swiftwind.costs.exceptions import CannotEnactUnenactableRecurringCostError, \
+    RecurringCostAlreadyEnactedForBillingCycle
 from swiftwind.settings.models import Settings
 from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.site import get_site_root
@@ -73,10 +75,10 @@ class BillingCycle(models.Model):
         return 'BillingCycle <{}>'.format(self.date_range)
 
     @classmethod
-    def populate(cls):
+    def populate(cls, as_of=None):
         """Ensure the next X years of billing cycles exist
         """
-        return cls._populate(as_of=date.today(), delete=True)
+        return cls._populate(as_of=as_of or date.today(), delete=True)
 
     @classmethod
     def repopulate(cls):
@@ -230,3 +232,12 @@ class BillingCycle(models.Model):
                 recipient_list=[housemate.user.email],
                 html_message=html,
             )
+
+    def enact_all_costs(self):
+        from swiftwind.costs.models import RecurringCost
+
+        for recurring_cost in RecurringCost.objects.all():
+            try:
+                recurring_cost.enact(self)
+            except (CannotEnactUnenactableRecurringCostError, RecurringCostAlreadyEnactedForBillingCycle):
+                pass

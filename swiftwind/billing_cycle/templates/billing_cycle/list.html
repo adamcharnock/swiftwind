@@ -1,0 +1,71 @@
+{% extends 'swiftwind/base.html' %}
+{% load bootstrap3 %}
+
+{% block page_name %}Billing cycles{% endblock %}
+{% block page_description %}{% endblock %}
+
+{% block content %}
+    <div class="box box-solid">
+        <div class="box-body no-padding">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Start date</th>
+                    <th>End date</th>
+                    <th>Transactions created</th>
+                    <th>Is reconciled</th>
+                    <th>Statements sent</th>
+                    <td></td>
+                    <td></td>
+                </tr>
+                </thead>
+                <tbody>
+                {% for billing_cycle in billing_cycles %}
+                    <tr>
+                        <td>{{ billing_cycle.date_range.lower }}</td>
+                        <td>{{ billing_cycle.date_range.upper }}</td>
+                        <td>
+                            {% if billing_cycle.transactions_created %}
+                                <i class="fa fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if billing_cycle.is_reconciled %}
+                                <i class="fa fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if billing_cycle.statements_sent %}
+                                <i class="fa fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fa fa-times-circle text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not billing_cycle.transactions_created %}
+                                <form action="{% url 'billing_cycles:enact' billing_cycle.uuid %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="submit" class="btn btn-xs btn-default" value="Create transactions">
+                                </form>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if billing_cycle.transactions_created and billing_cycle.is_reconciled %}
+                                <form action="{% url 'billing_cycles:send' billing_cycle.uuid %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="submit" class="btn btn-xs btn-default" value="Send/resend statements">
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+{% endblock %}
