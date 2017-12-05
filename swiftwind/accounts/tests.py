@@ -13,5 +13,5 @@ class StatementEmailViewTestCase(DataProvider, TestCase):
             date_range=['2000-01-01', '2000-02-01'],
         )
         billing_cycle.refresh_from_db()
-        html = StatementEmailView.get_html(housemate, billing_cycle)
+        html = StatementEmailView.get_html(uuid=housemate.uuid, date='2000-01-01')
         self.assertIn('<html>', html)
