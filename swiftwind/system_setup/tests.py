@@ -1,3 +1,4 @@
+from datetime import date
 from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.test import TestCase
@@ -6,6 +7,7 @@ from django.urls import reverse
 
 from hordak.models.core import Account, Transaction
 from hordak.utilities.currency import Balance
+from swiftwind.billing_cycle.models import BillingCycle
 from swiftwind.settings.models import Settings
 from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.testing import DataProvider
@@ -43,6 +45,7 @@ class SetupViewTestCase(DataProvider, TestCase):
             'site_domain': 'mysite.com',
             'use_https': 'yes',
             'opening_bank_balance': '0.00',
+            'accounting_start_date': '2000-01-01',
         })
         context = response.context
         if response.context:
@@ -76,6 +79,10 @@ class SetupViewTestCase(DataProvider, TestCase):
         self.assertFalse(Account.objects.filter(name='Opening Balance').exists())
         self.assertFalse(Transaction.objects.all().exists())
 
+        # Check accounting start date was used
+        self.assertEqual(BillingCycle.objects.first().date_range.lower, date(2000, 1, 1))
+        self.assertEqual(BillingCycle.objects.first().date_range.upper, date(2000, 2, 1))
+
     def test_can_load_dashboard_after_setup(self):
         self.client.post(self.view_url, data={
             'first_name': 'First',
@@ -90,6 +97,7 @@ class SetupViewTestCase(DataProvider, TestCase):
             'site_domain': 'mysite.com',
             'use_https': 'yes',
             'opening_bank_balance': '0.00',
+            'accounting_start_date': '2000-01-01',
         })
 
         # Now check we can load the dashboard
@@ -110,6 +118,7 @@ class SetupViewTestCase(DataProvider, TestCase):
             'site_domain': 'mysite.com',
             'use_https': 'yes',
             'opening_bank_balance': '1234.56',
+            'accounting_start_date': '2000-01-01',
         })
 
         opening_balance = Account.objects.get(name='Opening Balance')

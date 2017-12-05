@@ -1,3 +1,4 @@
+from datetime import date
 from django.contrib.auth import authenticate, login
 from django.db import transaction
 from django.http.response import HttpResponseRedirect
@@ -29,6 +30,7 @@ class SetupView(FormView):
         initial.update(
             site_domain=domain,
             use_https=self.request.is_secure(),
+            accounting_start_date=date(date.today().year, date.today().month, 1)
         )
         return initial
 

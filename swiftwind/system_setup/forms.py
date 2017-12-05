@@ -27,7 +27,9 @@ class SetupForm(forms.Form):
     default_currency = forms.ChoiceField(choices=CURRENCY_CHOICES, initial='EUR')
     additional_currencies = forms.MultipleChoiceField(choices=CURRENCY_CHOICES, widget=forms.SelectMultiple(),
                                                       required=False)
-
+    accounting_start_date = forms.DateField(
+        help_text='When should we start accounting from?'
+    )
     opening_bank_balance = forms.DecimalField(min_value=0, max_digits=13, decimal_places=2,
                                               initial='0.00',
                                               help_text='Enter your opening bank balance if you are '
@@ -115,4 +117,4 @@ class SetupForm(forms.Form):
             )
 
         # Create the billing cycles
-        BillingCycle.populate()
+        BillingCycle.populate(as_of=self.cleaned_data['accounting_start_date'])
