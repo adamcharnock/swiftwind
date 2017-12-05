@@ -302,6 +302,9 @@ class CreateTransactionsViewTestCase(DataProvider, TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Transaction.objects.count(), 1)  # One transaction per recurring cost
 
+        self.billing_cycle.refresh_from_db()
+        self.assertEqual(self.billing_cycle.transactions_created, True)
+
     @patch.object(BillingCycle, 'send_statements')
     def test_already_enacted(self, mock):
         self.billing_cycle.enact_all_costs()

@@ -2,7 +2,7 @@ from datetime import date
 
 from django.core.management.base import BaseCommand
 
-from swiftwind.costs.models import RecurringCost
+from swiftwind.billing_cycle.models import BillingCycle
 
 
 class Command(BaseCommand):
@@ -23,4 +23,5 @@ class Command(BaseCommand):
             as_of = date(*map(int, options['as_of'].split('-')))
         else:
             as_of = date.today()
-        RecurringCost.objects.enact(as_of)
+        for billing_cycle in BillingCycle.objects.filter(start_date__lt=as_of, transactions_created=False):
+            billing_cycle.enact_all_costs()

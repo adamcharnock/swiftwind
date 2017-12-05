@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from datetime import date
 from django.db.utils import IntegrityError
-from django.db import transaction as db_transaction
+from django.db import transaction as db_transaction, transaction
 from django.test import TestCase
 from django.test.testcases import TransactionTestCase
 from django.urls.base import reverse
@@ -528,24 +528,7 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         recurring_cost.enact(self.billing_cycle_2)
         self.assertTrue(recurring_cost.disabled)
 
-    def test_enact_costs_manager(self):
-        with db_transaction.atomic():
-            recurring_cost = RecurringCost.objects.create(
-                to_account=self.to_account,
-                fixed_amount=100,
-                type=RecurringCost.TYPES.normal,
-                initial_billing_cycle=self.billing_cycle_1,
-            )
-            split1 = self.add_split(recurring_cost, account_currency='GBP')
-            split2 = self.add_split(recurring_cost, account_currency='GBP')
-
-        RecurringCost.objects.enact(as_of=date(2000, 2, 5))
-
-        self.assertBalanceEqual(self.to_account.balance(), -200)
-        self.assertBalanceEqual(split1.from_account.balance(), -100)
-        self.assertBalanceEqual(split2.from_account.balance(), -100)
-
-    def test_enact_costs_task(self):
+    def test_enact_costs_task_with_as_of(self):
         with db_transaction.atomic():
             recurring_cost = RecurringCost.objects.create(
                 to_account=self.to_account,
@@ -561,6 +544,41 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         self.assertBalanceEqual(self.to_account.balance(), -200)
         self.assertBalanceEqual(split1.from_account.balance(), -100)
         self.assertBalanceEqual(split2.from_account.balance(), -100)
+
+        self.billing_cycle_1.refresh_from_db()
+        self.billing_cycle_2.refresh_from_db()
+        self.billing_cycle_3.refresh_from_db()
+        self.billing_cycle_4.refresh_from_db()
+        self.assertEqual(self.billing_cycle_1.transactions_created, True)
+        self.assertEqual(self.billing_cycle_2.transactions_created, True)
+        self.assertEqual(self.billing_cycle_3.transactions_created, False)
+        self.assertEqual(self.billing_cycle_4.transactions_created, False)
+
+    def test_enact_costs_task_default_as_of(self):
+        with db_transaction.atomic():
+            recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle_1,
+            )
+            split1 = self.add_split(recurring_cost, account_currency='GBP')
+            split2 = self.add_split(recurring_cost, account_currency='GBP')
+
+        tasks.enact_costs()
+
+        self.assertBalanceEqual(self.to_account.balance(), -400)
+        self.assertBalanceEqual(split1.from_account.balance(), -200)
+        self.assertBalanceEqual(split2.from_account.balance(), -200)
+
+        self.billing_cycle_1.refresh_from_db()
+        self.billing_cycle_2.refresh_from_db()
+        self.billing_cycle_3.refresh_from_db()
+        self.billing_cycle_4.refresh_from_db()
+        self.assertEqual(self.billing_cycle_1.transactions_created, True)
+        self.assertEqual(self.billing_cycle_2.transactions_created, True)
+        self.assertEqual(self.billing_cycle_3.transactions_created, True)
+        self.assertEqual(self.billing_cycle_4.transactions_created, True)
 
     def test_enact_costs_command_with_as_of(self):
         with db_transaction.atomic():
@@ -579,6 +597,15 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         self.assertBalanceEqual(split1.from_account.balance(), -100)
         self.assertBalanceEqual(split2.from_account.balance(), -100)
 
+        self.billing_cycle_1.refresh_from_db()
+        self.billing_cycle_2.refresh_from_db()
+        self.billing_cycle_3.refresh_from_db()
+        self.billing_cycle_4.refresh_from_db()
+        self.assertEqual(self.billing_cycle_1.transactions_created, True)
+        self.assertEqual(self.billing_cycle_2.transactions_created, True)
+        self.assertEqual(self.billing_cycle_3.transactions_created, False)
+        self.assertEqual(self.billing_cycle_4.transactions_created, False)
+
     def test_enact_costs_command_default_as_of(self):
         with db_transaction.atomic():
             recurring_cost = RecurringCost.objects.create(
@@ -596,6 +623,15 @@ class RecurringCostModelTransactionTestCase(DataProvider, BalanceUtils, Transact
         self.assertBalanceEqual(self.to_account.balance(), -400)
         self.assertBalanceEqual(split1.from_account.balance(), -200)
         self.assertBalanceEqual(split2.from_account.balance(), -200)
+
+        self.billing_cycle_1.refresh_from_db()
+        self.billing_cycle_2.refresh_from_db()
+        self.billing_cycle_3.refresh_from_db()
+        self.billing_cycle_4.refresh_from_db()
+        self.assertEqual(self.billing_cycle_1.transactions_created, True)
+        self.assertEqual(self.billing_cycle_2.transactions_created, True)
+        self.assertEqual(self.billing_cycle_3.transactions_created, True)
+        self.assertEqual(self.billing_cycle_4.transactions_created, True)
 
 
 class RecurringCostSplitModelTestCase(DataProvider, TestCase):
@@ -1081,4 +1117,28 @@ class CreateOneOffCostViewTestCase(DataProvider, TransactionTestCase):
         self.assertFalse(form.is_valid())
 
 
+class EnactCostsTaskTestCase(DataProvider, TestCase):
 
+    def setUp(self):
+        self.housemate1 = self.housemate()
+        self.housemate2 = self.housemate()
+
+        self.billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        self.billing_cycle.refresh_from_db()
+
+        self.to_account = self.account()
+        with transaction.atomic():
+            self.recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle,
+            )
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate1.account)
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate2.account)
+
+    def test_task(self):
+        tasks.enact_costs(as_of=date(2016, 4, 15))
+        self.billing_cycle.refresh_from_db()
+        self.assertEqual(self.billing_cycle.transactions_created, True)
+        self.assertEqual(Transaction.objects.count(), 1)  # One transaction per recurring cost

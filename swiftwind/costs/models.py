@@ -22,13 +22,6 @@ from hordak.utilities.money import ratio_split
 
 class RecurringCostQuerySet(models.QuerySet):
 
-    def enact(self, as_of):
-        """Enact the recurring costs where appropriate"""
-        costs = [cost for cost in self if cost.is_enactable(as_of)]
-        for billing_cycle in BillingCycle.objects.filter(transactions_created=False, start_date__lte=as_of):
-            for cost in costs:
-                cost.enact(billing_cycle)
-
     def disable_if_done(self):
         """Disable any recurring costs that have completed all their billing cycles"""
         for cost in self:
