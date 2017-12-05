@@ -6,6 +6,7 @@ from django.db import models
 from django.db.models import Q, Sum, When, Case, Value, Subquery, OuterRef, Exists
 from django.db.models.functions import Cast
 from django.test import RequestFactory
+from django.urls.base import reverse
 from django.views import View
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
@@ -88,7 +89,7 @@ class HousemateStatementView(DetailView):
         legs = Leg.objects.filter(
             transaction__recurred_cost__billing_cycle=billing_cycle,
             account=housemate.account,
-        ).select_related(
+        ).order_by('-transaction__date', '-pk').select_related(
             'transaction',
             'transaction__recurred_cost__recurring_cost__to_account',
         )
@@ -98,7 +99,25 @@ class HousemateStatementView(DetailView):
             transaction__date__gte=billing_cycle.date_range.lower,
             transaction__date__lt=billing_cycle.date_range.upper,
             account=housemate.account,
-        ).exclude(pk__in=[l.pk for l in legs]).select_related('transaction')
+        ).exclude(
+            pk__in=[l.pk for l in legs]
+        ).order_by('-transaction__date', '-pk').select_related('transaction')
+
+        # Previous & next URLs
+        # Not a pretty way to generate URLs, but parsing the date to reverse the
+        # historical URL would be pretty onerous.
+        previous = billing_cycle.get_previous()
+        next = billing_cycle.get_next()
+
+        if previous:
+            previous_url = '{}{}/'.format(reverse('accounts:housemate_statement', args=[housemate.uuid]), str(previous.start_date))
+        else:
+            previous_url = ''
+
+        if next and next.start_date <= datetime.date.today():
+            next_url = '{}{}/'.format(reverse('accounts:housemate_statement', args=[housemate.uuid]), str(next.start_date))
+        else:
+            next_url = ''
 
         return super(HousemateStatementView, self).get_context_data(
             billing_cycle=billing_cycle,
@@ -116,6 +135,8 @@ class HousemateStatementView(DetailView):
             ),
             payment_history=housemate.account.legs.all().order_by('-transaction__date', '-transaction__pk'),
             payment_information=Settings.objects.get().payment_information,
+            next_url=next_url,
+            previous_url=previous_url,
             **kwargs
         )
 
