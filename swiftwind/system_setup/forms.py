@@ -9,7 +9,7 @@ from djmoney.settings import CURRENCY_CHOICES
 from hordak.models import Account
 from swiftwind.billing_cycle.models import BillingCycle
 from swiftwind.core.management.commands.swiftwind_create_accounts import Command as SwiftwindCreateAccountsCommand
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 from swiftwind.housemates.models import Housemate
 
 User = get_user_model()
@@ -39,7 +39,7 @@ class SetupForm(forms.Form):
     site_domain = forms.CharField(max_length=100, validators=[_simple_domain_name_validator],
                                   help_text='What is the domain name you will use for this site? '
                                             'If unsure leave at the default value.')
-    use_https = forms.BooleanField(initial=False,
+    use_https = forms.BooleanField(initial=False, required=False,
                                    help_text='Is this site being served over HTTPS? '
                                              'If unsure leave at the default value.')
 

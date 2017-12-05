@@ -21,7 +21,7 @@
     <li><a href="{% url 'housemates:list' %}"><i class="fa fa-group"></i> <span>Housemates</span></a></li>
 
     <li class="treeview active">
-        <a href="#">
+        <a href="javascript:;">
             <i class="fa fa-user"></i>
             <span>Housemate Accounts</span>
             <span class="pull-right-container">
@@ -30,7 +30,7 @@
         </a>
 
         <ul class="treeview-menu">
-                <li><a href="{% url 'accounts:overview' %}"><i class="fa fa-group"></i>Overview</a></li>
+            <li><a href="{% url 'accounts:overview' %}"><i class="fa fa-group"></i>Overview</a></li>
             {% housemate_accounts as housemate_accounts %}
             {% for account in housemate_accounts %}
                 <li>
@@ -39,7 +39,7 @@
                         {{ account.name }}
                         <span class="pull-right-container">
                             {% with balance=account.balance %}
-                            <small class="label pull-right {% if balance > 0 %}bg-green{% elif balance < 0 %}bg-red{% else %}bg-gray{% endif %}">
+                                <small class="label pull-right {% if balance > 0 %}bg-green{% elif balance < 0 %}bg-red{% else %}bg-gray{% endif %}">
                                 {{ balance|currency }}
                             </small>
                             {% endwith %}
@@ -47,6 +47,22 @@
                     </a>
                 </li>
             {% endfor %}
+        </ul>
+    </li>
+
+    <li class="treeview">
+        <a href="javascript:;">
+            <i class="fa fa-cogs"></i>
+            <span>Settings</span>
+            <span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+
+        <ul class="treeview-menu">
+            <li><a href="{% url 'settings:general' %}"><i class="fa fa-cogs"></i>General</a></li>
+            <li><a href="{% url 'settings:technical' %}"><i class="fa fa-cogs"></i>Technical</a></li>
+            <li><a href="{% url 'settings:teller' %}"><i class="fa fa-cogs"></i>Teller.io data import</a></li>
         </ul>
     </li>
 

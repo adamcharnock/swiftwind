@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from hordak.models.core import Account, Transaction
 from hordak.utilities.currency import Balance
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.testing import DataProvider
 

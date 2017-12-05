@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'swiftwind.costs',
     'swiftwind.dashboard',
     'swiftwind.housemates',
+    'swiftwind.settings',
     'swiftwind.system_setup',
     'swiftwind.transactions',
 

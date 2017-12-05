@@ -1,5 +1,5 @@
 from django.contrib.sites.models import Site
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 
 
 def get_site_root():

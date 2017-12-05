@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from hordak.models import Account
 
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 
 
 class Command(BaseCommand):

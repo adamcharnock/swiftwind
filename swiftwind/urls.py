@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'^accounts/', include('swiftwind.accounts.urls', namespace='accounts')),
     url(r'^costs/', include('swiftwind.costs.urls', namespace='costs')),
     url(r'^setup/', include('swiftwind.system_setup.urls', namespace='setup')),
+    url(r'^settings/', include('swiftwind.settings.urls', namespace='settings')),
     url(r'^', include('swiftwind.dashboard.urls', namespace='dashboard')),
 
     url(r'^', include(hordak_urls, namespace='hordak', app_name='hordak')),

@@ -1,7 +1,7 @@
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
 
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 
 
 class CheckSetupDoneMiddleware(object):

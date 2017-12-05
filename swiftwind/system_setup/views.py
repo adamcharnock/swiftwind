@@ -4,7 +4,7 @@ from django.http.response import HttpResponseRedirect
 from django.urls.base import reverse_lazy, reverse
 from django.views.generic import FormView
 
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 from swiftwind.system_setup.forms import SetupForm
 
 

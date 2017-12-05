@@ -13,7 +13,7 @@ from django.conf import settings
 from pytz import UTC
 
 from swiftwind.billing_cycle.exceptions import CannotPopulateForDateOutsideExistingCycles
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.site import get_site_root
 

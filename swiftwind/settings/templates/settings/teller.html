@@ -1,0 +1,23 @@
+{% extends 'settings/base.html' %}
+{% load bootstrap3 %}
+
+{% block page_name %}Teller.io data import (beta){% endblock %}
+{% block page_description %}{% endblock %}
+
+{% block settings_form %}
+    <p>
+        Swiftwind can load you bank statement data in using the
+        <a href="https://teller.io">teller.io</a> service. Once you setup
+        an account you can enter the details below.
+    </p>
+
+    <p>
+        The <strong>teller token</strong> is the token teller providers you with
+        once you signup. The <strong>account ID</strong> is the ID of your bank account
+        as reported by their API. You will need to access their API in order to retrieve your
+        account ID.
+    </p>
+
+    <p></p>
+    {{ block.super }}
+{% endblock %}

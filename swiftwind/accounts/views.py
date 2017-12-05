@@ -14,7 +14,7 @@ from djmoney.models.fields import MoneyField
 
 from hordak.models.core import Account, Transaction, Leg
 from swiftwind.billing_cycle.models import BillingCycle
-from swiftwind.core.models import Settings
+from swiftwind.settings.models import Settings
 from swiftwind.costs.models import RecurringCostSplit
 from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.emails import EmailViewMixin

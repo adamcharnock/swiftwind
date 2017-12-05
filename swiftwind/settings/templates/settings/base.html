@@ -1,0 +1,21 @@
+{% extends 'swiftwind/base.html' %}
+{% load bootstrap3 %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <div class="box box-solid">
+                <div class="box-body">
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        {% block settings_form %}
+                            {% bootstrap_form form %}
+                        {% endblock %}
+                        <input type="submit" value="Save settings" class="btn btn-primary pull-right btn-lg">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
