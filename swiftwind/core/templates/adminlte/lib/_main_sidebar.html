@@ -34,7 +34,7 @@
             {% housemate_accounts as housemate_accounts %}
             {% for account in housemate_accounts %}
                 <li>
-                    <a href="#">
+                    <a href="{% url 'accounts:housemate_statement' account.housemate.uuid %}">
                         <i class="fa fa-user"></i>
                         {{ account.name }}
                         <span class="pull-right-container">

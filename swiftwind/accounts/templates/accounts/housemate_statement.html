@@ -1,7 +1,7 @@
 {% extends 'swiftwind/base.html' %}
 {% load bootstrap3 hordak %}
 
-{% block page_name %}{{ housemate.user }}{% endblock %}
+{% block page_name %}{% firstof housemate.user.get_full_name housemate.user %}{% endblock %}
 {% block page_description %}{% endblock %}
 
 {% block content %}
