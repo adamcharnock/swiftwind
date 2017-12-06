@@ -1,4 +1,5 @@
 {% extends 'swiftwind/base.html' %}
+{% load hordak %}
 
 {% block page_name %}{% endblock %}
 
@@ -61,8 +62,8 @@
                                 <td>
                                     <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
-                                <td>
-                                    {{ account.balance }}
+                                <td class="text-right">
+                                    {{ account.balance|color_currency }}
                                 </td>
                             </tr>
                         {% empty %}
@@ -75,7 +76,7 @@
                         {% if housemate_accounts %}
                             <tr>
                                 <td class="text-right text-bold">Total:</td>
-                                <td>{{ housemate_accounts.net_balance }}</td>
+                                <td class="text-right text-bold">{{ housemate_accounts.net_balance|color_currency }}</td>
                             </tr>
                         {% endif %}
                     </table>
@@ -105,8 +106,8 @@
                                 <td>
                                     <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
-                                <td>
-                                    {{ account.balance }}
+                                <td class="text-right">
+                                    {{ account.balance|color_currency }}
                                 </td>
                             </tr>
                         {% empty %}
@@ -119,7 +120,7 @@
                         {% if other_income_accounts %}
                             <tr>
                                 <td class="text-right text-bold">Total:</td>
-                                <td>{{ other_income_accounts.net_balance }}</td>
+                                <td class="text-right text-bold">{{ other_income_accounts.net_balance|color_currency }}</td>
                             </tr>
                         {% endif %}
                     </table>
@@ -147,10 +148,16 @@
                         {% for account in expense_accounts %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
+                                    {% widthratio account.get_level 1 10 as padding %}
+                                    <div style="padding-left: {{ padding|sub:10 }}px;">
+                                        {% if account.get_level > 1 %}↳{% endif %}
+                                        <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
+                                    </div>
                                 </td>
-                                <td>
-                                    {{ account.balance }}
+                                <td class="text-right">
+                                    {% if account.is_leaf_node %}
+                                        {{ account.balance }}
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% empty %}
@@ -163,7 +170,7 @@
                         {% if expense_accounts %}
                             <tr>
                                 <td class="text-right text-bold">Total:</td>
-                                <td>{{ expense_accounts.net_balance }}</td>
+                                <td class="text-right text-bold">{{ expense_accounts.net_balance }}</td>
                             </tr>
                         {% endif %}
                     </table>
@@ -193,7 +200,7 @@
                                 <td>
                                     <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
-                                <td>
+                                <td class="text-right">
                                     {{ account.balance }}
                                 </td>
                             </tr>
@@ -207,7 +214,7 @@
                         {% if current_liability_accounts %}
                             <tr>
                                 <td class="text-right text-bold">Total:</td>
-                                <td>{{ current_liability_accounts.net_balance }}</td>
+                                <td class="text-right text-bold">{{ current_liability_accounts.net_balance }}</td>
                             </tr>
                         {% endif %}
                     </table>
@@ -237,7 +244,7 @@
                                 <td>
                                     <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
                                 </td>
-                                <td>
+                                <td class="text-right">
                                     {{ account.balance }}
                                 </td>
                             </tr>
@@ -251,7 +258,7 @@
                         {% if long_term_liability_accounts %}
                             <tr>
                                 <td class="text-right text-bold">Total:</td>
-                                <td>{{ long_term_liability_accounts.net_balance }}</td>
+                                <td class="text-right text-bold">{{ long_term_liability_accounts.net_balance }}</td>
                             </tr>
                         {% endif %}
                     </table>

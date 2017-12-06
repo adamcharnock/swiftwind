@@ -43,7 +43,7 @@ class DashboardView(TemplateView):
 
         return dict(
             housemate_accounts=Account.objects.filter(parent=housemate_parent),
-            expense_accounts=Account.objects.filter(parent=expense_parent),
+            expense_accounts=expense_parent.get_descendants(),
             current_liability_accounts=Account.objects.filter(parent=current_liabilities_parent),
             long_term_liability_accounts=Account.objects.filter(parent=long_term_liabilities_parent),
             other_income_accounts=Account.objects.filter(~Q(pk=housemate_parent.pk), parent=income_parent)
