@@ -12,24 +12,8 @@ services:
     expose:
       - "6379"
 
-  test:
-    build: .
-    volumes:
-      - .:/swiftwind
-    environment:
-      - DATABASE_URL=postgres://postgres@db/postgres
-    links:
-      - db
-    command: ./manage.py test
-    stdin_open: true
-    tty: true
-    networks:
-      - default
-
   app:
     build: .
-    volumes:
-      - .:/swiftwind
     environment:
       - DATABASE_URL=postgres://postgres@db/postgres
     links:

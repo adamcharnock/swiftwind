@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
 
@@ -11,7 +12,14 @@ class CheckSetupDoneMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        if not request.path_info.startswith('/setup'):
+        url = request.path_info
+        ignore = (
+            url.startswith('/setup') or
+            url.startswith(settings.STATIC_URL) or
+            url.startswith(settings.MEDIA_URL)
+        )
+
+        if not ignore:
             if not Settings.objects.exists():
                 return HttpResponseRedirect(reverse('setup:index'))
 

@@ -46,6 +46,15 @@ Once installed you will need to run the following ``manage.py`` commands::
     ./manage.py createsuperuser
     ./manage.py swiftwind_create_accounts
 
+Docker compose
+--------------
+
+Swiftwind can be run using docker-compose. This will also provide the Postgres database server for you::
+
+    docker-compose run app ./manage.py migrate
+    docker-compose up
+
+
 Credits
 -------
 
