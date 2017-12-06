@@ -60,19 +60,15 @@
                         <tbody>
                         <tr>
                             <td class="col-xs-10">Recurring costs</td>
-                            <td class="col-xs-2">{{ recurring_total|inv }}</td>
+                            <td class="col-xs-2 text-right">{{ recurring_total|inv }}</td>
                         </tr>
                         <tr>
                             <td>One-off costs</td>
-                            <td>{{ one_off_total|inv }}</td>
-                        </tr>
-                        <tr>
-                            <td>Other transactions</td>
-                            <td>{{ other_total|inv }}</td>
+                            <td class="text-right">{{ one_off_total|inv }}</td>
                         </tr>
                         <tr>
                             <th>Total for this period</th>
-                            <th>{{ total }}</th>
+                            <th class="text-right">{{ total|inv }}</th>
                         </tr>
                         </tbody>
                     </table>
@@ -98,13 +94,13 @@
                                 {% with recurring_cost=leg.transaction.recurred_cost.recurring_cost %}
                                     <tr>
                                         <td class="col-xs-10">{{ recurring_cost.to_account.name }}</td>
-                                        <td class="col-xs-2">{{ leg.amount|inv }}</td>
+                                        <td class="col-xs-2 text-right">{{ leg.amount|inv }}</td>
                                     </tr>
                                 {% endwith %}
                             {% endfor %}
                             <tr>
                                 <td></td>
-                                <th>{{ recurring_total|inv }}</th>
+                                <th class="text-right">{{ recurring_total|inv }}</th>
                             </tr>
                             </tbody>
                         </table>
@@ -133,14 +129,10 @@
                                 {% with recurring_cost=leg.transaction.recurred_cost.recurring_cost %}
                                     <tr>
                                         <td class="col-xs-10">{{ recurring_cost.to_account.name }}</td>
-                                        <td class="col-xs-2">{{ leg.amount|inv }}</td>
+                                        <td class="col-xs-2 text-right">{{ leg.amount|inv }}</td>
                                     </tr>
                                 {% endwith %}
                             {% endfor %}
-                            <tr>
-                                <td></td>
-                                <th>{{ one_off_total|inv }}</th>
-                            </tr>
                             </tbody>
                         </table>
                     {% else %}
@@ -156,7 +148,7 @@
             <div class="box box-default">
                 <div class="box-header with-border">
                     <h3 class="box-title">
-                        Other transactions breakdown
+                        Other transactions
                     </h3>
                 </div>
                 <div class="box-body">
@@ -174,7 +166,7 @@
                                         {% endfor %}
                                     </td>
                                     <td class="col-xs-7">{% firstof leg.transaction.description 'No transaction description' %}</td>
-                                    <td class="col-xs-2">{{ leg.amount }}</td>
+                                    <td class="col-xs-2 text-right">{{ leg.amount }}</td>
                                 </tr>
                             {% endfor %}
                             <tr>
@@ -237,9 +229,9 @@
                                         {% endfor %}
                                     {% endif %}
                                 </td>
-                                <td>{% if leg.is_debit %}{{ leg.amount|abs }}{% endif %}</td>
-                                <td>{% if leg.is_credit %}{{ leg.amount|abs }}{% endif %}</td>
-                                <td>{{ leg.account_balance_after|color_currency }}</td>
+                                <td class="text-right">{% if leg.is_debit %}{{ leg.amount|abs }}{% endif %}</td>
+                                <td class="text-right">{% if leg.is_credit %}{{ leg.amount|abs }}{% endif %}</td>
+                                <td class="text-right">{{ leg.account_balance_after|color_currency }}</td>
                                 <td>{{ leg.transaction.description }}</td>
                             </tr>
 

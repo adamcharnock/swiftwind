@@ -103,6 +103,9 @@ class HousemateStatementView(DetailView):
             pk__in=[l.pk for l in legs]
         ).order_by('-transaction__date', '-pk').select_related('transaction')
 
+        recurring_total = sum(l.amount for l in recurring_legs)
+        one_off_total = sum(l.amount for l in one_off_legs)
+
         # Previous & next URLs
         # Not a pretty way to generate URLs, but parsing the date to reverse the
         # historical URL would be pretty onerous.
@@ -126,13 +129,9 @@ class HousemateStatementView(DetailView):
             recurring_legs=recurring_legs,
             one_off_legs=one_off_legs,
             other_legs=other_legs,
-            recurring_total=sum(l.amount for l in recurring_legs),
-            one_off_total=sum(l.amount for l in one_off_legs),
-            other_total=sum(l.amount for l in other_legs),
-            total=housemate.account.balance(
-                transaction__date__gte=billing_cycle.date_range.lower,
-                transaction__date__lt=billing_cycle.date_range.upper,
-            ),
+            recurring_total=recurring_total,
+            one_off_total=one_off_total,
+            total=recurring_total + one_off_total,
             payment_history=housemate.account.legs.all().order_by('-transaction__date', '-transaction__pk'),
             payment_information=Settings.objects.get().payment_information,
             next_url=next_url,
