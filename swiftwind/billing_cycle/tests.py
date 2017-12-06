@@ -10,10 +10,10 @@ from django.urls.base import reverse
 from django.utils.timezone import datetime
 from freezegun.api import freeze_time
 
-from hordak.models.core import StatementImport, Account, StatementLine, Transaction
+from hordak.models.core import StatementImport, Account, StatementLine, Transaction, Leg
 from pytz import UTC
 
-from swiftwind.costs.models import RecurringCost, RecurringCostSplit
+from swiftwind.costs.models import RecurringCost, RecurringCostSplit, RecurredCost
 from swiftwind.utilities.testing import DataProvider
 
 from .cycles import Monthly
@@ -296,8 +296,7 @@ class CreateTransactionsViewTestCase(DataProvider, TestCase):
             RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate1.account)
             RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate2.account)
 
-    @patch.object(BillingCycle, 'send_statements')
-    def test_transactions_not_yet_created(self, mock):
+    def test_transactions_not_yet_created(self):
         response = self.client.post(reverse('billing_cycles:enact', args=[self.billing_cycle.uuid]))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Transaction.objects.count(), 1)  # One transaction per recurring cost
@@ -305,14 +304,52 @@ class CreateTransactionsViewTestCase(DataProvider, TestCase):
         self.billing_cycle.refresh_from_db()
         self.assertEqual(self.billing_cycle.transactions_created, True)
 
-    @patch.object(BillingCycle, 'send_statements')
-    def test_already_enacted(self, mock):
+    def test_already_enacted(self):
         self.billing_cycle.enact_all_costs()
         self.assertEqual(Transaction.objects.count(), 1)
 
         response = self.client.post(reverse('billing_cycles:enact', args=[self.billing_cycle.uuid]))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Transaction.objects.count(), 1)
+
+
+class RecreateTransactionsViewTestCase(DataProvider, TransactionTestCase):
+
+    def setUp(self):
+        self.housemate1 = self.housemate(account_kwargs=dict(currencies=['GBP']))
+        self.housemate2 = self.housemate(account_kwargs=dict(currencies=['GBP']))
+
+        self.billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        self.billing_cycle.refresh_from_db()
+
+        self.to_account = self.account(currencies=['GBP'])
+        with transaction.atomic():
+            self.recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle,
+                total_billing_cycles=1,
+            )
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate1.account)
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate2.account)
+
+        self.billing_cycle.enact_all_costs()
+        self.transaction = Transaction.objects.get()
+        self.recurred_cost = RecurredCost.objects.get()
+
+    def test_reenact(self):
+        response = self.client.post(reverse('billing_cycles:reenact', args=[self.billing_cycle.uuid]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Transaction.objects.count(), 1)
+        self.assertEqual(Leg.objects.count(), 3)
+
+        self.billing_cycle.refresh_from_db()
+        self.assertEqual(self.billing_cycle.transactions_created, True)
+
+        self.assertNotEqual(self.transaction, Transaction.objects.get())
+        self.assertNotEqual(self.recurred_cost, RecurredCost.objects.get())
 
 
 class SendNotificationsViewTestCase(DataProvider, TestCase):

@@ -46,7 +46,12 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if not billing_cycle.transactions_created %}
+                            {% if billing_cycle.transactions_created %}
+                                <form action="{% url 'billing_cycles:reenact' billing_cycle.uuid %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="submit" class="btn btn-xs btn-danger" value="Delete &amp; recreate transactions">
+                                </form>
+                            {% else %}
                                 <form action="{% url 'billing_cycles:enact' billing_cycle.uuid %}" method="post">
                                     {% csrf_token %}
                                     <input type="submit" class="btn btn-xs btn-default" value="Create transactions">

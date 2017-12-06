@@ -163,7 +163,7 @@ class RecurringCost(models.Model):
         """Get the total amount billed so far"""
         return Leg.objects.filter(transaction__recurred_cost__recurring_cost=self, amount__gt=0).sum_to_balance()
 
-    def enact(self, billing_cycle):
+    def enact(self, billing_cycle, disable_if_done=True):
         """Enact this RecurringCost for the given billing cycle
 
         This will:
@@ -190,7 +190,8 @@ class RecurringCost(models.Model):
             recurred_cost.make_transaction()
             recurred_cost.save()
 
-        self.disable_if_done(billing_cycle)
+        if disable_if_done:
+            self.disable_if_done(billing_cycle)
 
     def disable_if_done(self, commit=True):
         """Set disabled=True if we have billed all we need to

@@ -7,9 +7,6 @@ from django.views import View
 from django.views.generic import ListView
 
 from swiftwind.billing_cycle.models import BillingCycle
-from swiftwind.costs.exceptions import CannotEnactUnenactableRecurringCostError, \
-    RecurringCostAlreadyEnactedForBillingCycle
-from swiftwind.costs.models import RecurringCost
 
 
 class BillingCycleListView(ListView):
@@ -27,6 +24,15 @@ class CreateTransactionsView(View):
     def post(self, request, uuid):
         billing_cycle = get_object_or_404(BillingCycle, uuid=uuid)
         billing_cycle.enact_all_costs()
+        return HttpResponseRedirect(reverse('billing_cycles:list'))
+
+
+class RecreateTransactionsView(View):
+    """For those times when you realise you're costs were not setup correctly"""
+
+    def post(self, request, uuid):
+        billing_cycle = get_object_or_404(BillingCycle, uuid=uuid)
+        billing_cycle.reenact_all_costs()
         return HttpResponseRedirect(reverse('billing_cycles:list'))
 
 

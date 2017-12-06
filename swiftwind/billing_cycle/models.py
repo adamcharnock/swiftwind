@@ -7,11 +7,11 @@ from django.db.models.functions import Lower, Upper
 from django.urls.base import reverse
 from django.utils import formats
 from django.utils.datetime_safe import datetime, date
-from django.utils.timezone import make_aware
 from django_smalluuid.models import uuid_default, SmallUUIDField
 from django.conf import settings
 from pytz import UTC
 
+from hordak.models import Transaction
 from swiftwind.billing_cycle.exceptions import CannotPopulateForDateOutsideExistingCycles
 from swiftwind.costs.exceptions import CannotEnactUnenactableRecurringCostError, \
     RecurringCostAlreadyEnactedForBillingCycle
@@ -245,3 +245,22 @@ class BillingCycle(models.Model):
 
         self.transactions_created = True
         self.save()
+
+    def reenact_all_costs(self):
+        from swiftwind.costs.models import RecurringCost, RecurredCost
+
+        with transaction.atomic():
+            Transaction.objects.filter(recurred_cost__billing_cycle=self).delete()
+            RecurredCost.objects.filter(billing_cycle=self).delete()
+            self.transactions_created = False
+            self.save()
+
+            for recurring_cost in RecurringCost.objects.all():
+                recurring_cost.disabled = False
+                recurring_cost.enact(self, disable_if_done=False)
+
+            self.transactions_created = True
+            self.save()
+
+        for recurring_cost in RecurringCost.objects.all():
+            recurring_cost.disable_if_done(self)

@@ -37,7 +37,6 @@ class Migration(migrations.Migration):
             """
             CREATE CONSTRAINT TRIGGER check_cannot_create_recurred_cost_for_disabled_cost_trigger
             AFTER INSERT ON costs_recurredcost
-            DEFERRABLE INITIALLY DEFERRED
             FOR EACH ROW EXECUTE PROCEDURE check_cannot_create_recurred_cost_for_disabled_cost()
             """,
             "DROP TRIGGER check_cannot_create_recurred_cost_for_disabled_cost_trigger ON costs_recurredcost"
