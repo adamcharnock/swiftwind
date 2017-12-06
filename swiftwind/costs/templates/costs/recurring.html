@@ -15,6 +15,7 @@
         {% csrf_token %}
         {{ formset.management_form }}
         {% for form in formset %}
+            {{ form.errors }}
             <section class="panel panel-default cost">
                 <div class="panel-heading">
                     {% bootstrap_field form.id %}

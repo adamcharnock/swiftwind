@@ -14,7 +14,6 @@ from swiftwind.utilities.formsets import nested_model_formset_factory
 
 class AbstractCostForm(forms.ModelForm):
     to_account = TreeNodeChoiceField(queryset=Account.objects.all(), to_field_name='uuid')
-    initial_billing_cycle = forms.ModelChoiceField(queryset=BillingCycle.objects.none(), required=False)
 
     class Meta:
         model = RecurringCost
@@ -26,15 +25,7 @@ class AbstractCostForm(forms.ModelForm):
         if instance:
             kwargs['initial'].update(to_account=instance.to_account.uuid)
 
-        kwargs['initial'].update(initial_billing_cycle=BillingCycle.objects.as_of(date.today()))
-
         super(AbstractCostForm, self).__init__(*args, **kwargs)
-        self.fields['initial_billing_cycle'].queryset = self.get_initial_billing_cycle_queryset()
-
-    def get_initial_billing_cycle_queryset(self):
-        return BillingCycle.objects.filter(
-            end_date__gte=datetime.now().date() - timedelta(days=31 * 6),
-        )
 
     @transaction.atomic()
     def save(self, commit=True):
@@ -52,22 +43,12 @@ class AbstractCostForm(forms.ModelForm):
 
         return recurring_cost
 
-    def clean_initial_billing_cycle(self):
-        value = self.cleaned_data.get('initial_billing_cycle')
-        if value and self.cleaned_data.get('disabled'):
-            raise ValidationError('Cannot specify initial billing cycle for a disabled cost')
-
-        if not value and not self.cleaned_data.get('disabled'):
-            raise ValidationError('Active costs require an initial billing cycle')
-
-        return value
-
 
 class RecurringCostForm(AbstractCostForm):
     type = forms.ChoiceField(choices=RecurringCost.TYPES, widget=forms.RadioSelect)
 
     class Meta(AbstractCostForm.Meta):
-        fields = ('to_account', 'type', 'disabled', 'fixed_amount', 'initial_billing_cycle')
+        fields = ('to_account', 'type', 'disabled', 'fixed_amount')
         labels = dict(
             disabled='Disable this recurring cost',
         )
@@ -84,7 +65,7 @@ class OneOffCostForm(AbstractCostForm):
     total_billing_cycles = forms.IntegerField(required=True, label='Total Billing Cycles', initial=1)
 
     class Meta(AbstractCostForm.Meta):
-        fields = ('to_account', 'fixed_amount', 'total_billing_cycles', 'initial_billing_cycle')
+        fields = ('to_account', 'fixed_amount', 'total_billing_cycles')
 
     def save(self, commit=True):
         self.instance.type = RecurringCost.TYPES.normal
@@ -108,6 +89,44 @@ class OneOffCostForm(AbstractCostForm):
                 "".format(billed_amount)
             )
         return amount
+
+
+class InitialBillingCycleMixin(object):
+    """The creation forms need to collect initial billing cycle, hence this mixin"""
+    initial_billing_cycle = forms.ModelChoiceField(queryset=BillingCycle.objects.none(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('initial', {})
+        kwargs['initial'].update(initial_billing_cycle=BillingCycle.objects.as_of(date.today()))
+        super().__init__(*args, **kwargs)
+        self.fields['initial_billing_cycle'].queryset = self.get_initial_billing_cycle_queryset()
+
+    def get_initial_billing_cycle_queryset(self):
+        return BillingCycle.objects.filter(
+            end_date__gte=datetime.now().date() - timedelta(days=31 * 6),
+        )
+
+    def clean_initial_billing_cycle(self):
+        value = self.cleaned_data.get('initial_billing_cycle')
+        if value and self.cleaned_data.get('disabled'):
+            raise ValidationError('Cannot specify initial billing cycle for a disabled cost')
+
+        if not value and not self.cleaned_data.get('disabled'):
+            raise ValidationError('Active costs require an initial billing cycle')
+
+        return value
+
+
+class CreateRecurringCostForm(InitialBillingCycleMixin, RecurringCostForm):
+
+    class Meta(RecurringCostForm.Meta):
+        fields = ('to_account', 'type', 'disabled', 'fixed_amount', 'initial_billing_cycle')
+
+
+class CreateOneOffCostForm(InitialBillingCycleMixin, OneOffCostForm):
+
+    class Meta(OneOffCostForm.Meta):
+        fields = ('to_account', 'fixed_amount', 'total_billing_cycles', 'initial_billing_cycle')
 
 
 class RecurringCostSplitForm(forms.ModelForm):

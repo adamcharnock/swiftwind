@@ -5,7 +5,8 @@ from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
 
 from swiftwind.housemates.views import HousematesRequiredMixin
-from .forms import RecurringCostForm, RecurringCostFormSet, OneOffCostFormSet, OneOffCostForm
+from .forms import RecurringCostForm, RecurringCostFormSet, OneOffCostFormSet, OneOffCostForm, CreateOneOffCostForm, \
+    CreateRecurringCostForm
 from .models import RecurringCost
 
 
@@ -41,7 +42,7 @@ class RecurringCostsView(HousematesRequiredMixin, UpdateView):
 
 @method_decorator(login_required, name='dispatch')
 class CreateRecurringCostView(HousematesRequiredMixin, CreateView):
-    form_class = RecurringCostForm
+    form_class = CreateRecurringCostForm
     template_name = 'costs/create_recurring.html'
 
     def get_success_url(self):
@@ -67,7 +68,7 @@ class OneOffCostsView(RecurringCostsView):
 
 @method_decorator(login_required, name='dispatch')
 class CreateOneOffCostView(HousematesRequiredMixin, CreateView):
-    form_class = OneOffCostForm
+    form_class = CreateOneOffCostForm
     template_name = 'costs/create_one_off.html'
 
     def get_success_url(self):

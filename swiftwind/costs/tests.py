@@ -20,7 +20,7 @@ from swiftwind.costs.management.commands.enact_costs import Command as EnactCost
 from swiftwind.costs.models import RecurredCost
 from swiftwind.housemates.models import Housemate
 from swiftwind.utilities.testing import DataProvider
-from .forms import RecurringCostForm, OneOffCostForm
+from .forms import RecurringCostForm, OneOffCostForm, CreateRecurringCostForm, CreateOneOffCostForm
 from .models import RecurringCost, RecurringCostSplit
 
 
@@ -713,7 +713,7 @@ class RecurredCostModelTestCase(DataProvider, TestCase):
         self.assertEqual(transaction.legs.count(), 4)  # 3 splits (from accounts) + 1 to account
 
 
-class RecurringCostFormTestCase(DataProvider, TestCase):
+class CreateRecurringCostFormTestCase(DataProvider, TestCase):
 
     def setUp(self):
         self.expense_account = self.account(type=Account.TYPES.expense)
@@ -726,7 +726,7 @@ class RecurringCostFormTestCase(DataProvider, TestCase):
         self.first_billing_cycle = BillingCycle.objects.first()
 
     def test_valid(self):
-        form = RecurringCostForm(data=dict(
+        form = CreateRecurringCostForm(data=dict(
             to_account=self.expense_account.uuid,
             type=RecurringCost.TYPES.normal,
             disabled='',
@@ -754,7 +754,7 @@ class RecurringCostFormTestCase(DataProvider, TestCase):
         self.assertEqual(split_3.portion, 1)
 
     def test_fixed_amount_not_allowed(self):
-        form = RecurringCostForm(data=dict(
+        form = CreateRecurringCostForm(data=dict(
             to_account=self.expense_account.uuid,
             type=RecurringCost.TYPES.arrears_balance,
             disabled='',
@@ -766,7 +766,7 @@ class RecurringCostFormTestCase(DataProvider, TestCase):
         self.assertIn('fixed_amount', form.errors)
 
     def test_fixed_amount_disabled(self):
-        form = RecurringCostForm(data=dict(
+        form = CreateRecurringCostForm(data=dict(
             to_account=self.expense_account.uuid,
             type=RecurringCost.TYPES.normal,
             disabled='on',
@@ -777,7 +777,7 @@ class RecurringCostFormTestCase(DataProvider, TestCase):
         self.assertTrue(form.is_valid(), form.errors)
 
     def test_initial_billing_cycle_required(self):
-        form = RecurringCostForm(data=dict(
+        form = CreateRecurringCostForm(data=dict(
             to_account=self.expense_account.uuid,
             type=RecurringCost.TYPES.normal,
             disabled='',
@@ -789,7 +789,7 @@ class RecurringCostFormTestCase(DataProvider, TestCase):
         self.assertIn('initial_billing_cycle', form.errors)
 
     def test_initial_billing_cycle_unrequired(self):
-        form = RecurringCostForm(data=dict(
+        form = CreateRecurringCostForm(data=dict(
             to_account=self.expense_account.uuid,
             type=RecurringCost.TYPES.normal,
             disabled='on    ',
@@ -844,7 +844,6 @@ class RecurringCostsViewTestCase(DataProvider, TestCase):
             'form-0-type': RecurringCost.TYPES.normal,
             'form-0-fixed_amount': '200',
             'form-0-disabled': '',
-            'form-0-initial_billing_cycle': self.first_billing_cycle.pk,
             'form-0-splits-TOTAL_FORMS': 3,
             'form-0-splits-INITIAL_FORMS': 3,
             'form-0-splits-0-id': self.split1.id,
@@ -968,7 +967,6 @@ class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
             'form-0-to_account': self.expense_account.uuid,
             'form-0-total_billing_cycles': 3,
             'form-0-fixed_amount': Decimal('200'),
-            'form-0-initial_billing_cycle': self.billing_cycle.pk,
             'form-0-disabled': '',
             'form-0-splits-TOTAL_FORMS': 3,
             'form-0-splits-INITIAL_FORMS': 3,
@@ -996,7 +994,7 @@ class OneOffCostsViewTestCase(DataProvider, TransactionTestCase):
         self.assertEqual(self.split3.portion, 4)
 
 
-class OneOffCostFormTestCase(DataProvider, TestCase):
+class CreateOneOffCostFormTestCase(DataProvider, TestCase):
 
     def setUp(self):
         BillingCycle.populate()
@@ -1019,7 +1017,7 @@ class OneOffCostFormTestCase(DataProvider, TestCase):
         self.recurring_cost.enact(self.billing_cycle)
         # Billed amount is now 50 EUR
 
-        form = OneOffCostForm(data=dict(
+        form = CreateOneOffCostForm(data=dict(
             to_account=self.expense_account.uuid,
             initial_billing_cycle=self.billing_cycle.pk,
             fixed_amount=30,
