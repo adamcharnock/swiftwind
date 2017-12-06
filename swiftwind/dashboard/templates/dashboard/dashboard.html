@@ -152,6 +152,9 @@
                                     <div style="padding-left: {{ padding|sub:10 }}px;">
                                         {% if account.get_level > 1 %}↳{% endif %}
                                         <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
+                                        {% if account.inbound_costs.exists %}
+                                            <i class="fa fa-clock-o text-gray"></i>
+                                        {% endif %}
                                     </div>
                                 </td>
                                 <td class="text-right">
@@ -199,6 +202,9 @@
                             <tr>
                                 <td>
                                     <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
+                                    {% if account.inbound_costs.exists %}
+                                        <i class="fa fa-clock-o text-gray"></i>
+                                    {% endif %}
                                 </td>
                                 <td class="text-right">
                                     {{ account.balance }}
