@@ -630,6 +630,7 @@ class RecurredCostModelTestCase(DataProvider, TestCase):
 
     def setUp(self):
         self.billing_cycle = BillingCycle.objects.create(date_range=('2000-01-01', '2000-02-01'))
+        self.billing_cycle.refresh_from_db()
         to_account = self.account(type=Account.TYPES.expense, currencies=['GBP'])
 
         self.recurring_cost = RecurringCost.objects.create(
@@ -668,6 +669,7 @@ class RecurredCostModelTestCase(DataProvider, TestCase):
 
         transaction = self.recurred_cost.transaction
         self.assertEqual(transaction.legs.count(), 4)  # 3 splits (from accounts) + 1 to account
+        self.assertEqual(str(transaction.date), '2000-01-01')
 
 
 class CreateRecurringCostFormTestCase(DataProvider, TestCase):
