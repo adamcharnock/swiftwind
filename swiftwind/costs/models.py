@@ -91,8 +91,7 @@ class RecurringCost(models.Model):
     total_billing_cycles = models.PositiveIntegerField(default=None, null=True, blank=True,
                                                        help_text='Stop billing after this many billing cycles.')
     type = models.CharField(max_length=20, choices=TYPES, default=TYPES.normal)
-    #: May only be Null if disabled=True. Enforced by DB constraint.
-    initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', null=True, blank=True)
+    initial_billing_cycle = models.ForeignKey('billing_cycle.BillingCycle')
     transactions = models.ManyToManyField(Transaction, through='costs.RecurredCost')
 
     objects = models.Manager.from_queryset(RecurringCostQuerySet)()
@@ -198,7 +197,6 @@ class RecurringCost(models.Model):
         Will only have an effect on one-off costs.
         """
         if self._is_billing_complete() and not self.disabled:
-            self.initial_billing_cycle = None
             self.disabled = True
 
             if commit:

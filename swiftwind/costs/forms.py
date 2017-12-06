@@ -93,7 +93,6 @@ class OneOffCostForm(AbstractCostForm):
 
 class InitialBillingCycleMixin(object):
     """The creation forms need to collect initial billing cycle, hence this mixin"""
-    initial_billing_cycle = forms.ModelChoiceField(queryset=BillingCycle.objects.none(), required=False)
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('initial', {})
@@ -105,16 +104,6 @@ class InitialBillingCycleMixin(object):
         return BillingCycle.objects.filter(
             end_date__gte=datetime.now().date() - timedelta(days=31 * 6),
         )
-
-    def clean_initial_billing_cycle(self):
-        value = self.cleaned_data.get('initial_billing_cycle')
-        if value and self.cleaned_data.get('disabled'):
-            raise ValidationError('Cannot specify initial billing cycle for a disabled cost')
-
-        if not value and not self.cleaned_data.get('disabled'):
-            raise ValidationError('Active costs require an initial billing cycle')
-
-        return value
 
 
 class CreateRecurringCostForm(InitialBillingCycleMixin, RecurringCostForm):

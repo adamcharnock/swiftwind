@@ -51,7 +51,7 @@ class RecurringCostModelTriggerTestCase(DataProvider, TransactionTestCase):
                 to_account=to_account,
                 fixed_amount=100,
                 type=RecurringCost.TYPES.normal,
-                initial_billing_cycle=None,
+                initial_billing_cycle=billing_cycle,
                 disabled=True,
             )
             split = RecurringCostSplit.objects.create(
@@ -72,49 +72,6 @@ class RecurringCostModelTriggerTestCase(DataProvider, TransactionTestCase):
 
         with self.assertRaises(IntegrityError):
             recurred_cost.save()
-
-    def test_check_recurring_cost_cannot_be_disabled_with_initial_transaction_id(self):
-        """RecurringCost cannot be disabled AND have an initial_transaction
-
-        We want to make sure initial_billing_cycle is set to something if cost is ever un-disabled
-        """
-
-        with db_transaction.atomic():
-            to_account = self.account(type=Account.TYPES.expense)
-            billing_cycle = BillingCycle.objects.create(date_range=('2000-01-01', '2000-02-01'))
-
-            recurring_cost = RecurringCost.objects.create(
-                to_account=to_account,
-                fixed_amount=100,
-                type=RecurringCost.TYPES.normal,
-                initial_billing_cycle=billing_cycle,
-            )
-            split = RecurringCostSplit.objects.create(
-                recurring_cost=recurring_cost,
-                from_account=self.account(type=Account.TYPES.income),
-                portion=Decimal('1'),
-            )
-            recurring_cost.splits.add(split)
-
-        with self.assertRaises(IntegrityError):
-            recurring_cost.initial_billing_cycle = billing_cycle
-            recurring_cost.disabled = True
-            recurring_cost.save()
-
-        with self.assertRaises(IntegrityError):
-            recurring_cost.initial_billing_cycle = None
-            recurring_cost.disabled = False
-            recurring_cost.save()
-
-        # OK
-        recurring_cost.initial_billing_cycle = None
-        recurring_cost.disabled = True
-        recurring_cost.save()
-
-        # OK
-        recurring_cost.initial_billing_cycle = billing_cycle
-        recurring_cost.disabled = False
-        recurring_cost.save()
 
     def test_check_fixed_amount_requires_type_normal(self):
         """Only RecurringCosts with type=normal can have a fixed_amount set
@@ -326,7 +283,7 @@ class RecurringCostModelTestCase(DataProvider, BalanceUtils, TestCase):
             to_account=self.to_account,
             fixed_amount=100,
             type=RecurringCost.TYPES.normal,
-            initial_billing_cycle=None,
+            initial_billing_cycle=self.billing_cycle_1,
             disabled=True,
         )
         self.add_split(recurring_cost)
@@ -772,7 +729,7 @@ class CreateRecurringCostFormTestCase(DataProvider, TestCase):
             disabled='on',
             fixed_amount='100',
             total_billing_cycles='5',
-            initial_billing_cycle=None,
+            initial_billing_cycle=self.first_billing_cycle.pk,
         ))
         self.assertTrue(form.is_valid(), form.errors)
 
@@ -784,18 +741,6 @@ class CreateRecurringCostFormTestCase(DataProvider, TestCase):
             fixed_amount='100',
             total_billing_cycles='5',
             initial_billing_cycle=None,
-        ))
-        self.assertFalse(form.is_valid())
-        self.assertIn('initial_billing_cycle', form.errors)
-
-    def test_initial_billing_cycle_unrequired(self):
-        form = CreateRecurringCostForm(data=dict(
-            to_account=self.expense_account.uuid,
-            type=RecurringCost.TYPES.normal,
-            disabled='on    ',
-            fixed_amount='100',
-            total_billing_cycles='5',
-            initial_billing_cycle=self.first_billing_cycle,
         ))
         self.assertFalse(form.is_valid())
         self.assertIn('initial_billing_cycle', form.errors)
