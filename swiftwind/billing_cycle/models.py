@@ -257,6 +257,10 @@ class BillingCycle(models.Model):
 
             for recurring_cost in RecurringCost.objects.all():
                 recurring_cost.disabled = False
+                if not recurring_cost.is_enactable(self.start_date):
+                    continue
+
+                recurring_cost.save()
                 recurring_cost.enact(self, disable_if_done=False)
 
             self.transactions_created = True
