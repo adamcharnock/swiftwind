@@ -59,16 +59,16 @@
                     <table class="table table-striped">
                         <tbody>
                         <tr>
-                            <td class="col-xs-10">Recurring costs</td>
-                            <td class="col-xs-2 text-right">{{ recurring_total|inv }}</td>
+                            <td class="col-xs-7">Recurring costs</td>
+                            <td class="col-xs-3 text-right">{{ recurring_total|inv }}</td>
                         </tr>
                         <tr>
                             <td>One-off costs</td>
                             <td class="text-right">{{ one_off_total|inv }}</td>
                         </tr>
                         <tr>
-                            <th>Total for this period</th>
-                            <th class="text-right">{{ total|inv }}</th>
+                            <th style="font-size: 2em;">Total for this period</th>
+                            <th class="text-right" style="font-size: 2em;">{{ total|inv }}</th>
                         </tr>
                         </tbody>
                     </table>
@@ -133,6 +133,10 @@
                                     </tr>
                                 {% endwith %}
                             {% endfor %}
+                            <tr>
+                                <td></td>
+                                <th class="text-right">{{ one_off_total|inv }}</th>
+                            </tr>
                             </tbody>
                         </table>
                     {% else %}
