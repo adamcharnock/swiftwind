@@ -50,6 +50,24 @@ class TechnicalSettingsForm(forms.ModelForm):
         return obj
 
 
+class EmailSettingsForm(forms.ModelForm):
+    smtp_host = forms.CharField(required=True, label='SMTP host')
+    smtp_port = forms.IntegerField(required=True, label='SMTP port')
+    smtp_user = forms.CharField(label='SMTP user')
+    smtp_password = forms.CharField(widget=forms.PasswordInput(render_value=True), label='SMTP password')
+    smtp_use_ssl = forms.BooleanField(initial=True, label='Use SSL')
+
+    class Meta:
+        model = Settings
+        fields = [
+            'smtp_host',
+            'smtp_port',
+            'smtp_user',
+            'smtp_password',
+            'smtp_use_ssl',
+        ]
+
+
 class TellerSettingsForm(forms.ModelForm):
     tellerio_token = forms.CharField(max_length=100, widget=forms.PasswordInput)
 

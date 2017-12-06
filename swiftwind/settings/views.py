@@ -23,6 +23,13 @@ class TechnicalSettingsView(SettingsUpdateView):
     success_url = reverse_lazy('settings:technical')
 
 
+class EmailSettingsView(SettingsUpdateView):
+    form_class = forms.EmailSettingsForm
+
+    template_name = 'settings/email.html'
+    success_url = reverse_lazy('settings:email')
+
+
 class TellerSettingsView(SettingsUpdateView):
     form_class = forms.TellerSettingsForm
     template_name = 'settings/teller.html'
