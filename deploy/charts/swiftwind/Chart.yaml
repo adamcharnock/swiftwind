@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Swiftwind chart
+name: swiftwind
+version: 0.1.0
