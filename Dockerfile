@@ -36,5 +36,5 @@ RUN SECRET_KEY=none ./manage.py collectstatic --no-input
 
 ### Using gunicorn to serve ###
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "example_project.wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "example_project.wsgi"]
 
