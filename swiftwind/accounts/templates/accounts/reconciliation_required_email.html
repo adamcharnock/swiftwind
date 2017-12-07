@@ -12,9 +12,19 @@
         household statement for this month.
     </p>
 
-    <p>
-        <a href="{{ site_root }}{% url 'hordak:transactions_reconcile' %}">Reconcile statements now</a>
-    </p>
+    <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin: 20px 0;" width="100%">
+        <tbody>
+        <tr>
+            <td width="20%"></td>
+            <td width="60%" style="font-family: sans-serif; font-size: 14px; vertical-align: top; background-color: #3498db; border-radius: 5px; text-align: center;">
+                <a href="{{ site_root }}{% url 'hordak:transactions_reconcile' %}" target="_blank" style="display: inline-block; color: #ffffff; background-color: #3498db; border: solid 1px #3498db; border-radius: 5px; box-sizing: border-box; cursor: pointer; text-decoration: none; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-transform: capitalize; border-color: #3498db;">
+                    Reconcile statements now
+                </a>
+            </td>
+            <td width="20%"></td>
+        </tr>
+        </tbody>
+    </table>
 
 
 {% endblock %}
