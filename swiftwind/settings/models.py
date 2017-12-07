@@ -44,7 +44,9 @@ class Settings(models.Model):
     smtp_port = models.IntegerField(default=None, blank=True, null=True)
     smtp_user = models.CharField(max_length=100, default='', blank=True)
     smtp_password = models.CharField(max_length=100, default='', blank=True)
-    smtp_use_ssl = models.BooleanField(default=True)
+    smtp_use_tls = models.BooleanField(default=False)
+    smtp_use_ssl = models.BooleanField(default=False)
+    smtp_subject_prefix = models.CharField(max_length=100, default='[swiftwind] ', blank=True)
 
     objects = SettingsManager()
 
