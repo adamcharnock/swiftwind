@@ -19,6 +19,9 @@ class SettingsConfig(AppConfig):
         django_settings.CURRENCIES = db_settings.currencies or 'EUR'
 
         # TODO: Move all settings into here, stop accessing settings model directly
+        # TODO: IMPORTANT: Settings will only be reloaded on server restart. We need to revisit how we do this.
+        #                  Perhaps get_setting(), which optionally takes a request with the settings object attached
+        #                  via some middleware (therefore we only have to fetch it once per request)
         if db_settings.smtp_host:
             django_settings.DEFAULT_FROM_EMAIL = db_settings.from_email
             django_settings.EMAIL_HOST = db_settings.smtp_host
