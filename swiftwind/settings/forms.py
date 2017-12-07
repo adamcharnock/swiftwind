@@ -55,7 +55,8 @@ class EmailSettingsForm(forms.ModelForm):
     smtp_host = forms.CharField(required=True, label='SMTP host')
     smtp_port = forms.IntegerField(required=True, label='SMTP port')
     smtp_user = forms.CharField(label='SMTP user')
-    smtp_password = forms.CharField(widget=forms.PasswordInput(render_value=True), label='SMTP password')
+    smtp_password = forms.CharField(widget=forms.PasswordInput(), label='SMTP password',
+                                    help_text='This password will not be redisplayed once saved.')
     smtp_use_ssl = forms.BooleanField(initial=True, label='Use SSL', required=False)
     smtp_use_tls = forms.BooleanField(initial=True, label='Use TLS', required=False)
     smtp_subject_prefix = forms.CharField(initial='[Swiftwind] ')
