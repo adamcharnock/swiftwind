@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -9,7 +10,7 @@ from django.views.generic import ListView
 from swiftwind.billing_cycle.models import BillingCycle
 
 
-class BillingCycleListView(ListView):
+class BillingCycleListView(LoginRequiredMixin, ListView):
     template_name = 'billing_cycle/list.html'
     context_object_name = 'billing_cycles'
 
@@ -19,7 +20,7 @@ class BillingCycleListView(ListView):
         ).order_by('-date_range')
 
 
-class CreateTransactionsView(View):
+class CreateTransactionsView(LoginRequiredMixin, View):
 
     def post(self, request, uuid):
         billing_cycle = get_object_or_404(BillingCycle, uuid=uuid)
@@ -28,7 +29,7 @@ class CreateTransactionsView(View):
         return HttpResponseRedirect(reverse('billing_cycles:list'))
 
 
-class RecreateTransactionsView(View):
+class RecreateTransactionsView(LoginRequiredMixin, View):
     """For those times when you realise you're costs were not setup correctly"""
 
     def post(self, request, uuid):
@@ -37,7 +38,7 @@ class RecreateTransactionsView(View):
         return HttpResponseRedirect(reverse('billing_cycles:list'))
 
 
-class SendNotificationsView(View):
+class SendNotificationsView(LoginRequiredMixin, View):
 
     def post(self, request, uuid):
         billing_cycle = get_object_or_404(BillingCycle, uuid=uuid)

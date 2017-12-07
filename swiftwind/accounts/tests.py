@@ -7,6 +7,9 @@ from swiftwind.utilities.testing import DataProvider
 
 class StatementEmailViewTestCase(DataProvider, TestCase):
 
+    def setUp(self):
+        self.login()
+
     def test_get_html(self):
         housemate = self.housemate()
         billing_cycle = BillingCycle.objects.create(

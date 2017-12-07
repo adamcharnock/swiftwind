@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls.base import reverse_lazy
 from django.views.generic.edit import UpdateView
 
@@ -5,7 +6,7 @@ from .models import Settings
 from . import forms
 
 
-class SettingsUpdateView(UpdateView):
+class SettingsUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return Settings.objects.get()

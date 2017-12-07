@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -12,8 +13,7 @@ from .forms import HousemateCreateForm
 from .models import Housemate
 
 
-@method_decorator(login_required, name='dispatch')
-class HousemateListView(ListView):
+class HousemateListView(LoginRequiredMixin, ListView):
     template_name = 'housemates/list.html'
     context_object_name = 'housemates'
     queryset = Housemate.objects.all()\
@@ -21,8 +21,7 @@ class HousemateListView(ListView):
         .select_related('user', 'account')
 
 
-@method_decorator(login_required, name='dispatch')
-class HousemateCreateView(CreateView):
+class HousemateCreateView(LoginRequiredMixin, CreateView):
     template_name = 'housemates/create.html'
     form_class = HousemateCreateForm
 
@@ -30,8 +29,7 @@ class HousemateCreateView(CreateView):
         return reverse('housemates:list')
 
 
-@method_decorator(login_required, name='dispatch')
-class HousemateUpdateView(UpdateView):
+class HousemateUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'housemates/update.html'
     form_class = HousemateUpdateForm
     model = Housemate

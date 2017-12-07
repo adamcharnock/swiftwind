@@ -1,6 +1,7 @@
 import datetime
 from datetime import timedelta
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
 from django.db import models
 from django.db.models import Q, Sum, When, Case, Value, Subquery, OuterRef, Exists
@@ -22,7 +23,7 @@ from swiftwind.utilities.emails import EmailViewMixin
 from swiftwind.utilities.site import get_site_root
 
 
-class OverviewView(ListView):
+class OverviewView(LoginRequiredMixin, ListView):
     template_name = 'accounts/overview.html'
     context_object_name = 'accounts'
 
@@ -71,7 +72,7 @@ class OverviewView(ListView):
             .select_related('housemate')
 
 
-class HousemateStatementView(DetailView):
+class AbstractHousemateStatementView(DetailView):
     template_name = 'accounts/housemate_statement.html'
     slug_url_kwarg = 'uuid'
     slug_field = 'uuid'
@@ -122,7 +123,7 @@ class HousemateStatementView(DetailView):
         else:
             next_url = ''
 
-        return super(HousemateStatementView, self).get_context_data(
+        return super().get_context_data(
             billing_cycle=billing_cycle,
             start_date=billing_cycle.date_range.lower,
             end_date=billing_cycle.date_range.upper - timedelta(days=1),
@@ -140,7 +141,11 @@ class HousemateStatementView(DetailView):
         )
 
 
-class StatementEmailView(EmailViewMixin, HousemateStatementView):
+class HousemateStatementView(LoginRequiredMixin, AbstractHousemateStatementView):
+    pass
+
+
+class StatementEmailView(EmailViewMixin, AbstractHousemateStatementView):
     template_name = 'accounts/statement_email.html'
 
 

@@ -262,6 +262,9 @@ class CycleTestCase(TestCase):
 
 class BillingCycleListViewTestCase(DataProvider, TestCase):
 
+    def setUp(self):
+        self.login()
+
     def test_get(self):
         cycle1 = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
         cycle2 = BillingCycle.objects.create(date_range=(date(2016, 5, 1), date(2016, 6, 1)))
@@ -279,6 +282,8 @@ class BillingCycleListViewTestCase(DataProvider, TestCase):
 class CreateTransactionsViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
+        self.login()
+
         self.housemate1 = self.housemate(account_kwargs=dict(currencies=['GBP']))
         self.housemate2 = self.housemate(account_kwargs=dict(currencies=['GBP']))
 
@@ -316,6 +321,8 @@ class CreateTransactionsViewTestCase(DataProvider, TestCase):
 class RecreateTransactionsViewTestCase(DataProvider, TransactionTestCase):
 
     def setUp(self):
+        self.login()
+
         self.housemate1 = self.housemate(account_kwargs=dict(currencies=['GBP']))
         self.housemate2 = self.housemate(account_kwargs=dict(currencies=['GBP']))
 
@@ -353,6 +360,9 @@ class RecreateTransactionsViewTestCase(DataProvider, TransactionTestCase):
 
 
 class SendNotificationsViewTestCase(DataProvider, TestCase):
+
+    def setUp(self):
+        self.login()
 
     @patch.object(BillingCycle, 'send_statements')
     def test_transactions_not_yet_created(self, mock):

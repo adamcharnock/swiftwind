@@ -1,14 +1,12 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.conf import settings
 from hordak.models import Account
 from hordak.utilities.currency import Balance
 
 
-@method_decorator(login_required, name='dispatch')
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard/dashboard.html'
 
     def get_balance_context(self):

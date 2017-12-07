@@ -1,5 +1,6 @@
 from datetime import date
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http.response import HttpResponseRedirect
 from django.urls.base import reverse_lazy, reverse

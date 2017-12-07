@@ -1,17 +1,16 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.views.generic import ListView
 from django.views.generic.edit import CreateView, UpdateView
 
 from swiftwind.housemates.views import HousematesRequiredMixin
-from .forms import RecurringCostForm, RecurringCostFormSet, OneOffCostFormSet, OneOffCostForm, CreateOneOffCostForm, \
+from .forms import RecurringCostFormSet, OneOffCostFormSet, CreateOneOffCostForm, \
     CreateRecurringCostForm
 from .models import RecurringCost
 
 
-@method_decorator(login_required, name='dispatch')
-class RecurringCostsView(HousematesRequiredMixin, UpdateView):
+class RecurringCostsView(LoginRequiredMixin, HousematesRequiredMixin, UpdateView):
     template_name = 'costs/recurring.html'
     model = RecurringCost
     ordering = ['is_active', 'to_account__name']
@@ -40,8 +39,7 @@ class RecurringCostsView(HousematesRequiredMixin, UpdateView):
         return reverse('costs:recurring')
 
 
-@method_decorator(login_required, name='dispatch')
-class CreateRecurringCostView(HousematesRequiredMixin, CreateView):
+class CreateRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, CreateView):
     form_class = CreateRecurringCostForm
     template_name = 'costs/create_recurring.html'
 
@@ -49,7 +47,6 @@ class CreateRecurringCostView(HousematesRequiredMixin, CreateView):
         return reverse('costs:recurring')
 
 
-@method_decorator(login_required, name='dispatch')
 class OneOffCostsView(RecurringCostsView):
     template_name = 'costs/one_off.html'
     form_class = OneOffCostFormSet
@@ -66,8 +63,7 @@ class OneOffCostsView(RecurringCostsView):
         return reverse('costs:one_off')
 
 
-@method_decorator(login_required, name='dispatch')
-class CreateOneOffCostView(HousematesRequiredMixin, CreateView):
+class CreateOneOffCostView(LoginRequiredMixin, HousematesRequiredMixin, CreateView):
     form_class = CreateOneOffCostForm
     template_name = 'costs/create_one_off.html'
 
