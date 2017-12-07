@@ -51,6 +51,7 @@ class TechnicalSettingsForm(forms.ModelForm):
 
 
 class EmailSettingsForm(forms.ModelForm):
+    from_email = forms.CharField(required=True, help_text='Address to send emails from')
     smtp_host = forms.CharField(required=True, label='SMTP host')
     smtp_port = forms.IntegerField(required=True, label='SMTP port')
     smtp_user = forms.CharField(label='SMTP user')
@@ -62,6 +63,7 @@ class EmailSettingsForm(forms.ModelForm):
     class Meta:
         model = Settings
         fields = [
+            'from_email',
             'smtp_host',
             'smtp_port',
             'smtp_user',

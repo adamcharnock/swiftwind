@@ -40,6 +40,7 @@ class Settings(models.Model):
     tellerio_token = models.CharField(max_length=100)
     tellerio_account_id = models.CharField(max_length=100)
 
+    from_email = models.EmailField(default='', blank=True)
     smtp_host = models.CharField(max_length=100, default='', blank=True)
     smtp_port = models.IntegerField(default=None, blank=True, null=True)
     smtp_user = models.CharField(max_length=100, default='', blank=True)

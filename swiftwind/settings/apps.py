@@ -17,6 +17,7 @@ class SettingsConfig(AppConfig):
 
         # TODO: Move all settings into here, stop accessing settings model directly
         if db_settings.smtp_host:
+            django_settings.DEFAULT_FROM_EMAIL = db_settings.from_email
             django_settings.EMAIL_HOST = db_settings.smtp_host
             django_settings.EMAIL_HOST_PASSWORD = db_settings.smtp_password
             django_settings.EMAIL_HOST_USER = db_settings.smtp_user
