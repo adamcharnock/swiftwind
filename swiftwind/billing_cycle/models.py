@@ -233,7 +233,7 @@ class BillingCycle(models.Model):
                 subject='{}, your house statement for {}'.format(
                     housemate.user.first_name or housemate.user.username,
                     # TODO: Assumes monthly billing cycles
-                    self.date_range.upper.strftime('%B %Y'),
+                    self.date_range.lower.strftime('%B %Y'),
                 ),
                 message='See {}{}'.format(
                     get_site_root(),
