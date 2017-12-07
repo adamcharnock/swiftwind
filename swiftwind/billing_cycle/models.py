@@ -204,6 +204,18 @@ class BillingCycle(models.Model):
                 html_message=html,
             )
 
+    def can_create_transactions(self):
+        """Can we create the transactions
+
+        We can only do this if the previous cycle has been reconciled,
+        as some costs may depend upon it to calculate their amounts.
+        """
+        previous = self.get_previous()
+        return not previous or previous.is_reconciled()
+
+    def can_send_statements(self):
+        return self.can_create_transactions() and self.transactions_created
+
     @transaction.atomic()
     def send_statements(self, force=False):
         from swiftwind.accounts.views import StatementEmailView

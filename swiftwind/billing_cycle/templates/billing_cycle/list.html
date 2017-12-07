@@ -51,7 +51,7 @@
                                     {% csrf_token %}
                                     <input type="submit" class="btn btn-xs btn-danger" value="Delete &amp; recreate transactions">
                                 </form>
-                            {% else %}
+                            {% elif billing_cycle.can_create_transactions %}
                                 <form action="{% url 'billing_cycles:enact' billing_cycle.uuid %}" method="post">
                                     {% csrf_token %}
                                     <input type="submit" class="btn btn-xs btn-default" value="Create transactions">
@@ -59,7 +59,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if billing_cycle.transactions_created and billing_cycle.is_reconciled %}
+                            {% if billing_cycle.can_send_statements %}
                                 <form action="{% url 'billing_cycles:send' billing_cycle.uuid %}" method="post">
                                     {% csrf_token %}
                                     <input type="submit" class="btn btn-xs btn-default" value="Send/resend statements">

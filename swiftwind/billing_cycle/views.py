@@ -23,7 +23,8 @@ class CreateTransactionsView(View):
 
     def post(self, request, uuid):
         billing_cycle = get_object_or_404(BillingCycle, uuid=uuid)
-        billing_cycle.enact_all_costs()
+        if billing_cycle.can_create_transactions():
+            billing_cycle.enact_all_costs()
         return HttpResponseRedirect(reverse('billing_cycles:list'))
 
 
@@ -40,7 +41,7 @@ class SendNotificationsView(View):
 
     def post(self, request, uuid):
         billing_cycle = get_object_or_404(BillingCycle, uuid=uuid)
-        if billing_cycle.transactions_created:
+        if billing_cycle.can_send_statements():
             billing_cycle.send_statements(force=True)
         return HttpResponseRedirect(reverse('billing_cycles:list'))
 
