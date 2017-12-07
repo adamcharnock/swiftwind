@@ -18,7 +18,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         return dict(
             bank=bank_account,
-            retained_earnings=Account.objects.get(name='Retained Earnings'),
+            retained_earnings_accounts=Account.objects.filter(parent__name='Retained Earnings'),
         )
 
     def get_accounts_context(self):

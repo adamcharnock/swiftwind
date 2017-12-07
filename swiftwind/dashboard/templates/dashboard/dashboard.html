@@ -271,10 +271,30 @@
                         and it is retained until a later date when we may choose to spend it.
                     </p>
 
-                    <p>
-                        <a href="{% url 'hordak:accounts_transactions' retained_earnings.uuid %}">Retained Earnings</a>:
-                        {{ retained_earnings.balance }}
-                    </p>
+                    <table class="table table-striped">
+                        {% for account in retained_earnings_accounts %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'hordak:accounts_transactions' account.uuid %}">{{ account.name }}</a>
+                                </td>
+                                <td class="text-right">
+                                    {{ account.balance }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td>
+                                    No retained-earnings accounts
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        {% if retained_earnings_accounts %}
+                            <tr>
+                                <td class="text-right text-bold">Total:</td>
+                                <td class="text-right text-bold">{{ retained_earnings_accounts.net_balance }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
                 </div>
             </div>
         </div>
