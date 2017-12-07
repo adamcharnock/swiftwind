@@ -9,7 +9,7 @@
 
     {% with balance=housemate.account.balance %}
         {% if balance < 0 %}
-            <p>You currently owe <strong>{{ balance }}</strong></p>
+            <p>You currently owe <strong>{{ balance|inv }}</strong></p>
         {% elif balance > 0 %}
             <p><strong>The house currently owes you</strong> {{ balance }}</p>
         {% else %}
