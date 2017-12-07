@@ -24,6 +24,7 @@ hordak_urls = [
     url(r'^extra/transactions/create/$', hordak_views.TransactionCreateView.as_view(), name='transactions_create'),
     url(r'^extra/transactions/currency/$', hordak_views.CurrencyTradeView.as_view(), name='currency_trade'),
     url(r'^extra/transactions/reconcile/$', hordak_views.TransactionsReconcileView.as_view(), name='transactions_reconcile'),
+    url(r'^extra/transactions/(?P<uuid>.+)/delete/$', hordak_views.TransactionDeleteView.as_view(), name='transactions_delete'),
     url(r'^extra/accounts/$', hordak_views.AccountListView.as_view(), name='accounts_list'),
     url(r'^extra/accounts/create/$', hordak_views.AccountCreateView.as_view(), name='accounts_create'),
     url(r'^extra/accounts/update/(?P<uuid>.+)/$', hordak_views.AccountUpdateView.as_view(), name='accounts_update'),
