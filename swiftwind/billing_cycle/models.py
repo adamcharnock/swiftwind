@@ -245,18 +245,21 @@ class BillingCycle(models.Model):
                 html_message=html,
             )
 
-    @transaction.atomic()
     def enact_all_costs(self):
         from swiftwind.costs.models import RecurringCost
 
-        for recurring_cost in RecurringCost.objects.all():
-            try:
-                recurring_cost.enact(self)
-            except (CannotEnactUnenactableRecurringCostError, RecurringCostAlreadyEnactedForBillingCycle):
-                pass
+        with transaction.atomic():
+            for recurring_cost in RecurringCost.objects.all():
+                try:
+                    recurring_cost.enact(self)
+                except (CannotEnactUnenactableRecurringCostError, RecurringCostAlreadyEnactedForBillingCycle):
+                    pass
 
-        self.transactions_created = True
-        self.save()
+            self.transactions_created = True
+            self.save()
+
+        for recurring_cost in RecurringCost.objects.all():
+            recurring_cost.disable_if_done(self)
 
     def reenact_all_costs(self):
         from swiftwind.costs.models import RecurringCost, RecurredCost
