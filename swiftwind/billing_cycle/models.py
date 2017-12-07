@@ -232,7 +232,8 @@ class BillingCycle(models.Model):
             send_mail(
                 subject='{}, your house statement for {}'.format(
                     housemate.user.first_name or housemate.user.username,
-                    self.date_range.upper,
+                    # TODO: Assumes monthly billing cycles
+                    self.date_range.upper.strftime('%B %Y'),
                 ),
                 message='See {}{}'.format(
                     get_site_root(),
