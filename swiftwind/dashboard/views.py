@@ -1,9 +1,12 @@
+from datetime import date
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.views.generic import TemplateView
 from django.conf import settings
 from hordak.models import Account
 from hordak.utilities.currency import Balance
+from swiftwind.billing_cycle.models import BillingCycle
 
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -11,22 +14,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_balance_context(self):
         """Get the high level balances"""
-        income_accounts = Account.objects.filter(type=Account.TYPES.income, children__isnull=True)
-        expense_accounts = Account.objects.filter(type=Account.TYPES.expense, children__isnull=True)
         bank_account = Account.objects.get(name='Bank')
 
-        net_income = income_accounts.net_balance()
-        net_expense = expense_accounts.net_balance()
-        net_total = net_income - net_expense
-
-        # Ensure we have a zero value if we have no income or expense accounts
-        if not net_total.monies():
-            net_total += Balance('0', getattr(settings, 'DEFAULT_CURRENCY', 'EUR'))
-
         return dict(
-            net_income=net_income,
-            net_expense=net_expense,
-            net_total=net_total,
             bank=bank_account,
             retained_earnings=Account.objects.get(name='Retained Earnings'),
         )
