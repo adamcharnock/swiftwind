@@ -130,7 +130,7 @@ class HousemateCreateForm(forms.ModelForm):
                 name=user.get_full_name() or user.username,
                 parent=parent,
                 code=code,
-                currencies=[settings.SWIFTWIND_DEFAULT_CURRENCY],
+                currencies=[getattr(settings, 'DEFAULT_CURRENCY', 'EUR')],
             )
 
         self.instance.user = user

@@ -15,6 +15,9 @@ class SettingsConfig(AppConfig):
             # Maybe we are running migrations on the settings table
             return
 
+        django_settings.DEFAULT_CURRENCY = db_settings.default_currency or 'EUR'
+        django_settings.CURRENCIES = db_settings.currencies or 'EUR'
+
         # TODO: Move all settings into here, stop accessing settings model directly
         if db_settings.smtp_host:
             django_settings.DEFAULT_FROM_EMAIL = db_settings.from_email

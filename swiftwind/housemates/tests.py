@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.urls import reverse
 from hordak.models import Account
 from hordak.tests.utils import DataProvider
@@ -90,6 +91,7 @@ class HousemateCreateViewTestCase(DataProvider, TestCase):
         self.assertEqual(housemate.account.currencies, ['EUR'])
         self.assertEqual(housemate.account.type, Account.TYPES.income)
 
+    @override_settings(DEFAULT_CURRENCY='EUR')
     def test_post_success_new_user_new_account(self):
         account = self.account(
             name='Existing Account',

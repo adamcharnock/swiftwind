@@ -21,7 +21,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         # Ensure we have a zero value if we have no income or expense accounts
         if not net_total.monies():
-            net_total += Balance('0', settings.SWIFTWIND_DEFAULT_CURRENCY)
+            net_total += Balance('0', getattr(settings, 'DEFAULT_CURRENCY', 'EUR'))
 
         return dict(
             net_income=net_income,
