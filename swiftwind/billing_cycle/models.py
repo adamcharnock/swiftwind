@@ -266,8 +266,13 @@ class BillingCycle(models.Model):
         from swiftwind.costs.models import RecurringCost, RecurredCost
 
         with transaction.atomic():
-            Transaction.objects.filter(recurred_cost__billing_cycle=self).delete()
+            # We need to delete the recurred cost before the transactions
+            # otherwise django will complain that the RecurredCost.transaction
+            # field cannot be set to null
+            transaction_ids = list(Transaction.objects.filter(recurred_cost__billing_cycle=self).values_list('pk', flat=True))
             RecurredCost.objects.filter(billing_cycle=self).delete()
+            Transaction.objects.filter(pk__in=transaction_ids).delete()
+
             self.transactions_created = False
             self.save()
 

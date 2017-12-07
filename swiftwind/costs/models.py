@@ -330,7 +330,8 @@ class RecurredCost(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, editable=False)
     recurring_cost = models.ForeignKey(RecurringCost, related_name='recurrences')
     billing_cycle = models.ForeignKey('billing_cycle.BillingCycle', related_name='recurring_costs')
-    transaction = models.OneToOneField(Transaction, related_name='recurred_cost', unique=True, null=True)
+    transaction = models.OneToOneField(Transaction, related_name='recurred_cost', unique=True, null=True,
+                                       on_delete=models.PROTECT)
 
     class Meta:
         unique_together = (

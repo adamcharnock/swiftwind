@@ -346,6 +346,7 @@ class RecreateTransactionsViewTestCase(DataProvider, TransactionTestCase):
         self.recurred_cost = RecurredCost.objects.get()
 
     def test_reenact(self):
+        self.assertEqual(Transaction.objects.count(), 1)
         response = self.client.post(reverse('billing_cycles:reenact', args=[self.billing_cycle.uuid]))
 
         self.assertEqual(response.status_code, 302)
