@@ -183,8 +183,3 @@ else:
 if ENABLE_DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
-
-try:
-    from . import extra_settings
-except ImportError:
-    pass

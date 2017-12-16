@@ -5,7 +5,7 @@ import sys
 
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'example_project.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'example_project.custom_config.settings')
 sys.path.insert(0, '/Users/adam/Projects/swiftwind')
 
 from django.conf import settings  # noqa

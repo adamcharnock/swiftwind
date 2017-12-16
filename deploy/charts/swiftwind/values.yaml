@@ -24,7 +24,7 @@ ingress:
        hosts:
          - swiftwind.local
 
-# Extra settings loaded at end of settings.py
+# Customise django settings.
 # settings: |-
 #   DEBUG=True
 

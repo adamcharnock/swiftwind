@@ -9,6 +9,7 @@ metadata:
     heritage: {{ .Release.Service }}
 data:
   settings.py: |-
+    from .settings import *
 {{- if .Values.settings }}
 {{ .Values.settings | indent 4 }}
 {{- end -}}

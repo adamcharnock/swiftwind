@@ -16,7 +16,7 @@ spec:
         release: {{ .Release.Name }}
     spec:
       volumes:
-      - name: settings
+      - name: config
         configMap:
           name: {{ template "swiftwind.fullname" . }}
 
@@ -45,7 +45,7 @@ spec:
           command: ['./manage.py', 'migrate', '--noinput']
           volumeMounts:
           - name: config
-            mountPath: /swiftwind/example_project/extra_settings.py
+            mountPath: /swiftwind/example_project/custom_config/
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -72,7 +72,7 @@ spec:
             - containerPort: {{ .Values.service.internalPort }}
           volumeMounts:
           - name: config
-            mountPath: /swiftwind/example_project/extra_settings.py
+            mountPath: /swiftwind/example_project/settings.py
           livenessProbe:
             initialDelaySeconds: 20
             httpGet:
