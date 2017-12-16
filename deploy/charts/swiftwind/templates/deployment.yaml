@@ -15,6 +15,11 @@ spec:
         app: {{ template "swiftwind.name" . }}
         release: {{ .Release.Name }}
     spec:
+      volumes:
+      - name: settings
+        configMap:
+          name: {{ template "swiftwind.fullname" . }}
+
       initContainers:
         - name: migrations-{{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -38,6 +43,9 @@ spec:
           - name: POSTGRES_PORT
             value: {{ .Values.postgresql.service.port | quote }}
           command: ['./manage.py', 'migrate', '--noinput']
+          volumeMounts:
+          - name: config
+            mountPath: /swiftwind/example_project/extra_settings.py
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -62,6 +70,9 @@ spec:
             value: {{ .Values.postgresql.service.port | quote }}
           ports:
             - containerPort: {{ .Values.service.internalPort }}
+          volumeMounts:
+          - name: config
+            mountPath: /swiftwind/example_project/extra_settings.py
           livenessProbe:
             initialDelaySeconds: 20
             httpGet:

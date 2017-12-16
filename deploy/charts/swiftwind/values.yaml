@@ -24,5 +24,9 @@ ingress:
        hosts:
          - swiftwind.local
 
+# Extra settings loaded at end of settings.py
+# settings: |-
+#   DEBUG=True
+
 postgresql:
   postgresDatabase: swiftwind
