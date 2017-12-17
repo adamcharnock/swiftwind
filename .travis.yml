@@ -20,7 +20,7 @@ script:
 - env
 - env PYTHONPATH=`pwd` coverage run --source=swiftwind ./manage.py test
 addons:
-  postgresql: "9.2"
+  postgresql: "9.5"
 after_success: coveralls
 notifications:
   pushover:
