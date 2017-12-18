@@ -22,8 +22,8 @@ Requirements
 ------------
 
 * Django >= 1.8
-* Postgres >= 9.2
-* Python 2.7, or >=3.4
+* Postgres >= 9.5
+* Python >=3.4
 
 Installation
 ------------
