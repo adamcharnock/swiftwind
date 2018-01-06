@@ -380,11 +380,12 @@ class RecurredCost(models.Model):
         for split, split_amount in splits:
             # Create the transaction legs for the inbound funds
             # (from housemate accounts)
-            self.transaction.legs.add(Leg.objects.create(
-                transaction=self.transaction,
-                amount=Money(split_amount * -1, self.recurring_cost.currency),
-                account=split.from_account,
-            ))
+            if split_amount:
+                self.transaction.legs.add(Leg.objects.create(
+                    transaction=self.transaction,
+                    amount=Money(split_amount * -1, self.recurring_cost.currency),
+                    account=split.from_account,
+                ))
 
         return self.transaction
 
