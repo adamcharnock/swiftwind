@@ -18,9 +18,9 @@ def notify_housemates():
 @transaction.atomic()
 def import_tellerio():
     settings = Settings.objects.get()
-    first_billing_cycle = BillingCycle.objects.first()
 
     if settings.tellerio_enable:
+        first_billing_cycle = BillingCycle.objects.first()
         tellerio.do_import(
             token=settings.tellerio_token,
             account_uuid=settings.tellerio_account_id,

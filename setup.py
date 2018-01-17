@@ -32,6 +32,7 @@ setup(
         'six',
         'python-dateutil',
         'django-adminlte2>=0.1.5',
+        'schedule==0.5.0',
     ],
 )
 
