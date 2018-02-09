@@ -260,7 +260,22 @@ class BillingCycle(models.Model):
             self.save()
 
         for recurring_cost in RecurringCost.objects.all():
-            recurring_cost.disable_if_done(self)
+            recurring_cost.disable_if_done()
+
+    def unenact_all_costs(self):
+        from swiftwind.costs.models import RecurringCost, RecurredCost
+
+        with transaction.atomic():
+            transaction_ids = list(Transaction.objects.filter(recurred_cost__billing_cycle=self).values_list('pk', flat=True))
+            RecurredCost.objects.filter(billing_cycle=self).delete()
+            Transaction.objects.filter(pk__in=transaction_ids).delete()
+
+            self.transactions_created = False
+            for recurring_cost in RecurringCost.objects.all():
+                recurring_cost.disabled = False
+                recurring_cost.save()
+                recurring_cost.disable_if_done()
+            self.save()
 
     def reenact_all_costs(self):
         from swiftwind.costs.models import RecurringCost, RecurredCost
@@ -288,4 +303,4 @@ class BillingCycle(models.Model):
             self.save()
 
         for recurring_cost in RecurringCost.objects.all():
-            recurring_cost.disable_if_done(self)
+            recurring_cost.disable_if_done()

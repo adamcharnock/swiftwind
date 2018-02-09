@@ -85,6 +85,7 @@ class RecurringCost(models.Model):
     #: We could infer the disabled state from other values (billed amount, number of billing
     #: periods billed, etc), but checking this would make our triggers rather complex.
     disabled = models.BooleanField(default=False)
+    archived = models.BooleanField(default=False)
     # The amount to be billed per cycle for recurring costs, or the amount to spread
     # across cycles for one-off costs
     fixed_amount = models.DecimalField(max_digits=13, decimal_places=2, null=True, blank=True)
@@ -203,10 +204,21 @@ class RecurringCost(models.Model):
             if commit:
                 self.save()
 
+    def archive(self, commit=True):
+        self.archived = True
+        if commit:
+            self.save()
+
+    def unarchive(self, commit=True):
+        self.archived = False
+        if commit:
+            self.save()
+
     def is_enactable(self, as_of):
         """Can this RecurringCost be enacted"""
         return \
             not self.disabled and \
+            not self.archived and \
             not self._is_finished(as_of) and \
             self._is_ready(as_of) and \
             not self._is_billing_complete()
@@ -278,6 +290,9 @@ class RecurringCost(models.Model):
         return BillingCycle.objects.filter(
             start_date__gte=self.initial_billing_cycle.date_range.lower
         )[:self.total_billing_cycles]
+
+    def can_delete(self):
+        return not self.transactions.exists()
 
 
 class RecurringCostSplitQuerySet(QuerySet):

@@ -38,6 +38,15 @@ class RecreateTransactionsView(LoginRequiredMixin, View):
         return HttpResponseRedirect(reverse('billing_cycles:list'))
 
 
+class DeleteTransactionsView(LoginRequiredMixin, View):
+    """For those times when you need to delete the transactions and faff about some more"""
+
+    def post(self, request, uuid):
+        billing_cycle = get_object_or_404(BillingCycle, uuid=uuid)
+        billing_cycle.unenact_all_costs()
+        return HttpResponseRedirect(reverse('billing_cycles:list'))
+
+
 class SendNotificationsView(LoginRequiredMixin, View):
 
     def post(self, request, uuid):

@@ -360,6 +360,53 @@ class RecreateTransactionsViewTestCase(DataProvider, TransactionTestCase):
         self.assertNotEqual(self.recurred_cost, RecurredCost.objects.get())
 
 
+class UnenactTransactionsViewTestCase(DataProvider, TransactionTestCase):
+
+    def setUp(self):
+        self.login()
+
+        self.housemate1 = self.housemate(account_kwargs=dict(currencies=['GBP']))
+        self.housemate2 = self.housemate(account_kwargs=dict(currencies=['GBP']))
+
+        self.billing_cycle = BillingCycle.objects.create(date_range=(date(2016, 4, 1), date(2016, 5, 1)))
+        self.billing_cycle.refresh_from_db()
+
+        self.to_account = self.account(currencies=['GBP'])
+        with transaction.atomic():
+            self.recurring_cost = RecurringCost.objects.create(
+                to_account=self.to_account,
+                fixed_amount=100,
+                type=RecurringCost.TYPES.normal,
+                initial_billing_cycle=self.billing_cycle,
+                total_billing_cycles=1,
+            )
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate1.account)
+            RecurringCostSplit.objects.create(recurring_cost=self.recurring_cost, from_account=self.housemate2.account)
+
+        self.billing_cycle.enact_all_costs()
+        self.transaction = Transaction.objects.get()
+        self.recurred_cost = RecurredCost.objects.get()
+        self.recurring_cost.refresh_from_db()
+
+    def test_unenact(self):
+        self.assertEqual(Transaction.objects.count(), 1)
+        self.assertEqual(Leg.objects.count(), 3)
+        self.assertEqual(self.recurring_cost.disabled, True)
+
+        response = self.client.post(reverse('billing_cycles:unenact', args=[self.billing_cycle.uuid]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Transaction.objects.count(), 0)
+        self.assertEqual(Leg.objects.count(), 0)
+
+        self.billing_cycle.refresh_from_db()
+        self.recurring_cost.refresh_from_db()
+
+        self.assertEqual(self.billing_cycle.transactions_created, False)
+        self.assertEqual(RecurredCost.objects.count(), 0)
+        self.assertEqual(self.recurring_cost.disabled, False)
+
+
 class SendNotificationsViewTestCase(DataProvider, TestCase):
 
     def setUp(self):
@@ -381,5 +428,5 @@ class SendNotificationsViewTestCase(DataProvider, TestCase):
         cycle1.save()
         response = self.client.post(reverse('billing_cycles:send', args=[cycle1.uuid]))
         self.assertEqual(response.status_code, 302)
-        mock.assert_called()
+        assert mock.called
 
