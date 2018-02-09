@@ -1,10 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'swiftwind/base.html' %}
 
-</body>
-</html>
+{% block page_name %}Delete One-off Cost{% endblock %}
+
+{% block content %}
+    <form action="{% url 'costs:delete_one_off' cost.uuid %}" method="post">
+        {% csrf_token %}
+        {% block form_content %}
+            {{ form }}
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+
+                    <div class="alert alert-warning alert-dismissible">
+                        <h4><i class="icon fa fa-exclamation-triangle"></i> Are you sure you wish to delete this cost?</h4>
+
+                        <p>
+                            This cost has not yet been billed, so it is safe to delete.
+                            However, you cannot undo this action. If you are unsure perhaps
+                            archive the cost instead.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <a href="{% url 'hordak:accounts_list' %}" class="btn btn-lg">Cancel</a>
+                <input type="submit" value="Confirm Deletion" class="btn btn-warning btn-lg">
+            </div>
+        {% endblock %}
+    </form>
+
+{% endblock %}
+]

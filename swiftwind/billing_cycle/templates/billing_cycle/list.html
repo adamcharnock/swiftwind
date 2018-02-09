@@ -50,7 +50,7 @@
                                 <form action="{% url 'billing_cycles:reenact' billing_cycle.uuid %}" method="post">
                                     {% csrf_token %}
                                     <div class="btn-group">
-                                        <button type="button" class="btn btn-xs btn-danger">Delete &amp; recreate transactions</button>
+                                        <button type="submit" class="btn btn-xs btn-danger">Delete &amp; recreate transactions</button>
                                         <button type="button" class="btn btn-xs btn-danger dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                                             <span class="caret"></span>
                                             <span class="sr-only">Toggle Dropdown</span>

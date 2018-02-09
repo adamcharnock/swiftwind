@@ -42,6 +42,7 @@ form .money select {
     margin-left: 1%;
 }
 
+.archived-costs,
 .disabled-costs {
     margin-top: 20px;
 }

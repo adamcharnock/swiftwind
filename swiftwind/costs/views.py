@@ -25,10 +25,11 @@ class RecurringCostsView(LoginRequiredMixin, HousematesRequiredMixin, UpdateView
         context['formset'] = context['form']
         context['form_action'] = self.get_success_url()
         context['disabled_costs'] = RecurringCost.objects.filter(disabled=True).recurring()
+        context['archived_costs'] = RecurringCost.objects.filter(archived=True, disabled=False).recurring()
         return context
 
     def get_queryset(self):
-        return RecurringCost.objects.filter(total_billing_cycles=None, disabled=False)
+        return RecurringCost.objects.filter(disabled=False, archived=False).recurring()
 
     def get_form_kwargs(self):
         kwargs = super(RecurringCostsView, self).get_form_kwargs()
@@ -53,11 +54,12 @@ class OneOffCostsView(RecurringCostsView):
     form_class = OneOffCostFormSet
 
     def get_queryset(self):
-        return RecurringCost.objects.filter(disabled=False).one_off()
+        return RecurringCost.objects.filter(disabled=False, archived=False).one_off()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['disabled_costs'] = RecurringCost.objects.filter(disabled=True).one_off()
+        context['archived_costs'] = RecurringCost.objects.filter(archived=True, disabled=False).one_off()
         return context
 
     def get_success_url(self):
@@ -80,6 +82,7 @@ class DeleteRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, Delet
     template_name = 'costs/delete_recurring.html'
     queryset = RecurringCost.objects.recurring()
     archive_url_name = 'costs:archive_recurring'
+    context_object_name = 'cost'
 
     def archive_url(self):
         return reverse(self.archive_url_name, args=[self.get_object().uuid])
@@ -111,6 +114,7 @@ class ArchiveRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, Deta
     slug_field = 'uuid'
     slug_url_kwarg = 'uuid'
     queryset = RecurringCost.objects.recurring()
+    context_object_name = 'cost'
 
     def get(self, request, *args, **kwargs):
         # No get requests allowed (as we don't ask for confirmation upon archiving)
@@ -132,6 +136,7 @@ class UnarchiveRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, De
     slug_field = 'uuid'
     slug_url_kwarg = 'uuid'
     queryset = RecurringCost.objects.recurring()
+    context_object_name = 'cost'
 
     def get(self, request, *args, **kwargs):
         # No get requests allowed (as we don't ask for confirmation upon archiving)
