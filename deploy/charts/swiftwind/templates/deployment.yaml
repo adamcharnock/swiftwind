@@ -20,6 +20,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+{{- if .Values.postgresql.enabled }}
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -37,12 +38,17 @@ spec:
             value: {{ printf "%s-postgresql" .Release.Name | trunc 63 | trimSuffix "-" }}
           - name: POSTGRES_PORT
             value: {{ .Values.postgresql.service.port | quote }}
+{{- else }}
+          - name: DATABASE_URL
+            value: {{ .Values.database_url | quote }}
+{{- end }}
           command: ['./manage.py', 'migrate', '--noinput']
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+{{- if .Values.postgresql.enabled }}
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -60,6 +66,11 @@ spec:
             value: {{ printf "%s-postgresql" .Release.Name | trunc 63 | trimSuffix "-" }}
           - name: POSTGRES_PORT
             value: {{ .Values.postgresql.service.port | quote }}
+{{- else }}
+          - name: DATABASE_URL
+            value: {{ .Values.database_url | quote }}
+{{- end }}
+
           ports:
             - containerPort: {{ .Values.service.internalPort }}
           livenessProbe:

@@ -21,6 +21,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: ['./manage.py', 'run_scheduler']
           env:
+{{- if .Values.postgresql.enabled }}
           - name: POSTGRES_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -38,6 +39,10 @@ spec:
             value: {{ printf "%s-postgresql" .Release.Name | trunc 63 | trimSuffix "-" }}
           - name: POSTGRES_PORT
             value: {{ .Values.postgresql.service.port | quote }}
+{{- else }}
+          - name: DATABASE_URL
+            value: {{ .Values.database_url | quote }}
+{{- end }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- if .Values.nodeSelector }}

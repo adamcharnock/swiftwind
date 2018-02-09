@@ -25,4 +25,5 @@ ingress:
          - swiftwind.local
 
 postgresql:
+  enabled: true
   postgresDatabase: swiftwind
