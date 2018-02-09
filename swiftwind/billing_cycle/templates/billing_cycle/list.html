@@ -49,7 +49,19 @@
                             {% if billing_cycle.transactions_created %}
                                 <form action="{% url 'billing_cycles:reenact' billing_cycle.uuid %}" method="post">
                                     {% csrf_token %}
-                                    <input type="submit" class="btn btn-xs btn-danger" value="Delete &amp; recreate transactions">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-xs btn-danger">Delete &amp; recreate transactions</button>
+                                        <button type="button" class="btn btn-xs btn-danger dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="javascript:$('#unenact-{{ billing_cycle.uuid }}').submit();">Delete transactions</a></li>
+                                        </ul>
+                                    </div>
+                                </form>
+                                <form action="{% url 'billing_cycles:unenact' billing_cycle.uuid %}" method="post" id="unenact-{{ billing_cycle.uuid }}">
+                                    {% csrf_token %}
                                 </form>
                             {% elif billing_cycle.can_create_transactions %}
                                 <form action="{% url 'billing_cycles:enact' billing_cycle.uuid %}" method="post">
