@@ -279,6 +279,9 @@ class RecurringCost(models.Model):
             start_date__gte=self.initial_billing_cycle.date_range.lower
         )[:self.total_billing_cycles]
 
+    def can_delete(self):
+        return not self.transactions.exists()
+
 
 class RecurringCostSplitQuerySet(QuerySet):
 

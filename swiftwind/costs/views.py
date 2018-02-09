@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse
+from django.db import transaction
+from django.http import HttpResponseRedirect
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic import DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 from swiftwind.housemates.views import HousematesRequiredMixin
 from .forms import RecurringCostFormSet, OneOffCostFormSet, CreateOneOffCostForm, \
@@ -69,3 +72,57 @@ class CreateOneOffCostView(LoginRequiredMixin, HousematesRequiredMixin, CreateVi
 
     def get_success_url(self):
         return reverse('costs:one_off')
+
+
+class DeleteRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, DeleteView):
+    model = RecurringCost
+    success_url = reverse_lazy('costs:recurring')
+    slug_field = 'uuid'
+    slug_url_kwarg = 'uuid'
+    template_name = 'costs/delete_recurring.html'
+    queryset = RecurringCost.objects.recurring()
+    archive_url_name = 'costs:archive_recurring'
+
+    def archive_url(self):
+        return reverse(self.archive_url_name, args=[self.get_object().uuid])
+
+    def get(self, request, *args, **kwargs):
+        if self.get_object().can_delete():
+            return super().get(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect(self.archive_url())
+
+    def delete(self, request, *args, **kwargs):
+        if self.get_object().can_delete():
+            with transaction.atomic():
+                return super().delete(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect(self.archive_url())
+
+
+class DeleteOneOffCostView(DeleteRecurringCostView):
+    success_url = reverse_lazy('costs:one_off')
+    template_name = 'costs/delete_oneoff.html'
+    queryset = RecurringCost.objects.one_off()
+    archive_url_name = 'costs:archive_one_off'
+
+
+class ArchiveRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, DetailView):
+    model = RecurringCost
+    success_url = reverse_lazy('costs:recurring')
+    slug_field = 'uuid'
+    slug_url_kwarg = 'uuid'
+    queryset = RecurringCost.objects.recurring()
+
+    def get(self, request, *args, **kwargs):
+        # No get requests allowed (as we don't ask for confirmation upon archiving)
+        return HttpResponseRedirect(self.success_url)
+
+    def post(self, request, *args, **kwargs):
+        self.get_object().archive()
+        return HttpResponseRedirect(self.success_url)
+
+
+class ArchiveOneOffCostView(ArchiveRecurringCostView):
+    success_url = reverse_lazy('costs:one_off')
+    queryset = RecurringCost.objects.one_off()
