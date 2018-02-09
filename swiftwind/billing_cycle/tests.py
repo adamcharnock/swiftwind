@@ -428,5 +428,5 @@ class SendNotificationsViewTestCase(DataProvider, TestCase):
         cycle1.save()
         response = self.client.post(reverse('billing_cycles:send', args=[cycle1.uuid]))
         self.assertEqual(response.status_code, 302)
-        mock.assert_called()
+        assert mock.called
 
