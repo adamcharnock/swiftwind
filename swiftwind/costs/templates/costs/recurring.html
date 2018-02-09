@@ -94,36 +94,37 @@
     </form>
 
     {% if disabled_costs %}
+        <div class="row disabled-costs">
+            <div class="col-xs-12">
 
-        <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3 class="box-title">Disabled costs</h3>
-            </div>
-            <div class="box-body">
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>Account</th>
-                        <th>Total billing cycles</th>
-                        <th>Billed amount</th>
-                    </tr>
-                    </thead>
-                    <tbody>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Disabled costs</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Total billing cycles</th>
+                                <th>Billed amount</th>
+                            </tr>
+                            </thead>
+                            <tbody>
 
-                    {% for cost in disabled_costs %}
-                        <tr>
-                            <td>{{ cost.to_account }}</td>
-                            <td>{{ cost.recurrences.count }}</td>
-                            <td>{{ cost.get_billed_amount }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                            {% for cost in disabled_costs %}
+                                <tr>
+                                    <td>{{ cost.to_account }}</td>
+                                    <td>{{ cost.recurrences.count }}</td>
+                                    <td>{{ cost.get_billed_amount }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <table>
-        </table>
 
 
     {% endif %}

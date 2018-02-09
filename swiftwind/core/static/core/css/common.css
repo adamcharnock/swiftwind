@@ -41,3 +41,7 @@ form .money select {
     float: right;
     margin-left: 1%;
 }
+
+.disabled-costs {
+    margin-top: 20px;
+}
