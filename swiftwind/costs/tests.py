@@ -289,6 +289,17 @@ class RecurringCostModelTestCase(DataProvider, BalanceUtils, TestCase):
         self.add_split(recurring_cost)
         self.assertFalse(recurring_cost.is_enactable(date(2000, 1, 1)))
 
+    def test_is_enactable_false_because_archived(self):
+        recurring_cost = RecurringCost.objects.create(
+            to_account=self.to_account,
+            fixed_amount=100,
+            type=RecurringCost.TYPES.normal,
+            initial_billing_cycle=self.billing_cycle_1,
+            archived=True,
+        )
+        self.add_split(recurring_cost)
+        self.assertFalse(recurring_cost.is_enactable(date(2000, 1, 1)))
+
     # Test _get_billing_cycle_number()
 
     def test_get_billing_cycle_number(self):
@@ -1172,13 +1183,13 @@ class ArchiveRecurringCostViewTestCase(DataProvider, DeleteArchiveMixin, TestCas
 
     def test_get(self):
         response = self.client.get(reverse('costs:archive_recurring', args=[self.recurring_cost.uuid]))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)  # Get requests not used, no confirmation needed
 
     def test_post(self):
         response = self.client.post(reverse('costs:archive_recurring', args=[self.recurring_cost.uuid]))
         self.assertEqual(response.status_code, 302)
         self.recurring_cost.refresh_from_db()
-        self.assertEqual(self.recurring_cost, True)
+        self.assertEqual(self.recurring_cost.archived, True)
 
 
 class ArchiveOneOffCostViewTestCase(DataProvider, DeleteArchiveMixin, TestCase):
@@ -1190,5 +1201,35 @@ class ArchiveOneOffCostViewTestCase(DataProvider, DeleteArchiveMixin, TestCase):
     def test_post(self):
         response = self.client.post(reverse('costs:archive_one_off', args=[self.one_off_cost.uuid]))
         self.assertEqual(response.status_code, 302)
+        self.one_off_cost.refresh_from_db()
+        self.assertEqual(self.one_off_cost.archived, True)
+
+
+class UnarchiveRecurringCostViewTestCase(DataProvider, DeleteArchiveMixin, TestCase):
+
+    def test_get(self):
+        self.one_off_cost.archive()
+        response = self.client.get(reverse('costs:unarchive_recurring', args=[self.recurring_cost.uuid]))
+        self.assertEqual(response.status_code, 302)  # Get requests not used, no confirmation needed
+
+    def test_post(self):
+        self.one_off_cost.archive()
+        response = self.client.post(reverse('costs:unarchive_recurring', args=[self.recurring_cost.uuid]))
+        self.assertEqual(response.status_code, 302)
         self.recurring_cost.refresh_from_db()
-        self.assertEqual(self.recurring_cost, True)
+        self.assertEqual(self.recurring_cost.archived, False)
+
+
+class UnarchiveOneOffCostViewTestCase(DataProvider, DeleteArchiveMixin, TestCase):
+
+    def test_get(self):
+        self.one_off_cost.archive()
+        response = self.client.get(reverse('costs:unarchive_one_off', args=[self.one_off_cost.uuid]))
+        self.assertEqual(response.status_code, 302)  # Get requests not used, no confirmation needed
+
+    def test_post(self):
+        self.one_off_cost.archive()
+        response = self.client.post(reverse('costs:unarchive_one_off', args=[self.one_off_cost.uuid]))
+        self.assertEqual(response.status_code, 302)
+        self.one_off_cost.refresh_from_db()
+        self.assertEqual(self.one_off_cost.archived, False)

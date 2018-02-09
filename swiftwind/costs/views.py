@@ -1,9 +1,7 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.urls import reverse, reverse_lazy
-from django.utils.decorators import method_decorator
 from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
@@ -124,5 +122,26 @@ class ArchiveRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, Deta
 
 
 class ArchiveOneOffCostView(ArchiveRecurringCostView):
+    success_url = reverse_lazy('costs:one_off')
+    queryset = RecurringCost.objects.one_off()
+
+
+class UnarchiveRecurringCostView(LoginRequiredMixin, HousematesRequiredMixin, DetailView):
+    model = RecurringCost
+    success_url = reverse_lazy('costs:recurring')
+    slug_field = 'uuid'
+    slug_url_kwarg = 'uuid'
+    queryset = RecurringCost.objects.recurring()
+
+    def get(self, request, *args, **kwargs):
+        # No get requests allowed (as we don't ask for confirmation upon archiving)
+        return HttpResponseRedirect(self.success_url)
+
+    def post(self, request, *args, **kwargs):
+        self.get_object().unarchive()
+        return HttpResponseRedirect(self.success_url)
+
+
+class UnarchiveOneOffCostView(UnarchiveRecurringCostView):
     success_url = reverse_lazy('costs:one_off')
     queryset = RecurringCost.objects.one_off()
