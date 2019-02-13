@@ -33,7 +33,7 @@ class Command(BaseCommand):
             except Settings.DoesNotExist:
                 raise CommandError('No currency specified by either --currency or by the swiftwind settings.')
 
-        kw = dict(currencies=[currency])
+        kw = dict(currencies=currency)
 
         T = Account.TYPES
         assets = Account.objects.create(name='Assets', code='1', type=T.asset, **kw)
