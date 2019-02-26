@@ -11,13 +11,12 @@ env:
 - DJANGO_VERSION=1.8.17 HORDAK_INSTALL_ARGS=django-hordak
 - DJANGO_VERSION=1.10.4 HORDAK_INSTALL_ARGS=django-hordak
 - DJANGO_VERSION=1.10.4 HORDAK_INSTALL_ARGS=git+git://github.com/adamcharnock/django-hordak.git@master#egg=django-hordak
-before_install:
-- pip install -q $DJANGO_VERSION
 install:
 - python setup.py develop
 - pip install .
 - pip uninstall -y django-hordak
 - pip install pytest coveralls freezegun $HORDAK_INSTALL_ARGS
+- pip install -q django==$DJANGO_VERSION
 script:
 - env
 - env PYTHONPATH=`pwd` coverage run --source=swiftwind ./manage.py test
