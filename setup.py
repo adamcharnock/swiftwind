@@ -26,7 +26,7 @@ setup(
         'psycopg2==2.7.3.2',
         'django-extensions',
         'kombu==4.0.2',
-        'celery==4.0.2',
+        'celery==5.2.2',
         'django-celery-beat==1.0.1',
         'redis==2.10.5',
         'six',
